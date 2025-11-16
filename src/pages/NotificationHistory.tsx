@@ -7,11 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Bell, CheckCircle2, AlertCircle, XCircle, ArrowLeft, Trash2, CalendarIcon, Filter, ArrowUpDown } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { formatDistanceToNow, format, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR, enUS, es } from "date-fns/locale";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface Notification {
   id: string;
@@ -23,6 +24,7 @@ interface Notification {
 }
 
 const NotificationHistory = () => {
+  const { t, i18n } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filteredNotifications, setFilteredNotifications] = useState<Notification[]>([]);
@@ -32,6 +34,14 @@ const NotificationHistory = () => {
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [sortBy, setSortBy] = useState<string>("newest");
   const navigate = useNavigate();
+
+  const getDateLocale = () => {
+    switch (i18n.language) {
+      case 'en': return enUS;
+      case 'es': return es;
+      default: return ptBR;
+    }
+  };
 
   useEffect(() => {
     checkUserAndFetchNotifications();
@@ -222,13 +232,13 @@ const NotificationHistory = () => {
   const getTypeBadge = (type: string) => {
     switch (type) {
       case 'success':
-        return <Badge className="bg-success/10 text-success border-success/20">Sucesso</Badge>;
+        return <Badge className="bg-success/10 text-success border-success/20">{t('notifications.success')}</Badge>;
       case 'warning':
-        return <Badge className="bg-warning/10 text-warning border-warning/20">Aviso</Badge>;
+        return <Badge className="bg-warning/10 text-warning border-warning/20">{t('notifications.warning')}</Badge>;
       case 'error':
-        return <Badge className="bg-destructive/10 text-destructive border-destructive/20">Erro</Badge>;
+        return <Badge className="bg-destructive/10 text-destructive border-destructive/20">{t('notifications.error')}</Badge>;
       default:
-        return <Badge>Info</Badge>;
+        return <Badge>{t('notifications.info')}</Badge>;
     }
   };
 
@@ -255,7 +265,7 @@ const NotificationHistory = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-3xl font-bold text-foreground">Histórico de Notificações</h1>
+            <h1 className="text-3xl font-bold text-foreground">{t('notifications.title')}</h1>
             <p className="text-muted-foreground">
               {unreadCount > 0 
                 ? `${unreadCount} notificação${unreadCount > 1 ? 'ões' : ''} não lida${unreadCount > 1 ? 's' : ''}`
@@ -272,11 +282,11 @@ const NotificationHistory = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Filter className="h-5 w-5" />
-                <CardTitle>Filtros e Ordenação</CardTitle>
+                <CardTitle>{t('notifications.filterBy')} e {t('notifications.sortBy')}</CardTitle>
               </div>
               {hasActiveFilters && (
                 <Button variant="ghost" size="sm" onClick={clearFilters}>
-                  Limpar filtros
+                  {t('notifications.clearFilters')}
                 </Button>
               )}
             </div>
@@ -285,17 +295,17 @@ const NotificationHistory = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {/* Type Filter */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">Tipo</label>
+                <label className="text-sm font-medium">{t('notifications.type')}</label>
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tipo" />
+                    <SelectValue placeholder={t('notifications.type')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="success">Sucesso</SelectItem>
-                    <SelectItem value="warning">Aviso</SelectItem>
-                    <SelectItem value="error">Erro</SelectItem>
-                    <SelectItem value="info">Info</SelectItem>
+                    <SelectItem value="all">{t('notifications.all')}</SelectItem>
+                    <SelectItem value="success">{t('notifications.success')}</SelectItem>
+                    <SelectItem value="warning">{t('notifications.warning')}</SelectItem>
+                    <SelectItem value="error">{t('notifications.error')}</SelectItem>
+                    <SelectItem value="info">{t('notifications.info')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -304,23 +314,23 @@ const NotificationHistory = () => {
               <div className="space-y-2">
                 <label className="text-sm font-medium flex items-center gap-2">
                   <ArrowUpDown className="h-4 w-4" />
-                  Ordenar por
+                  {t('notifications.sortBy')}
                 </label>
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Ordenação" />
+                    <SelectValue placeholder={t('notifications.sortBy')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="newest">Mais recentes</SelectItem>
-                    <SelectItem value="oldest">Mais antigas</SelectItem>
-                    <SelectItem value="unread">Não lidas primeiro</SelectItem>
+                    <SelectItem value="newest">{t('notifications.newest')}</SelectItem>
+                    <SelectItem value="oldest">{t('notifications.oldest')}</SelectItem>
+                    <SelectItem value="unread">{t('notifications.unreadFirst')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {/* Start Date Filter */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">Data inicial</label>
+                <label className="text-sm font-medium">{t('notifications.startDate')}</label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button

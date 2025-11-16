@@ -1,0 +1,117 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "back": "Volver",
+    "next": "Siguiente",
+    "confirm": "Confirmar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "clear": "Limpiar"
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "settings": "Configuración",
+    "notifications": "Notificaciones",
+    "admin": "Admin",
+    "logout": "Salir"
+  },
+  "auth": {
+    "login": "Iniciar sesión",
+    "signup": "Registrarse",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar Contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "resetPassword": "Restablecer Contraseña",
+    "dontHaveAccount": "¿No tienes una cuenta?",
+    "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+    "signupSuccess": "¡Registro exitoso!",
+    "loginSuccess": "¡Inicio de sesión exitoso!",
+    "logoutSuccess": "¡Cierre de sesión exitoso!"
+  },
+  "dashboard": {
+    "title": "Panel",
+    "welcome": "Bienvenido a Nottify",
+    "balance": "Saldo",
+    "pnl": "P&L",
+    "alerts": "Alertas",
+    "riskSettings": "Configuración de Riesgo"
+  },
+  "payment": {
+    "title": "Pago",
+    "cryptoPayment": "Pago Cripto",
+    "voucherActivation": "Activar Cupón",
+    "walletAddress": "Dirección de Billetera",
+    "copyAddress": "Copiar Dirección",
+    "addressCopied": "¡Dirección copiada!",
+    "amount": "Cantidad",
+    "voucherCode": "Código de Cupón",
+    "activate": "Activar",
+    "waitingPayment": "Esperando Pago",
+    "invalidFormat": "Formato inválido. Use: XXXX-XXXX-XXXX-XXXX"
+  },
+  "settings": {
+    "title": "Configuración",
+    "profile": "Perfil",
+    "security": "Seguridad",
+    "notifications": "Notificaciones",
+    "language": "Idioma",
+    "theme": "Tema",
+    "subscription": "Suscripción",
+    "binanceAccount": "Cuenta Binance"
+  },
+  "notifications": {
+    "title": "Historial de Notificaciones",
+    "markAsRead": "Marcar como leída",
+    "markAsUnread": "Marcar como no leída",
+    "deleteAll": "Eliminar todas",
+    "type": "Tipo",
+    "date": "Fecha",
+    "all": "Todas",
+    "success": "Éxito",
+    "warning": "Advertencia",
+    "error": "Error",
+    "info": "Info",
+    "sortBy": "Ordenar por",
+    "newest": "Más recientes",
+    "oldest": "Más antiguas",
+    "unreadFirst": "No leídas primero",
+    "filterBy": "Filtrar por",
+    "dateRange": "Rango de fechas",
+    "startDate": "Fecha inicial",
+    "endDate": "Fecha final",
+    "clearFilters": "Limpiar filtros",
+    "activeFilters": "filtro(s) activo(s)"
+  },
+  "admin": {
+    "title": "Panel de Admin",
+    "users": "Usuarios",
+    "payments": "Pagos",
+    "vouchers": "Cupones",
+    "statistics": "Estadísticas",
+    "createVoucher": "Crear Cupón",
+    "approvePayment": "Aprobar Pago",
+    "rejectPayment": "Rechazar Pago"
+  },
+  "binance": {
+    "setup": "Configurar Binance",
+    "accountName": "Nombre de Cuenta",
+    "apiKey": "API Key",
+    "apiSecret": "API Secret",
+    "connect": "Conectar",
+    "connected": "Conectado",
+    "disconnected": "Desconectado"
+  },
+  "subscription": {
+    "active": "Activa",
+    "inactive": "Inactiva",
+    "expired": "Expirada",
+    "expiresAt": "Expira en",
+    "daysRemaining": "días restantes",
+    "trialPeriod": "Período de prueba"
+  }
+}
