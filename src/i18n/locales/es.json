@@ -76,11 +76,19 @@
       "errorActivating": "Error al activar la suscripción. Contacta con soporte.",
       "unexpectedError": "Error inesperado al activar cupón. Por favor, inténtalo de nuevo.",
       "defaultError": "Error al activar cupón",
-      "registerPaymentError": "Error al registrar el pago"
+      "registerPaymentError": "Error al registrar el pago",
+      "NOT_AUTHENTICATED": "No autenticado. Inicie sesión nuevamente.",
+      "INVALID_SESSION": "Sesión inválida. Inicie sesión nuevamente.",
+      "CODE_REQUIRED": "El código del cupón es obligatorio",
+      "VOUCHER_NOT_FOUND": "Cupón no encontrado o inválido",
+      "VOUCHER_ALREADY_USED": "Este cupón ya ha sido utilizado",
+      "UPDATE_VOUCHER_ERROR": "Error al procesar cupón. Inténtelo de nuevo.",
+      "SUBSCRIPTION_ERROR": "Error al activar suscripción. Contacte soporte.",
+      "UNEXPECTED_ERROR": "Error inesperado. Inténtelo de nuevo más tarde."
     },
     "success": {
       "paymentRegistered": "¡Pago registrado! Esperando confirmación...",
-      "voucherActivated": "¡Cupón activado exitosamente!",
+      "voucherActivated": "¡Cupón activado exitosamente! {{days}} días de acceso.",
       "daysAccess": "días de acceso"
     }
   },

@@ -117,10 +117,14 @@ const Payment = () => {
     setLoading(true);
     try {
       const result = await activateVoucher(trimmedCode);
-      toast.success(result.message);
-      navigate("/setup-binance");
+      if (result.success) {
+        toast.success(t("payment.success.voucherActivated", { days: result.days }));
+        navigate("/setup-binance");
+      }
     } catch (error: any) {
-      toast.error(error.message || t("payment.errors.defaultError"));
+      const errorCode = error.error_code || "defaultError";
+      const errorKey = `payment.errors.${errorCode}`;
+      toast.error(t(errorKey));
     } finally {
       setLoading(false);
     }
