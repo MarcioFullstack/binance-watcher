@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Languages } from 'lucide-react';
+import { toast } from 'sonner';
 
 const languages = [
   { code: 'pt-BR', name: 'Português' },
@@ -11,9 +12,14 @@ const languages = [
 export const LanguageSelector = () => {
   const { i18n } = useTranslation();
 
-  const handleLanguageChange = (value: string) => {
-    i18n.changeLanguage(value);
+  const handleLanguageChange = async (value: string) => {
+    await i18n.changeLanguage(value);
     localStorage.setItem('language', value);
+    toast.success(`Language changed to ${languages.find(l => l.code === value)?.name}`);
+    // Force a small delay to ensure i18n updates
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   };
 
   return (
