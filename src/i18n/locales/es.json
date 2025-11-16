@@ -112,6 +112,142 @@
     "expired": "Expirada",
     "expiresAt": "Expira en",
     "daysRemaining": "días restantes",
-    "trialPeriod": "Período de prueba"
+    "trialPeriod": "Período de prueba",
+    "noSubscription": "Sin Suscripción",
+    "activateNow": "Activar suscripción ahora",
+    "goToDashboard": "Ir al Panel"
+  },
+  "landing": {
+    "hero": {
+      "title": "Protege Tu Cuenta con Inteligencia",
+      "subtitle": "Monitorea tus operaciones en Binance Futures en tiempo real con alertas personalizadas y kill-switch automático",
+      "cta": "Comenzar Ahora",
+      "secondaryCta": "Ver Cómo Funciona"
+    },
+    "features": {
+      "title": "Características Poderosas",
+      "subtitle": "Todo lo que necesitas para gestionar riesgos",
+      "monitoring": {
+        "title": "Monitoreo en Tiempo Real",
+        "description": "Sigue P&L, posiciones y saldo con actualización cada 5 segundos"
+      },
+      "alerts": {
+        "title": "Alertas Inteligentes",
+        "description": "Configura notificaciones personalizadas para ganancias, pérdidas y límites de riesgo"
+      },
+      "killswitch": {
+        "title": "Kill-Switch Automático",
+        "description": "Protege tu cuenta con cierre automático de posiciones en caso de pérdidas"
+      },
+      "security": {
+        "title": "Seguridad Total",
+        "description": "Autenticación 2FA (TOTP) y encriptación de datos sensibles"
+      },
+      "dashboard": {
+        "title": "Panel Profesional",
+        "description": "Visualiza métricas, gráficos e historial de operaciones de forma clara"
+      },
+      "setup": {
+        "title": "Configuración Rápida",
+        "description": "Conecta tu cuenta Binance en minutos y comienza a monitorear inmediatamente"
+      }
+    },
+    "stats": {
+      "update": "Actualización",
+      "monitoring": "Monitoreo",
+      "uptime": "Uptime",
+      "setup": "Configuración"
+    },
+    "howItWorks": {
+      "title": "Cómo Funciona",
+      "subtitle": "Configura en 4 pasos simples",
+      "step1": {
+        "title": "Crea tu Cuenta",
+        "description": "Regístrate con email y configura autenticación 2FA para máxima seguridad"
+      },
+      "step2": {
+        "title": "Conecta Binance",
+        "description": "Agrega tus API keys de Binance Futures de forma segura y encriptada"
+      },
+      "step3": {
+        "title": "Configura Alertas",
+        "description": "Define límites de riesgo, alertas personalizadas y activa el kill-switch"
+      },
+      "step4": {
+        "title": "Monitorea en Tiempo Real",
+        "description": "Sigue tu PnL, posiciones abiertas y recibe notificaciones instantáneas"
+      }
+    },
+    "testimonials": {
+      "title": "Lo Que Dicen Nuestros Usuarios",
+      "subtitle": "Traders profesionales confían en NOTTIFY"
+    },
+    "pricing": {
+      "title": "Planes y Precios",
+      "subtitle": "Elige el mejor plan para ti",
+      "monthly": "Mensual",
+      "annual": "Anual",
+      "free": {
+        "name": "Gratuito",
+        "price": "$0",
+        "period": "/mes",
+        "features": [
+          "1 cuenta Binance",
+          "Actualización cada 30s",
+          "Alertas básicas",
+          "Panel simplificado"
+        ]
+      },
+      "pro": {
+        "name": "Pro",
+        "price": "$9.90",
+        "period": "/mes",
+        "popular": "Más Popular",
+        "features": [
+          "Hasta 3 cuentas Binance",
+          "Actualización cada 5s",
+          "Alertas ilimitadas",
+          "Kill-switch automático",
+          "Panel avanzado",
+          "Soporte prioritario"
+        ]
+      },
+      "enterprise": {
+        "name": "Enterprise",
+        "price": "Personalizado",
+        "features": [
+          "Cuentas ilimitadas",
+          "API dedicada",
+          "Integración personalizada",
+          "SLA garantizado",
+          "Soporte 24/7"
+        ]
+      },
+      "selectPlan": "Seleccionar Plan"
+    },
+    "faq": {
+      "title": "Preguntas Frecuentes",
+      "q1": {
+        "question": "¿Cómo funciona el kill-switch?",
+        "answer": "El kill-switch monitorea tu P&L en tiempo real y cierra automáticamente todas las posiciones cuando alcanzas tu límite de pérdida configurado, protegiendo tu cuenta de grandes pérdidas."
+      },
+      "q2": {
+        "question": "¿Necesito pagar por la API de Binance?",
+        "answer": "¡No! La API de Binance es gratuita. Solo necesitas crear tus claves API en la configuración de tu cuenta Binance y agregarlas a NOTTIFY."
+      },
+      "q3": {
+        "question": "¿Es seguro conectar mi cuenta Binance?",
+        "answer": "¡Sí! Usamos encriptación de extremo a extremo y puedes configurar los permisos de la API para solo lectura o con permisos limitados de trading."
+      },
+      "q4": {
+        "question": "¿Puedo cancelar en cualquier momento?",
+        "answer": "¡Sí! No hay compromiso. Puedes cancelar tu suscripción en cualquier momento y continuarás teniendo acceso hasta el final del período pagado."
+      }
+    },
+    "cta": {
+      "title": "¿Listo para Proteger Tu Cuenta?",
+      "subtitle": "Únete a cientos de traders que ya protegen sus operaciones con NOTTIFY",
+      "button": "Comenzar Gratis"
+    }
   }
 }

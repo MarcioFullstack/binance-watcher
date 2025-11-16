@@ -37,8 +37,10 @@ import {
 } from "lucide-react";
 import { useSubscriptionRealtime } from "@/hooks/useSubscriptionRealtime";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { useTranslation } from "react-i18next";
 
 const Index = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { scrollYProgress } = useScroll();
   const y = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
@@ -71,7 +73,7 @@ const Index = () => {
   };
 
   const getSubscriptionStatus = () => {
-    if (!subscription) return { status: 'inactive', label: 'Sem Assinatura', color: 'bg-destructive/10 text-destructive border-destructive/20' };
+    if (!subscription) return { status: 'inactive', label: t('subscription.noSubscription'), color: 'bg-destructive/10 text-destructive border-destructive/20' };
     
     if (subscription.status === 'active') {
       const expiresAt = new Date(subscription.expires_at);
@@ -79,77 +81,77 @@ const Index = () => {
       const daysRemaining = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
       
       if (daysRemaining <= 0) {
-        return { status: 'expired', label: 'Assinatura Expirada', color: 'bg-destructive/10 text-destructive border-destructive/20' };
+        return { status: 'expired', label: t('subscription.expired'), color: 'bg-destructive/10 text-destructive border-destructive/20' };
       } else if (daysRemaining <= 7) {
-        return { status: 'expiring', label: `Assinatura expira em ${daysRemaining} dias`, color: 'bg-warning/10 text-warning border-warning/20' };
+        return { status: 'expiring', label: `${t('subscription.expiresAt')} ${daysRemaining} ${t('subscription.daysRemaining')}`, color: 'bg-warning/10 text-warning border-warning/20' };
       } else {
-        return { status: 'active', label: `Assinatura ativa até ${expiresAt.toLocaleDateString('pt-BR')}`, color: 'bg-success/10 text-success border-success/20' };
+        return { status: 'active', label: `${t('subscription.active')} - ${t('subscription.expiresAt')} ${expiresAt.toLocaleDateString()}`, color: 'bg-success/10 text-success border-success/20' };
       }
     }
     
-    return { status: 'inactive', label: 'Assinatura Inativa', color: 'bg-muted text-muted-foreground border-border' };
+    return { status: 'inactive', label: t('subscription.inactive'), color: 'bg-muted text-muted-foreground border-border' };
   };
 
   const features = [
     {
       icon: TrendingUp,
-      title: "Monitoramento em Tempo Real",
-      description: "Acompanhe seu PnL com atualizações a cada 5 segundos direto da Binance Futures"
+      title: t('landing.features.monitoring.title'),
+      description: t('landing.features.monitoring.description')
     },
     {
       icon: Bell,
-      title: "Alertas Inteligentes",
-      description: "Configure notificações personalizadas para lucros, perdas e limites de risco"
+      title: t('landing.features.alerts.title'),
+      description: t('landing.features.alerts.description')
     },
     {
       icon: Shield,
-      title: "Kill-Switch Automático",
-      description: "Proteja sua banca com fechamento automático de posições em caso de perdas"
+      title: t('landing.features.killswitch.title'),
+      description: t('landing.features.killswitch.description')
     },
     {
       icon: Lock,
-      title: "Segurança Total",
-      description: "Autenticação 2FA (TOTP) e criptografia de dados sensíveis"
+      title: t('landing.features.security.title'),
+      description: t('landing.features.security.description')
     },
     {
       icon: BarChart3,
-      title: "Dashboard Profissional",
-      description: "Visualize métricas, gráficos e histórico de operações de forma clara"
+      title: t('landing.features.dashboard.title'),
+      description: t('landing.features.dashboard.description')
     },
     {
       icon: Zap,
-      title: "Setup Rápido",
-      description: "Conecte sua conta Binance em minutos e comece a monitorar imediatamente"
+      title: t('landing.features.setup.title'),
+      description: t('landing.features.setup.description')
     }
   ];
 
   const stats = [
-    { value: "5s", label: "Atualização" },
-    { value: "24/7", label: "Monitoramento" },
-    { value: "100%", label: "Uptime" },
-    { value: "<1min", label: "Setup" }
+    { value: "5s", label: t('landing.stats.update') },
+    { value: "24/7", label: t('landing.stats.monitoring') },
+    { value: "100%", label: t('landing.stats.uptime') },
+    { value: "<1min", label: t('landing.stats.setup') }
   ];
 
   const howItWorks = [
     {
       step: "1",
-      title: "Crie sua Conta",
-      description: "Cadastre-se com email e configure autenticação 2FA para máxima segurança"
+      title: t('landing.howItWorks.step1.title'),
+      description: t('landing.howItWorks.step1.description')
     },
     {
       step: "2",
-      title: "Conecte a Binance",
-      description: "Adicione suas API keys da Binance Futures de forma segura e criptografada"
+      title: t('landing.howItWorks.step2.title'),
+      description: t('landing.howItWorks.step2.description')
     },
     {
       step: "3",
-      title: "Configure Alertas",
-      description: "Defina limites de risco, alertas personalizados e ative o kill-switch"
+      title: t('landing.howItWorks.step3.title'),
+      description: t('landing.howItWorks.step3.description')
     },
     {
       step: "4",
-      title: "Monitore em Tempo Real",
-      description: "Acompanhe seu PnL, posições abertas e receba notificações instantâneas"
+      title: t('landing.howItWorks.step4.title'),
+      description: t('landing.howItWorks.step4.description')
     }
   ];
 
@@ -254,7 +256,7 @@ const Index = () => {
                     onClick={() => navigate('/payment')}
                     className="text-sm underline hover:no-underline"
                   >
-                    Ativar assinatura agora
+                    {t('subscription.activateNow')}
                   </button>
                 )}
               </div>
@@ -266,7 +268,7 @@ const Index = () => {
                 onClick={() => navigate('/dashboard')}
                 className="hidden sm:flex"
               >
-                Ir para Dashboard
+                {t('subscription.goToDashboard')}
               </Button>
               <Button
                 variant="ghost"
@@ -412,10 +414,10 @@ const Index = () => {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Tudo que Você Precisa
+              {t('landing.features.title')}
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Ferramentas profissionais para monitorar e proteger seus investimentos
+              {t('landing.features.subtitle')}
             </p>
           </motion.div>
 
@@ -601,10 +603,10 @@ const Index = () => {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Como Funciona
+              {t('landing.howItWorks.title')}
             </h2>
             <p className="text-xl text-muted-foreground">
-              Setup simples em 4 passos
+              {t('landing.howItWorks.subtitle')}
             </p>
           </motion.div>
 
