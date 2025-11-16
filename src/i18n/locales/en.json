@@ -1,0 +1,117 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "next": "Next",
+    "confirm": "Confirm",
+    "search": "Search",
+    "filter": "Filter",
+    "clear": "Clear"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "settings": "Settings",
+    "notifications": "Notifications",
+    "admin": "Admin",
+    "logout": "Logout"
+  },
+  "auth": {
+    "login": "Login",
+    "signup": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "forgotPassword": "Forgot password?",
+    "resetPassword": "Reset Password",
+    "dontHaveAccount": "Don't have an account?",
+    "alreadyHaveAccount": "Already have an account?",
+    "signupSuccess": "Registration successful!",
+    "loginSuccess": "Login successful!",
+    "logoutSuccess": "Logout successful!"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome to Nottify",
+    "balance": "Balance",
+    "pnl": "P&L",
+    "alerts": "Alerts",
+    "riskSettings": "Risk Settings"
+  },
+  "payment": {
+    "title": "Payment",
+    "cryptoPayment": "Crypto Payment",
+    "voucherActivation": "Activate Voucher",
+    "walletAddress": "Wallet Address",
+    "copyAddress": "Copy Address",
+    "addressCopied": "Address copied!",
+    "amount": "Amount",
+    "voucherCode": "Voucher Code",
+    "activate": "Activate",
+    "waitingPayment": "Waiting for Payment",
+    "invalidFormat": "Invalid format. Use: XXXX-XXXX-XXXX-XXXX"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "security": "Security",
+    "notifications": "Notifications",
+    "language": "Language",
+    "theme": "Theme",
+    "subscription": "Subscription",
+    "binanceAccount": "Binance Account"
+  },
+  "notifications": {
+    "title": "Notification History",
+    "markAsRead": "Mark as read",
+    "markAsUnread": "Mark as unread",
+    "deleteAll": "Delete all",
+    "type": "Type",
+    "date": "Date",
+    "all": "All",
+    "success": "Success",
+    "warning": "Warning",
+    "error": "Error",
+    "info": "Info",
+    "sortBy": "Sort by",
+    "newest": "Newest first",
+    "oldest": "Oldest first",
+    "unreadFirst": "Unread first",
+    "filterBy": "Filter by",
+    "dateRange": "Date range",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "clearFilters": "Clear filters",
+    "activeFilters": "active filter(s)"
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "users": "Users",
+    "payments": "Payments",
+    "vouchers": "Vouchers",
+    "statistics": "Statistics",
+    "createVoucher": "Create Voucher",
+    "approvePayment": "Approve Payment",
+    "rejectPayment": "Reject Payment"
+  },
+  "binance": {
+    "setup": "Setup Binance",
+    "accountName": "Account Name",
+    "apiKey": "API Key",
+    "apiSecret": "API Secret",
+    "connect": "Connect",
+    "connected": "Connected",
+    "disconnected": "Disconnected"
+  },
+  "subscription": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "expired": "Expired",
+    "expiresAt": "Expires at",
+    "daysRemaining": "days remaining",
+    "trialPeriod": "Trial period"
+  }
+}

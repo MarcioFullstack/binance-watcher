@@ -9,8 +9,11 @@ import { toast } from "sonner";
 import { Loader2, ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { activateVoucher } from "@/hooks/useBinanceData";
+import { LanguageSelector } from "@/components/LanguageSelector";
+import { useTranslation } from "react-i18next";
 
 const Settings = () => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [accounts, setAccounts] = useState<any[]>([]);
   const [newAccount, setNewAccount] = useState({
@@ -214,6 +217,17 @@ const Settings = () => {
                 </p>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Language Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('settings.language')}</CardTitle>
+            <CardDescription>Selecione o idioma da interface</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <LanguageSelector />
           </CardContent>
         </Card>
 
