@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createAuditLog } from "../_shared/audit-log.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -138,6 +139,20 @@ serve(async (req) => {
     }
 
     console.log('Voucher invalidated successfully:', voucherId);
+
+    // Registrar log de auditoria
+    await createAuditLog({
+      userId: user.id,
+      action: 'INVALIDATE_VOUCHER',
+      entityType: 'voucher',
+      entityId: voucherId,
+      details: {
+        code: voucher.code,
+        days: voucher.days,
+      },
+      ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || '',
+      userAgent: req.headers.get('user-agent') || '',
+    });
 
     return new Response(
       JSON.stringify({

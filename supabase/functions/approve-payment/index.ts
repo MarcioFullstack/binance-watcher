@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createAuditLog } from "../_shared/audit-log.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -114,6 +115,21 @@ serve(async (req) => {
         throw new Error('Erro ao atualizar pagamento');
       }
 
+      // Registrar log de auditoria
+      await createAuditLog({
+        userId: user.id,
+        action: 'APPROVE_PAYMENT',
+        entityType: 'payment',
+        entityId: payment_id,
+        details: {
+          user_id: payment.user_id,
+          amount: payment.expected_amount,
+          currency: payment.currency,
+        },
+        ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || '',
+        userAgent: req.headers.get('user-agent') || '',
+      });
+
       return new Response(
         JSON.stringify({
           success: true,
@@ -137,6 +153,21 @@ serve(async (req) => {
       if (updateError) {
         throw new Error('Erro ao rejeitar pagamento');
       }
+
+      // Registrar log de auditoria
+      await createAuditLog({
+        userId: user.id,
+        action: 'REJECT_PAYMENT',
+        entityType: 'payment',
+        entityId: payment_id,
+        details: {
+          user_id: payment.user_id,
+          amount: payment.expected_amount,
+          currency: payment.currency,
+        },
+        ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || '',
+        userAgent: req.headers.get('user-agent') || '',
+      });
 
       return new Response(
         JSON.stringify({
