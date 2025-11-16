@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Bell, CheckCircle2, AlertCircle, XCircle, ArrowLeft, Trash2, CalendarIcon, Filter } from "lucide-react";
+import { Loader2, Bell, CheckCircle2, AlertCircle, XCircle, ArrowLeft, Trash2, CalendarIcon, Filter, ArrowUpDown } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { formatDistanceToNow, format, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -30,6 +30,7 @@ const NotificationHistory = () => {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
+  const [sortBy, setSortBy] = useState<string>("newest");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -38,7 +39,7 @@ const NotificationHistory = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [notifications, typeFilter, startDate, endDate]);
+  }, [notifications, typeFilter, startDate, endDate, sortBy]);
 
   const applyFilters = () => {
     let filtered = [...notifications];
@@ -63,6 +64,24 @@ const NotificationHistory = () => {
       );
     }
 
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "newest":
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        case "oldest":
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case "unread":
+          // Unread first, then by newest
+          if (a.is_read === b.is_read) {
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          }
+          return a.is_read ? 1 : -1;
+        default:
+          return 0;
+      }
+    });
+
     setFilteredNotifications(filtered);
   };
 
@@ -70,6 +89,7 @@ const NotificationHistory = () => {
     setTypeFilter("all");
     setStartDate(undefined);
     setEndDate(undefined);
+    setSortBy("newest");
   };
 
   const checkUserAndFetchNotifications = async () => {
@@ -221,7 +241,7 @@ const NotificationHistory = () => {
   }
 
   const unreadCount = filteredNotifications.filter(n => !n.is_read).length;
-  const hasActiveFilters = typeFilter !== "all" || startDate !== undefined || endDate !== undefined;
+  const hasActiveFilters = typeFilter !== "all" || startDate !== undefined || endDate !== undefined || sortBy !== "newest";
 
   return (
     <div className="min-h-screen bg-background">
@@ -252,7 +272,7 @@ const NotificationHistory = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Filter className="h-5 w-5" />
-                <CardTitle>Filtros</CardTitle>
+                <CardTitle>Filtros e Ordenação</CardTitle>
               </div>
               {hasActiveFilters && (
                 <Button variant="ghost" size="sm" onClick={clearFilters}>
@@ -262,7 +282,7 @@ const NotificationHistory = () => {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {/* Type Filter */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Tipo</label>
@@ -276,6 +296,24 @@ const NotificationHistory = () => {
                     <SelectItem value="warning">Aviso</SelectItem>
                     <SelectItem value="error">Erro</SelectItem>
                     <SelectItem value="info">Info</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Sort By */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <ArrowUpDown className="h-4 w-4" />
+                  Ordenar por
+                </label>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Ordenação" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Mais recentes</SelectItem>
+                    <SelectItem value="oldest">Mais antigas</SelectItem>
+                    <SelectItem value="unread">Não lidas primeiro</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
