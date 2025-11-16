@@ -6,11 +6,14 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { BalanceCards } from "@/components/dashboard/BalanceCards";
 import { PnLCards } from "@/components/dashboard/PnLCards";
 import { AlertsConfig } from "@/components/dashboard/AlertsConfig";
-import { Loader2 } from "lucide-react";
+import { Loader2, Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [hasAccount, setHasAccount] = useState<boolean | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,6 +30,15 @@ const Dashboard = () => {
       }
 
       setUser(user);
+
+      // Verificar se existe conta Binance configurada
+      const { data: accounts } = await supabase
+        .from('binance_accounts')
+        .select('id, is_active')
+        .eq('user_id', user.id)
+        .eq('is_active', true);
+
+      setHasAccount(accounts && accounts.length > 0);
     } catch (error) {
       console.error("Error checking user:", error);
       navigate("/login");
@@ -57,9 +69,36 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         <DashboardHeader onLogout={handleLogout} />
-        <BalanceCards />
-        <PnLCards />
-        <AlertsConfig />
+        
+        {hasAccount === false ? (
+          <Card className="border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Configure sua conta Binance
+              </CardTitle>
+              <CardDescription>
+                Para começar a monitorar suas operações, você precisa configurar sua API da Binance.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => navigate("/settings")} className="w-full sm:w-auto">
+                <Settings className="mr-2 h-4 w-4" />
+                Ir para Configurações
+              </Button>
+            </CardContent>
+          </Card>
+        ) : hasAccount === true ? (
+          <>
+            <BalanceCards />
+            <PnLCards />
+            <AlertsConfig />
+          </>
+        ) : (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
       </div>
     </div>
   );
