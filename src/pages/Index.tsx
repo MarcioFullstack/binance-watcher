@@ -39,16 +39,7 @@ const Index = () => {
   const y = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
-  useEffect(() => {
-    checkUser();
-  }, []);
-
-  const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      navigate("/dashboard");
-    }
-  };
+  // Removed auto-redirect to allow users to stay on landing page
 
   const features = [
     {
