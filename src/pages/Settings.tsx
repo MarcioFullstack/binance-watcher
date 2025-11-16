@@ -142,14 +142,23 @@ const Settings = () => {
   };
 
   const handleActivateVoucher = async () => {
-    if (!voucherCode) {
+    const trimmedCode = voucherCode.trim().toUpperCase();
+    
+    if (!trimmedCode) {
       toast.error("Digite o código do voucher");
+      return;
+    }
+
+    // Validação do formato: XXXX-XXXX-XXXX-XXXX
+    const voucherRegex = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+    if (!voucherRegex.test(trimmedCode)) {
+      toast.error("Formato inválido. Use: XXXX-XXXX-XXXX-XXXX");
       return;
     }
 
     setLoading(true);
     try {
-      const result = await activateVoucher(voucherCode);
+      const result = await activateVoucher(trimmedCode);
       toast.success(result.message);
       setVoucherCode("");
       loadSubscription();
@@ -193,7 +202,8 @@ const Settings = () => {
                   <Input
                     placeholder="Digite o código do voucher"
                     value={voucherCode}
-                    onChange={(e) => setVoucherCode(e.target.value)}
+                    onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+                    maxLength={19}
                   />
                   <Button onClick={handleActivateVoucher} disabled={loading}>
                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Ativar"}
