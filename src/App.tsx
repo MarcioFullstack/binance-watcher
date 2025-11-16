@@ -16,8 +16,6 @@ import Admin from "./pages/Admin";
 import NotificationHistory from "./pages/NotificationHistory";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
-
 const App = () => {
   const queryClient = React.useMemo(() => new QueryClient(), []);
 
