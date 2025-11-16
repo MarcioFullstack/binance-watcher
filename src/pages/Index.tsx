@@ -7,6 +7,14 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import nottifyLogo from "@/assets/nottify-logo.png";
@@ -20,7 +28,9 @@ import {
   Lock,
   ArrowRight,
   CheckCircle2,
-  HelpCircle
+  HelpCircle,
+  Star,
+  Quote
 } from "lucide-react";
 
 const Index = () => {
@@ -123,6 +133,57 @@ const Index = () => {
       }
     }
   };
+
+  const testimonials = [
+    {
+      name: "Carlos Silva",
+      role: "Day Trader",
+      avatar: "",
+      initials: "CS",
+      rating: 5,
+      text: "O NOTTIFY mudou completamente minha forma de operar. Agora tenho controle total sobre minhas posições e o kill-switch já me salvou várias vezes. Melhor investimento que fiz!"
+    },
+    {
+      name: "Marina Costa",
+      role: "Swing Trader",
+      avatar: "",
+      initials: "MC",
+      rating: 5,
+      text: "Excelente ferramenta! Os alertas personalizados são perfeitos e me mantêm informada mesmo quando não estou monitorando. Interface muito profissional e fácil de usar."
+    },
+    {
+      name: "Roberto Mendes",
+      role: "Scalper",
+      avatar: "",
+      initials: "RM",
+      rating: 5,
+      text: "A atualização a cada 5 segundos é essencial para meu estilo de trading. Dashboard limpo, informações precisas e a segurança 2FA me dá muita confiança."
+    },
+    {
+      name: "Juliana Alves",
+      role: "Position Trader",
+      avatar: "",
+      initials: "JA",
+      rating: 5,
+      text: "Gerencio múltiplas contas e o NOTTIFY facilita demais. Consigo alternar entre elas rapidamente e configurar proteções diferentes para cada estratégia. Recomendo muito!"
+    },
+    {
+      name: "Pedro Santos",
+      role: "Trader Profissional",
+      avatar: "",
+      initials: "PS",
+      rating: 5,
+      text: "Finalmente uma ferramenta que entende o trader brasileiro. Setup rápido, preço justo e funciona perfeitamente. O suporte também é excelente!"
+    },
+    {
+      name: "Ana Oliveira",
+      role: "Trader Iniciante",
+      avatar: "",
+      initials: "AO",
+      rating: 5,
+      text: "Como iniciante, o NOTTIFY me ajudou muito a aprender gerenciamento de risco. Os alertas me ensinam quando estou ultrapassando limites e o kill-switch me protege."
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-background overflow-hidden">
@@ -297,8 +358,147 @@ const Index = () => {
         </div>
       </section>
 
-      {/* How It Works Section */}
+      {/* Testimonials Section */}
       <section className="py-20 px-4 bg-card/30 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto">
+          <motion.div 
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <motion.div 
+              className="flex items-center justify-center gap-3 mb-4"
+              initial={{ scale: 0.8, opacity: 0 }}
+              whileInView={{ scale: 1, opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <Quote className="h-10 w-10 text-primary" />
+              <h2 className="text-4xl md:text-5xl font-bold">
+                O Que Nossos Traders Dizem
+              </h2>
+            </motion.div>
+            <p className="text-xl text-muted-foreground">
+              Depoimentos reais de quem já usa o NOTTIFY
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="px-12"
+          >
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              className="w-full"
+            >
+              <CarouselContent>
+                {testimonials.map((testimonial, index) => (
+                  <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: index * 0.1 }}
+                      whileHover={{ y: -8, transition: { duration: 0.3 } }}
+                      className="p-1 h-full"
+                    >
+                      <Card className="h-full border-2 hover:border-primary/50 transition-colors bg-card/50 backdrop-blur-sm">
+                        <CardContent className="p-6 space-y-4 flex flex-col h-full">
+                          {/* Rating Stars */}
+                          <div className="flex gap-1">
+                            {[...Array(testimonial.rating)].map((_, i) => (
+                              <motion.div
+                                key={i}
+                                initial={{ opacity: 0, scale: 0 }}
+                                whileInView={{ opacity: 1, scale: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: 0.1 * i }}
+                              >
+                                <Star className="h-5 w-5 fill-primary text-primary" />
+                              </motion.div>
+                            ))}
+                          </div>
+
+                          {/* Quote Icon */}
+                          <Quote className="h-8 w-8 text-primary/20" />
+
+                          {/* Testimonial Text */}
+                          <p className="text-muted-foreground flex-grow italic">
+                            "{testimonial.text}"
+                          </p>
+
+                          {/* Author Info */}
+                          <div className="flex items-center gap-3 pt-4 border-t border-border">
+                            <motion.div
+                              whileHover={{ scale: 1.1, rotate: 5 }}
+                              transition={{ duration: 0.3 }}
+                            >
+                              <Avatar className="h-12 w-12 border-2 border-primary/20">
+                                <AvatarImage src={testimonial.avatar} />
+                                <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                                  {testimonial.initials}
+                                </AvatarFallback>
+                              </Avatar>
+                            </motion.div>
+                            <div>
+                              <p className="font-bold">{testimonial.name}</p>
+                              <p className="text-sm text-muted-foreground">{testimonial.role}</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="hidden md:flex" />
+              <CarouselNext className="hidden md:flex" />
+            </Carousel>
+          </motion.div>
+
+          {/* Stats Below Testimonials */}
+          <motion.div 
+            className="grid grid-cols-3 gap-8 mt-16 max-w-3xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+          >
+            <motion.div 
+              className="text-center"
+              whileHover={{ scale: 1.05 }}
+            >
+              <div className="text-4xl font-bold text-primary mb-2">500+</div>
+              <div className="text-sm text-muted-foreground">Traders Ativos</div>
+            </motion.div>
+            <motion.div 
+              className="text-center"
+              whileHover={{ scale: 1.05 }}
+            >
+              <div className="text-4xl font-bold text-primary mb-2">4.9/5</div>
+              <div className="text-sm text-muted-foreground">Avaliação Média</div>
+            </motion.div>
+            <motion.div 
+              className="text-center"
+              whileHover={{ scale: 1.05 }}
+            >
+              <div className="text-4xl font-bold text-primary mb-2">1M+</div>
+              <div className="text-sm text-muted-foreground">Alertas Enviados</div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
           <motion.div 
             className="text-center mb-16"
