@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Loader2, Check, X, ArrowLeft, Shield, TrendingUp, Users, DollarSign, Activity, Ticket, Copy, Download, Calendar } from "lucide-react";
+import { Loader2, Check, X, ArrowLeft, Shield, TrendingUp, Users, DollarSign, Activity, Ticket, Copy, Download, Calendar, Bell, AlertTriangle, Settings } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -71,6 +71,25 @@ interface AuditLog {
   created_at: string;
 }
 
+interface AlertConfig {
+  id: string;
+  alert_type: 'vouchers_per_day' | 'payment_rejection_rate' | 'high_payment_volume';
+  threshold: number;
+  enabled: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Alert {
+  id: string;
+  alert_config_id: string;
+  triggered_at: string;
+  details: any;
+  is_resolved: boolean;
+  resolved_at: string | null;
+  resolved_by: string | null;
+}
+
 const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -93,12 +112,18 @@ const Admin = () => {
   const [dateRange, setDateRange] = useState<"week" | "month" | "3months" | "custom">("week");
   const [customStartDate, setCustomStartDate] = useState<Date>();
   const [customEndDate, setCustomEndDate] = useState<Date>();
+  const [alertConfigs, setAlertConfigs] = useState<AlertConfig[]>([]);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [alertsLoading, setAlertsLoading] = useState(false);
+  const [updatingConfig, setUpdatingConfig] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
   useEffect(() => {
     checkAdminAccess();
+    loadAlerts();
+    loadAlertConfigs();
   }, []);
 
   const checkAdminAccess = async () => {
@@ -428,6 +453,108 @@ const Admin = () => {
   const filterAuditLogs = () => {
     if (auditFilter === 'all') return auditLogs;
     return auditLogs.filter(log => log.action === auditFilter);
+  };
+
+  const loadAlertConfigs = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('alert_configs')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      setAlertConfigs(data || []);
+    } catch (error: any) {
+      console.error('Error loading alert configs:', error);
+      toast.error('Erro ao carregar configurações de alertas');
+    }
+  };
+
+  const loadAlerts = async () => {
+    setAlertsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('alerts')
+        .select('*')
+        .order('triggered_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      setAlerts(data || []);
+    } catch (error: any) {
+      console.error('Error loading alerts:', error);
+      toast.error('Erro ao carregar alertas');
+    } finally {
+      setAlertsLoading(false);
+    }
+  };
+
+  const updateAlertConfig = async (id: string, updates: Partial<AlertConfig>) => {
+    setUpdatingConfig(id);
+    try {
+      const { error } = await supabase
+        .from('alert_configs')
+        .update(updates)
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      toast.success('Configuração atualizada com sucesso');
+      loadAlertConfigs();
+    } catch (error: any) {
+      console.error('Error updating alert config:', error);
+      toast.error('Erro ao atualizar configuração');
+    } finally {
+      setUpdatingConfig(null);
+    }
+  };
+
+  const resolveAlert = async (alertId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const { error } = await supabase
+        .from('alerts')
+        .update({
+          is_resolved: true,
+          resolved_at: new Date().toISOString(),
+          resolved_by: user?.id
+        })
+        .eq('id', alertId);
+
+      if (error) throw error;
+      
+      toast.success('Alerta marcado como resolvido');
+      loadAlerts();
+    } catch (error: any) {
+      console.error('Error resolving alert:', error);
+      toast.error('Erro ao resolver alerta');
+    }
+  };
+
+  const triggerAlertCheck = async () => {
+    try {
+      toast.info('Verificando alertas...');
+      
+      const { data, error } = await supabase.functions.invoke('check-alerts');
+
+      if (error) throw error;
+      
+      toast.success(data.message || 'Verificação de alertas concluída');
+      loadAlerts();
+    } catch (error: any) {
+      console.error('Error triggering alert check:', error);
+      toast.error('Erro ao verificar alertas');
+    }
+  };
+
+  const getAlertTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      vouchers_per_day: 'Vouchers por Dia',
+      payment_rejection_rate: 'Taxa de Rejeição de Pagamentos',
+      high_payment_volume: 'Alto Volume de Pagamentos'
+    };
+    return labels[type] || type;
   };
 
   // Métricas de Auditoria
@@ -1389,6 +1516,123 @@ const Admin = () => {
                 </div>
               </CardContent>
             </Card>
+          </CardContent>
+        </Card>
+
+        {/* Alert Configuration Card */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Settings className="h-5 w-5 text-primary" />
+                <CardTitle>Configurações de Alertas</CardTitle>
+              </div>
+              <Button onClick={triggerAlertCheck} variant="outline" size="sm">
+                <Bell className="h-4 w-4 mr-2" />
+                Verificar Agora
+              </Button>
+            </div>
+            <CardDescription>
+              Configure limites para receber alertas automáticos
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {alertConfigs.map((config) => (
+                <div key={config.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex-1">
+                    <h4 className="font-medium">{getAlertTypeLabel(config.alert_type)}</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {config.alert_type === 'vouchers_per_day' && 'Alerta quando mais de X vouchers forem criados por dia'}
+                      {config.alert_type === 'payment_rejection_rate' && 'Alerta quando a taxa de rejeição ultrapassar X%'}
+                      {config.alert_type === 'high_payment_volume' && 'Alerta quando mais de X pagamentos forem registrados por dia'}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor={`threshold-${config.id}`}>Limite:</Label>
+                      <Input
+                        id={`threshold-${config.id}`}
+                        type="number"
+                        value={config.threshold}
+                        onChange={(e) => updateAlertConfig(config.id, { threshold: parseFloat(e.target.value) })}
+                        disabled={updatingConfig === config.id}
+                        className="w-24"
+                      />
+                      {config.alert_type === 'payment_rejection_rate' && <span>%</span>}
+                    </div>
+                    <Button
+                      variant={config.enabled ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => updateAlertConfig(config.id, { enabled: !config.enabled })}
+                      disabled={updatingConfig === config.id}
+                    >
+                      {updatingConfig === config.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : config.enabled ? (
+                        'Ativo'
+                      ) : (
+                        'Inativo'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Active Alerts Card */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-orange-500" />
+              <CardTitle>Alertas Ativos</CardTitle>
+            </div>
+            <CardDescription>
+              Alertas disparados que requerem atenção
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {alertsLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : alerts.filter(a => !a.is_resolved).length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Bell className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>Nenhum alerta ativo no momento</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {alerts.filter(a => !a.is_resolved).map((alert) => (
+                  <Alert key={alert.id} variant="destructive" className="relative">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="font-medium mb-1">
+                          {getAlertTypeLabel(alertConfigs.find(c => c.id === alert.alert_config_id)?.alert_type || '')}
+                        </div>
+                        <div className="text-sm">
+                          {alert.details?.message}
+                        </div>
+                        <div className="text-xs opacity-70 mt-1">
+                          {new Date(alert.triggered_at).toLocaleString('pt-BR')}
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => resolveAlert(alert.id)}
+                        className="ml-4"
+                      >
+                        Resolver
+                      </Button>
+                    </AlertDescription>
+                  </Alert>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 

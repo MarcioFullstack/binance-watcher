@@ -14,6 +14,71 @@ export type Database = {
   }
   public: {
     Tables: {
+      alert_configs: {
+        Row: {
+          alert_type: Database["public"]["Enums"]["alert_type"]
+          created_at: string | null
+          enabled: boolean
+          id: string
+          threshold: number
+          updated_at: string | null
+        }
+        Insert: {
+          alert_type: Database["public"]["Enums"]["alert_type"]
+          created_at?: string | null
+          enabled?: boolean
+          id?: string
+          threshold: number
+          updated_at?: string | null
+        }
+        Update: {
+          alert_type?: Database["public"]["Enums"]["alert_type"]
+          created_at?: string | null
+          enabled?: boolean
+          id?: string
+          threshold?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      alerts: {
+        Row: {
+          alert_config_id: string | null
+          details: Json
+          id: string
+          is_resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+          triggered_at: string | null
+        }
+        Insert: {
+          alert_config_id?: string | null
+          details: Json
+          id?: string
+          is_resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          triggered_at?: string | null
+        }
+        Update: {
+          alert_config_id?: string | null
+          details?: Json
+          id?: string
+          is_resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          triggered_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerts_alert_config_id_fkey"
+            columns: ["alert_config_id"]
+            isOneToOne: false
+            referencedRelation: "alert_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -304,6 +369,10 @@ export type Database = {
       }
     }
     Enums: {
+      alert_type:
+        | "vouchers_per_day"
+        | "payment_rejection_rate"
+        | "high_payment_volume"
       app_role: "admin" | "user"
     }
     CompositeTypes: {
@@ -432,6 +501,11 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      alert_type: [
+        "vouchers_per_day",
+        "payment_rejection_rate",
+        "high_payment_volume",
+      ],
       app_role: ["admin", "user"],
     },
   },
