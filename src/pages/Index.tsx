@@ -1,11 +1,26 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import nottifyLogo from "@/assets/nottify-logo.png";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { 
+  TrendingUp, 
+  Shield, 
+  Bell, 
+  Zap, 
+  BarChart3, 
+  Lock,
+  ArrowRight,
+  CheckCircle2
+} from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { scrollYProgress } = useScroll();
+  const y = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
   useEffect(() => {
     checkUser();
@@ -18,39 +33,442 @@ const Index = () => {
     }
   };
 
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="text-center space-y-6 max-w-2xl">
-        <div className="flex items-center justify-center gap-4 mb-8">
-          <img src={nottifyLogo} alt="NOTTIFY" className="w-20 h-20" />
-          <h1 className="text-5xl font-bold text-foreground">NOTTIFY</h1>
-        </div>
-        
-        <p className="text-xl text-muted-foreground mb-8">
-          Monitor de PnL para Binance Futures
-        </p>
-        
-        <p className="text-muted-foreground mb-8">
-          Monitore seus lucros e perdas em tempo real, configure alertas inteligentes 
-          e proteja sua banca com kill-switch automático.
-        </p>
+  const features = [
+    {
+      icon: TrendingUp,
+      title: "Monitoramento em Tempo Real",
+      description: "Acompanhe seu PnL com atualizações a cada 5 segundos direto da Binance Futures"
+    },
+    {
+      icon: Bell,
+      title: "Alertas Inteligentes",
+      description: "Configure notificações personalizadas para lucros, perdas e limites de risco"
+    },
+    {
+      icon: Shield,
+      title: "Kill-Switch Automático",
+      description: "Proteja sua banca com fechamento automático de posições em caso de perdas"
+    },
+    {
+      icon: Lock,
+      title: "Segurança Total",
+      description: "Autenticação 2FA (TOTP) e criptografia de dados sensíveis"
+    },
+    {
+      icon: BarChart3,
+      title: "Dashboard Profissional",
+      description: "Visualize métricas, gráficos e histórico de operações de forma clara"
+    },
+    {
+      icon: Zap,
+      title: "Setup Rápido",
+      description: "Conecte sua conta Binance em minutos e comece a monitorar imediatamente"
+    }
+  ];
 
-        <div className="flex gap-4 justify-center">
-          <Button 
-            size="lg"
-            onClick={() => navigate("/login")}
+  const stats = [
+    { value: "5s", label: "Atualização" },
+    { value: "24/7", label: "Monitoramento" },
+    { value: "100%", label: "Uptime" },
+    { value: "<1min", label: "Setup" }
+  ];
+
+  const howItWorks = [
+    {
+      step: "1",
+      title: "Crie sua Conta",
+      description: "Cadastre-se com email e configure autenticação 2FA para máxima segurança"
+    },
+    {
+      step: "2",
+      title: "Conecte a Binance",
+      description: "Adicione suas API keys da Binance Futures de forma segura e criptografada"
+    },
+    {
+      step: "3",
+      title: "Configure Alertas",
+      description: "Defina limites de risco, alertas personalizados e ative o kill-switch"
+    },
+    {
+      step: "4",
+      title: "Monitore em Tempo Real",
+      description: "Acompanhe seu PnL, posições abertas e receba notificações instantâneas"
+    }
+  ];
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5
+      }
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background overflow-hidden">
+      {/* Hero Section */}
+      <motion.section 
+        className="relative min-h-screen flex items-center justify-center px-4 py-20"
+        style={{ y, opacity }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-background" />
+        
+        <motion.div 
+          className="relative z-10 text-center space-y-8 max-w-4xl mx-auto"
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <motion.div 
+            className="flex items-center justify-center gap-4 mb-8"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
           >
-            Entrar
-          </Button>
-          <Button 
-            size="lg"
-            variant="outline"
-            onClick={() => navigate("/signup")}
+            <motion.img 
+              src={nottifyLogo} 
+              alt="NOTTIFY" 
+              className="w-24 h-24"
+              whileHover={{ rotate: 360, scale: 1.1 }}
+              transition={{ duration: 0.6 }}
+            />
+            <h1 className="text-6xl md:text-7xl font-bold bg-gradient-to-r from-primary to-success bg-clip-text text-transparent">
+              NOTTIFY
+            </h1>
+          </motion.div>
+          
+          <motion.h2 
+            className="text-3xl md:text-4xl font-bold text-foreground"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
           >
-            Criar Conta
-          </Button>
+            Monitor PnL Profissional para Binance Futures
+          </motion.h2>
+          
+          <motion.p 
+            className="text-xl text-muted-foreground max-w-2xl mx-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+          >
+            Monitore seus lucros e perdas em tempo real, configure alertas inteligentes 
+            e proteja sua banca com kill-switch automático. Tudo em um dashboard profissional.
+          </motion.p>
+
+          <motion.div 
+            className="flex flex-col sm:flex-row gap-4 justify-center pt-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+          >
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button 
+                size="lg"
+                className="group text-lg px-8"
+                onClick={() => navigate("/signup")}
+              >
+                Começar Agora
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </motion.div>
+            
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button 
+                size="lg"
+                variant="outline"
+                className="text-lg px-8"
+                onClick={() => navigate("/login")}
+              >
+                Já Tenho Conta
+              </Button>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+
+        {/* Scroll Indicator */}
+        <motion.div 
+          className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
+          animate={{ y: [0, 10, 0] }}
+          transition={{ repeat: Infinity, duration: 1.5 }}
+        >
+          <div className="w-6 h-10 border-2 border-primary/50 rounded-full flex justify-center">
+            <motion.div 
+              className="w-1.5 h-1.5 bg-primary rounded-full mt-2"
+              animate={{ y: [0, 20, 0] }}
+              transition={{ repeat: Infinity, duration: 1.5 }}
+            />
+          </div>
+        </motion.div>
+      </motion.section>
+
+      {/* Stats Section */}
+      <section className="py-20 px-4 bg-card/50 backdrop-blur-sm">
+        <motion.div 
+          className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+        >
+          {stats.map((stat, index) => (
+            <motion.div 
+              key={index}
+              className="text-center"
+              variants={itemVariants}
+              whileHover={{ scale: 1.1 }}
+            >
+              <div className="text-4xl md:text-5xl font-bold text-primary mb-2">
+                {stat.value}
+              </div>
+              <div className="text-muted-foreground">{stat.label}</div>
+            </motion.div>
+          ))}
+        </motion.div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 px-4">
+        <div className="max-w-6xl mx-auto">
+          <motion.div 
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+              Tudo que Você Precisa
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Ferramentas profissionais para monitorar e proteger seus investimentos
+            </p>
+          </motion.div>
+
+          <motion.div 
+            className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+          >
+            {features.map((feature, index) => (
+              <motion.div
+                key={index}
+                variants={itemVariants}
+                whileHover={{ y: -8, transition: { duration: 0.3 } }}
+              >
+                <Card className="h-full border-2 hover:border-primary/50 transition-colors bg-card/50 backdrop-blur-sm">
+                  <CardContent className="p-6 space-y-4">
+                    <motion.div 
+                      className="w-14 h-14 rounded-lg bg-primary/10 flex items-center justify-center"
+                      whileHover={{ rotate: 360 }}
+                      transition={{ duration: 0.6 }}
+                    >
+                      <feature.icon className="h-7 w-7 text-primary" />
+                    </motion.div>
+                    <h3 className="text-xl font-bold">{feature.title}</h3>
+                    <p className="text-muted-foreground">{feature.description}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
-      </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="py-20 px-4 bg-card/30 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto">
+          <motion.div 
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+              Como Funciona
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              Setup simples em 4 passos
+            </p>
+          </motion.div>
+
+          <motion.div 
+            className="grid md:grid-cols-2 lg:grid-cols-4 gap-8"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+          >
+            {howItWorks.map((item, index) => (
+              <motion.div
+                key={index}
+                className="relative"
+                variants={itemVariants}
+              >
+                <Card className="h-full border-2 hover:border-primary/50 transition-colors bg-card/50 backdrop-blur-sm">
+                  <CardContent className="p-6 space-y-4">
+                    <motion.div 
+                      className="w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-2xl font-bold mb-4"
+                      whileHover={{ scale: 1.2, rotate: 360 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      {item.step}
+                    </motion.div>
+                    <h3 className="text-xl font-bold">{item.title}</h3>
+                    <p className="text-muted-foreground">{item.description}</p>
+                  </CardContent>
+                </Card>
+                
+                {index < howItWorks.length - 1 && (
+                  <motion.div 
+                    className="hidden lg:block absolute top-1/2 -right-4 transform -translate-y-1/2 z-10"
+                    initial={{ x: -10, opacity: 0 }}
+                    whileInView={{ x: 0, opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.5 + index * 0.1 }}
+                  >
+                    <ArrowRight className="h-8 w-8 text-primary" />
+                  </motion.div>
+                )}
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="py-20 px-4">
+        <div className="max-w-4xl mx-auto">
+          <motion.div 
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+              Preço Simples e Transparente
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              Acesso completo a todas as funcionalidades
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            whileHover={{ scale: 1.02 }}
+          >
+            <Card className="max-w-md mx-auto border-2 border-primary">
+              <CardContent className="p-8 text-center space-y-6">
+                <div>
+                  <div className="text-5xl font-bold text-primary mb-2">$15</div>
+                  <div className="text-muted-foreground">por mês</div>
+                </div>
+
+                <ul className="space-y-3 text-left">
+                  {[
+                    "Monitoramento em tempo real (5s)",
+                    "Alertas ilimitados personalizáveis",
+                    "Kill-switch automático",
+                    "Autenticação 2FA",
+                    "Dashboard profissional",
+                    "Múltiplas contas Binance",
+                    "Suporte prioritário"
+                  ].map((feature, index) => (
+                    <motion.li 
+                      key={index}
+                      className="flex items-start gap-2"
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.1 * index }}
+                    >
+                      <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                      <span>{feature}</span>
+                    </motion.li>
+                  ))}
+                </ul>
+
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button 
+                    size="lg" 
+                    className="w-full text-lg"
+                    onClick={() => navigate("/signup")}
+                  >
+                    Começar Agora
+                  </Button>
+                </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 px-4 bg-gradient-to-r from-primary/10 via-success/10 to-primary/10">
+        <motion.div 
+          className="max-w-4xl mx-auto text-center space-y-8"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <h2 className="text-4xl md:text-5xl font-bold">
+            Pronto para Proteger Seus Investimentos?
+          </h2>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            Junte-se aos traders que já estão monitorando suas operações com segurança e eficiência
+          </p>
+          <motion.div
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Button 
+              size="lg"
+              className="text-lg px-8"
+              onClick={() => navigate("/signup")}
+            >
+              Criar Conta Grátis
+            </Button>
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-12 px-4 border-t border-border">
+        <div className="max-w-6xl mx-auto text-center space-y-4">
+          <div className="flex items-center justify-center gap-3">
+            <img src={nottifyLogo} alt="NOTTIFY" className="w-8 h-8" />
+            <span className="text-xl font-bold">NOTTIFY</span>
+          </div>
+          <p className="text-muted-foreground">
+            Monitor PnL Profissional para Binance Futures
+          </p>
+          <div className="text-sm text-muted-foreground">
+            © 2025 NOTTIFY. Todos os direitos reservados.
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
