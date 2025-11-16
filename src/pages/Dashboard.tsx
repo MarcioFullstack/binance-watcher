@@ -31,6 +31,18 @@ const Dashboard = () => {
 
       setUser(user);
 
+      // Verificar assinatura
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!subscription || subscription.status !== 'active') {
+        navigate("/payment");
+        return;
+      }
+
       // Verificar se existe conta Binance configurada
       const { data: accounts } = await supabase
         .from('binance_accounts')
@@ -38,7 +50,12 @@ const Dashboard = () => {
         .eq('user_id', user.id)
         .eq('is_active', true);
 
-      setHasAccount(accounts && accounts.length > 0);
+      if (!accounts || accounts.length === 0) {
+        navigate("/setup-binance");
+        return;
+      }
+
+      setHasAccount(true);
     } catch (error) {
       console.error("Error checking user:", error);
       navigate("/login");
@@ -70,25 +87,7 @@ const Dashboard = () => {
       <div className="max-w-7xl mx-auto space-y-6">
         <DashboardHeader onLogout={handleLogout} />
         
-        {hasAccount === false ? (
-          <Card className="border-primary/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5" />
-                Configure sua conta Binance
-              </CardTitle>
-              <CardDescription>
-                Para começar a monitorar suas operações, você precisa configurar sua API da Binance.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={() => navigate("/settings")} className="w-full sm:w-auto">
-                <Settings className="mr-2 h-4 w-4" />
-                Ir para Configurações
-              </Button>
-            </CardContent>
-          </Card>
-        ) : hasAccount === true ? (
+        {hasAccount ? (
           <>
             <BalanceCards />
             <PnLCards />

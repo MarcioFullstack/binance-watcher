@@ -10,9 +10,13 @@ import { Loader2 } from "lucide-react";
 import nottifyLogo from "@/assets/nottify-logo.png";
 
 const Signup = () => {
+  const [step, setStep] = useState(1); // 1: email/senha, 2: 2FA
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [totpCode, setTotpCode] = useState("");
+  const [totpSecret, setTotpSecret] = useState("");
+  const [qrCodeUrl, setQrCodeUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
