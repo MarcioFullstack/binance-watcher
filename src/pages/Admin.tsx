@@ -9,9 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Loader2, Check, X, ArrowLeft, Shield, TrendingUp, Users, DollarSign, Activity, Ticket, Copy, Download } from "lucide-react";
+import { Loader2, Check, X, ArrowLeft, Shield, TrendingUp, Users, DollarSign, Activity, Ticket, Copy, Download, Calendar } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format, subDays, subMonths, startOfDay, endOfDay } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface Payment {
   id: string;
@@ -86,6 +90,9 @@ const Admin = () => {
   const [auditLogsLoading, setAuditLogsLoading] = useState(false);
   const [auditFilter, setAuditFilter] = useState<string>("all");
   const [userProfiles, setUserProfiles] = useState<Record<string, string>>({});
+  const [dateRange, setDateRange] = useState<"week" | "month" | "3months" | "custom">("week");
+  const [customStartDate, setCustomStartDate] = useState<Date>();
+  const [customEndDate, setCustomEndDate] = useState<Date>();
   const navigate = useNavigate();
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
@@ -425,15 +432,54 @@ const Admin = () => {
 
   // Métricas de Auditoria
   const getAuditMetrics = () => {
-    // Ações por dia (últimos 7 dias)
-    const last7Days = Array.from({ length: 7 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (6 - i));
+    // Determinar o período de filtro
+    const now = new Date();
+    let startDate: Date;
+    let endDate = now;
+    let daysInRange = 7;
+
+    switch (dateRange) {
+      case "week":
+        startDate = subDays(now, 7);
+        daysInRange = 7;
+        break;
+      case "month":
+        startDate = subMonths(now, 1);
+        daysInRange = 30;
+        break;
+      case "3months":
+        startDate = subMonths(now, 3);
+        daysInRange = 90;
+        break;
+      case "custom":
+        if (customStartDate && customEndDate) {
+          startDate = startOfDay(customStartDate);
+          endDate = endOfDay(customEndDate);
+          daysInRange = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        } else {
+          startDate = subDays(now, 7);
+          daysInRange = 7;
+        }
+        break;
+      default:
+        startDate = subDays(now, 7);
+    }
+
+    // Filtrar logs pelo período
+    const filteredLogs = auditLogs.filter(log => {
+      const logDate = new Date(log.created_at);
+      return logDate >= startDate && logDate <= endDate;
+    });
+
+    // Gerar array de datas para o período
+    const dateArray = Array.from({ length: Math.min(daysInRange, 30) }, (_, i) => {
+      const date = new Date(startDate);
+      date.setDate(date.getDate() + i * Math.ceil(daysInRange / 30));
       return date.toISOString().split('T')[0];
     });
 
-    const actionsByDay = last7Days.map(date => {
-      const count = auditLogs.filter(log => 
+    const actionsByDay = dateArray.map(date => {
+      const count = filteredLogs.filter(log => 
         log.created_at.split('T')[0] === date
       ).length;
       return {
@@ -444,7 +490,7 @@ const Admin = () => {
 
     // Ações por tipo
     const actionCounts: Record<string, number> = {};
-    auditLogs.forEach(log => {
+    filteredLogs.forEach(log => {
       actionCounts[log.action] = (actionCounts[log.action] || 0) + 1;
     });
 
@@ -456,7 +502,7 @@ const Admin = () => {
 
     // Top usuários administrativos
     const userActionCounts: Record<string, number> = {};
-    auditLogs.forEach(log => {
+    filteredLogs.forEach(log => {
       userActionCounts[log.user_id] = (userActionCounts[log.user_id] || 0) + 1;
     });
 
@@ -469,19 +515,43 @@ const Admin = () => {
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
+    // Calcular ações de hoje
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const actionsToday = filteredLogs.filter(log => 
+      new Date(log.created_at) >= todayStart
+    ).length;
+
     return {
       actionsByDay,
       actionsByType,
       topUsers,
-      totalActions: auditLogs.length,
-      actionsToday: auditLogs.filter(log => 
-        log.created_at.split('T')[0] === new Date().toISOString().split('T')[0]
-      ).length,
-      uniqueUsers: new Set(auditLogs.map(log => log.user_id)).size
+      totalActions: filteredLogs.length,
+      actionsToday,
+      uniqueUsers: new Set(filteredLogs.map(log => log.user_id)).size,
+      avgPerDay: Math.round(filteredLogs.length / Math.max(daysInRange, 1))
     };
   };
 
   const auditMetrics = getAuditMetrics();
+
+  const getPeriodLabel = () => {
+    switch (dateRange) {
+      case "week":
+        return "Última Semana";
+      case "month":
+        return "Último Mês";
+      case "3months":
+        return "Últimos 3 Meses";
+      case "custom":
+        if (customStartDate && customEndDate) {
+          return `${format(customStartDate, "dd/MM/yy")} - ${format(customEndDate, "dd/MM/yy")}`;
+        }
+        return "Período Customizado";
+      default:
+        return "Última Semana";
+    }
+  };
 
   const filterVouchers = () => {
     let filtered = vouchers;
@@ -1119,12 +1189,73 @@ const Admin = () => {
         {/* Audit Metrics Dashboard */}
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              <CardTitle>Métricas de Administração</CardTitle>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-primary" />
+                <CardTitle>Métricas de Administração</CardTitle>
+              </div>
+              <div className="flex items-center gap-2">
+                {/* Filtro de Período Rápido */}
+                <Tabs value={dateRange} onValueChange={(v) => setDateRange(v as typeof dateRange)}>
+                  <TabsList>
+                    <TabsTrigger value="week">Semana</TabsTrigger>
+                    <TabsTrigger value="month">Mês</TabsTrigger>
+                    <TabsTrigger value="3months">3 Meses</TabsTrigger>
+                    <TabsTrigger value="custom">Custom</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                
+                {/* Date Range Picker para Custom */}
+                {dateRange === "custom" && (
+                  <div className="flex items-center gap-2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="gap-2">
+                          <Calendar className="h-4 w-4" />
+                          {customStartDate ? format(customStartDate, "dd/MM/yy") : "Início"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarComponent
+                          mode="single"
+                          selected={customStartDate}
+                          onSelect={setCustomStartDate}
+                          disabled={(date) => date > new Date()}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    
+                    <span className="text-muted-foreground">até</span>
+                    
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="gap-2">
+                          <Calendar className="h-4 w-4" />
+                          {customEndDate ? format(customEndDate, "dd/MM/yy") : "Fim"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarComponent
+                          mode="single"
+                          selected={customEndDate}
+                          onSelect={setCustomEndDate}
+                          disabled={(date) => 
+                            date > new Date() || 
+                            (customStartDate ? date < customStartDate : false)
+                          }
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                )}
+              </div>
             </div>
             <CardDescription>
-              Dashboard com estatísticas e análises de ações administrativas
+              Dashboard com estatísticas e análises de ações administrativas - {getPeriodLabel()}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -1158,10 +1289,10 @@ const Admin = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {Math.round(auditMetrics.totalActions / 7)}
+                    {auditMetrics.avgPerDay}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Últimos 7 dias
+                    No período selecionado
                   </p>
                 </CardContent>
               </Card>
@@ -1173,7 +1304,7 @@ const Admin = () => {
               <Card className="bg-card/50">
                 <CardHeader>
                   <CardTitle className="text-base">Ações ao Longo do Tempo</CardTitle>
-                  <CardDescription>Últimos 7 dias</CardDescription>
+                  <CardDescription>{getPeriodLabel()}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={250}>
