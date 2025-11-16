@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Settings, LogOut, Bell } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import nottifyLogo from "@/assets/nottify-logo.png";
 
 interface DashboardHeaderProps {
   onLogout: () => void;
@@ -15,9 +16,7 @@ export const DashboardHeader = ({ onLogout }: DashboardHeaderProps) => {
   return (
     <header className="flex flex-wrap items-center justify-between gap-4">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-          <span className="text-primary-foreground font-bold">N</span>
-        </div>
+        <img src={nottifyLogo} alt="NOTTIFY" className="w-12 h-12" />
         <div>
           <h1 className="text-2xl font-bold text-foreground">Monitor PnL</h1>
           <p className="text-sm text-muted-foreground">USD/S-M</p>

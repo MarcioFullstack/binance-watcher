@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import nottifyLogo from "@/assets/nottify-logo.png";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -20,10 +21,8 @@ const Index = () => {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="text-center space-y-6 max-w-2xl">
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-2xl">N</span>
-          </div>
+        <div className="flex items-center justify-center gap-4 mb-8">
+          <img src={nottifyLogo} alt="NOTTIFY" className="w-20 h-20" />
           <h1 className="text-5xl font-bold text-foreground">NOTTIFY</h1>
         </div>
         
