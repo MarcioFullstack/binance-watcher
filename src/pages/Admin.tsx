@@ -176,6 +176,67 @@ const Admin = () => {
     }
   };
 
+  const loadVouchers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("vouchers")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      setVouchers(data || []);
+    } catch (error) {
+      console.error("Error loading vouchers:", error);
+      toast.error("Erro ao carregar vouchers");
+    }
+  };
+
+  const handleCreateVoucher = async () => {
+    if (!voucherCode.trim()) {
+      toast.error("Digite um código para o voucher");
+      return;
+    }
+
+    if (!/^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(voucherCode)) {
+      toast.error("O código deve estar no formato XXXX-XXXX-XXXX-XXXX");
+      return;
+    }
+
+    const days = parseInt(voucherDays);
+    if (isNaN(days) || days < 1 || days > 365) {
+      toast.error("Dias deve ser um número entre 1 e 365");
+      return;
+    }
+
+    setCreatingVoucher(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-voucher", {
+        body: { code: voucherCode, days },
+      });
+
+      if (error) throw error;
+
+      toast.success("Voucher criado com sucesso!");
+      setVoucherCode("");
+      setVoucherDays("30");
+      loadVouchers();
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao criar voucher");
+    } finally {
+      setCreatingVoucher(false);
+    }
+  };
+
+  const handleCopyVoucher = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      toast.success("Código copiado!");
+    } catch (error) {
+      toast.error("Erro ao copiar código");
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: any; label: string }> = {
       pending: { variant: "outline", label: "Pendente" },
