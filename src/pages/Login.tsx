@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
@@ -14,6 +15,9 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -49,6 +53,33 @@ const Login = () => {
       if (error) throw error;
     } catch (error: any) {
       toast.error(error.message || "Erro ao fazer login com Google");
+    }
+  };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!resetEmail) {
+      toast.error("Por favor, informe seu email");
+      return;
+    }
+
+    setResetLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      toast.success("Email de recuperação enviado! Verifique sua caixa de entrada.");
+      setResetDialogOpen(false);
+      setResetEmail("");
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao enviar email de recuperação");
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -114,6 +145,49 @@ const Login = () => {
                 "Entrar"
               )}
             </Button>
+
+            <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+              <DialogTrigger asChild>
+                <button
+                  type="button"
+                  className="text-sm text-primary hover:underline text-center w-full"
+                >
+                  Esqueceu sua senha?
+                </button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Recuperar Senha</DialogTitle>
+                  <DialogDescription>
+                    Digite seu email para receber um link de recuperação de senha.
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handlePasswordReset} className="space-y-4 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-email">Email</Label>
+                    <Input
+                      id="reset-email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      required
+                      disabled={resetLoading}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={resetLoading}>
+                    {resetLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Enviando...
+                      </>
+                    ) : (
+                      "Enviar Link de Recuperação"
+                    )}
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
             
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
