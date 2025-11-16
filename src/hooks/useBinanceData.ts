@@ -61,5 +61,6 @@ export const activateVoucher = async (code: string) => {
   });
   
   if (error) throw error;
+  if (data?.error_code) throw data;
   return data;
 };

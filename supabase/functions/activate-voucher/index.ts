@@ -18,7 +18,7 @@ serve(async (req) => {
     if (!authHeader) {
       console.error('No authorization header provided');
       return new Response(
-        JSON.stringify({ error: 'Não autenticado. Faça login novamente.' }),
+        JSON.stringify({ error_code: 'NOT_AUTHENTICATED' }),
         {
           status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -41,7 +41,7 @@ serve(async (req) => {
     if (userError || !user) {
       console.error('User authentication error:', userError);
       return new Response(
-        JSON.stringify({ error: 'Sessão inválida. Faça login novamente.' }),
+        JSON.stringify({ error_code: 'INVALID_SESSION' }),
         {
           status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -56,7 +56,7 @@ serve(async (req) => {
     if (!code || typeof code !== 'string') {
       console.error('Invalid voucher code provided:', code);
       return new Response(
-        JSON.stringify({ error: 'Código do voucher é obrigatório' }),
+        JSON.stringify({ error_code: 'CODE_REQUIRED' }),
         {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -73,21 +73,10 @@ serve(async (req) => {
       .eq('code', code.trim().toUpperCase())
       .single();
 
-    if (voucherError) {
-      console.error('Error fetching voucher:', voucherError);
+    if (voucherError || !voucher) {
+      console.error('Error fetching voucher:', voucherError, 'Code:', code);
       return new Response(
-        JSON.stringify({ error: 'Voucher não encontrado ou inválido' }),
-        {
-          status: 404,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    if (!voucher) {
-      console.error('Voucher not found:', code);
-      return new Response(
-        JSON.stringify({ error: 'Voucher não encontrado' }),
+        JSON.stringify({ error_code: 'VOUCHER_NOT_FOUND' }),
         {
           status: 404,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -98,7 +87,7 @@ serve(async (req) => {
     if (voucher.is_used) {
       console.error('Voucher already used:', code);
       return new Response(
-        JSON.stringify({ error: 'Este voucher já foi utilizado' }),
+        JSON.stringify({ error_code: 'VOUCHER_ALREADY_USED' }),
         {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -121,7 +110,7 @@ serve(async (req) => {
     if (updateVoucherError) {
       console.error('Error updating voucher:', updateVoucherError);
       return new Response(
-        JSON.stringify({ error: 'Erro ao marcar voucher como usado' }),
+        JSON.stringify({ error_code: 'UPDATE_VOUCHER_ERROR' }),
         {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -170,7 +159,7 @@ serve(async (req) => {
     if (subError) {
       console.error('Subscription error:', subError);
       return new Response(
-        JSON.stringify({ error: 'Erro ao ativar assinatura. Contate o suporte.' }),
+        JSON.stringify({ error_code: 'SUBSCRIPTION_ERROR' }),
         {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -183,7 +172,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Voucher ativado com sucesso! ${voucher.days} dias de acesso.`,
+        days: voucher.days,
         expiresAt: expiresAt.toISOString(),
       }),
       { 
@@ -196,7 +185,7 @@ serve(async (req) => {
     console.error('Unexpected error in activate-voucher function:', error);
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Erro inesperado ao ativar voucher. Tente novamente.' 
+        error_code: 'UNEXPECTED_ERROR'
       }),
       {
         status: 500,

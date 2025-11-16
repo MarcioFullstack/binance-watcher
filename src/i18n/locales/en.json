@@ -76,11 +76,19 @@
       "errorActivating": "Error activating subscription. Contact support.",
       "unexpectedError": "Unexpected error activating voucher. Please try again.",
       "defaultError": "Error activating voucher",
-      "registerPaymentError": "Error registering payment"
+      "registerPaymentError": "Error registering payment",
+      "NOT_AUTHENTICATED": "Not authenticated. Please login again.",
+      "INVALID_SESSION": "Invalid session. Please login again.",
+      "CODE_REQUIRED": "Voucher code is required",
+      "VOUCHER_NOT_FOUND": "Voucher not found or invalid",
+      "VOUCHER_ALREADY_USED": "This voucher has already been used",
+      "UPDATE_VOUCHER_ERROR": "Error processing voucher. Please try again.",
+      "SUBSCRIPTION_ERROR": "Error activating subscription. Contact support.",
+      "UNEXPECTED_ERROR": "Unexpected error. Please try again later."
     },
     "success": {
       "paymentRegistered": "Payment registered! Waiting for confirmation...",
-      "voucherActivated": "Voucher activated successfully!",
+      "voucherActivated": "Voucher activated successfully! {{days}} days of access.",
       "daysAccess": "days of access"
     }
   },

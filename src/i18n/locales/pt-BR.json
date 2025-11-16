@@ -76,11 +76,19 @@
       "errorActivating": "Erro ao ativar assinatura. Contate o suporte.",
       "unexpectedError": "Erro inesperado ao ativar voucher. Tente novamente.",
       "defaultError": "Erro ao ativar voucher",
-      "registerPaymentError": "Erro ao registrar pagamento"
+      "registerPaymentError": "Erro ao registrar pagamento",
+      "NOT_AUTHENTICATED": "Não autenticado. Faça login novamente.",
+      "INVALID_SESSION": "Sessão inválida. Faça login novamente.",
+      "CODE_REQUIRED": "Código do voucher é obrigatório",
+      "VOUCHER_NOT_FOUND": "Voucher não encontrado ou inválido",
+      "VOUCHER_ALREADY_USED": "Este voucher já foi utilizado",
+      "UPDATE_VOUCHER_ERROR": "Erro ao processar voucher. Tente novamente.",
+      "SUBSCRIPTION_ERROR": "Erro ao ativar assinatura. Contate o suporte.",
+      "UNEXPECTED_ERROR": "Erro inesperado. Tente novamente mais tarde."
     },
     "success": {
       "paymentRegistered": "Pagamento registrado! Aguardando confirmação...",
-      "voucherActivated": "Voucher ativado com sucesso!",
+      "voucherActivated": "Voucher ativado com sucesso! {{days}} dias de acesso.",
       "daysAccess": "dias de acesso"
     }
   },
