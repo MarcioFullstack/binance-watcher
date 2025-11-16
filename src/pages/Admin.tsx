@@ -7,8 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Loader2, Check, X, ArrowLeft, Shield } from "lucide-react";
+import { Loader2, Check, X, ArrowLeft, Shield, TrendingUp, Users, DollarSign, Activity } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 interface Payment {
   id: string;
@@ -23,12 +24,35 @@ interface Payment {
   created_at: string;
 }
 
+interface AdminStats {
+  payments: {
+    total: number;
+    confirmed: number;
+    pending: number;
+    rejected: number;
+    totalReceived: string;
+    conversionRate: string;
+    byDay: Array<{ date: string; count: number; amount: number }>;
+  };
+  users: {
+    total: number;
+    active: number;
+    inactive: number;
+    subscriptionsByStatus: Record<string, number>;
+  };
+  topUsers: Array<{ userId: string; amount: number }>;
+}
+
 const Admin = () => {
   const [loading, setLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [stats, setStats] = useState<AdminStats | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
   useEffect(() => {
     checkAdminAccess();
@@ -58,11 +82,27 @@ const Admin = () => {
 
       setIsAdmin(true);
       loadPayments();
+      loadStats();
     } catch (error) {
       console.error("Error checking admin access:", error);
       navigate("/dashboard");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadStats = async () => {
+    try {
+      setStatsLoading(true);
+      const { data, error } = await supabase.functions.invoke("admin-stats");
+
+      if (error) throw error;
+      setStats(data);
+    } catch (error) {
+      console.error("Error loading stats:", error);
+      toast.error("Erro ao carregar estatísticas");
+    } finally {
+      setStatsLoading(false);
     }
   };
 
@@ -92,6 +132,7 @@ const Admin = () => {
 
       toast.success("Pagamento aprovado e assinatura ativada!");
       loadPayments();
+      loadStats();
     } catch (error: any) {
       toast.error(error.message || "Erro ao aprovar pagamento");
     } finally {
@@ -110,6 +151,7 @@ const Admin = () => {
 
       toast.success("Pagamento rejeitado");
       loadPayments();
+      loadStats();
     } catch (error: any) {
       toast.error(error.message || "Erro ao rejeitar pagamento");
     } finally {
@@ -172,6 +214,174 @@ const Admin = () => {
             </AlertDescription>
           </Alert>
         )}
+
+        {/* Estatísticas */}
+        {statsLoading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : stats ? (
+          <>
+            {/* Cards de Métricas */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Recebido</CardTitle>
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">${stats.payments.totalReceived}</div>
+                  <p className="text-xs text-muted-foreground">
+                    {stats.payments.confirmed} pagamentos confirmados
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Taxa de Conversão</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.payments.conversionRate}%</div>
+                  <p className="text-xs text-muted-foreground">
+                    {stats.payments.confirmed} de {stats.payments.total} pagamentos
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Usuários Ativos</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.users.active}</div>
+                  <p className="text-xs text-muted-foreground">
+                    de {stats.users.total} usuários totais
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Pagamentos Pendentes</CardTitle>
+                  <Activity className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.payments.pending}</div>
+                  <p className="text-xs text-muted-foreground">
+                    aguardando aprovação
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Gráficos */}
+            <div className="grid gap-4 md:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Pagamentos por Dia</CardTitle>
+                  <CardDescription>Últimos 30 dias</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={stats.payments.byDay}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="date" 
+                        tickFormatter={(value) => new Date(value).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                      />
+                      <YAxis />
+                      <Tooltip 
+                        labelFormatter={(value) => new Date(value).toLocaleDateString('pt-BR')}
+                      />
+                      <Legend />
+                      <Line type="monotone" dataKey="count" stroke="#8884d8" name="Quantidade" />
+                      <Line type="monotone" dataKey="amount" stroke="#82ca9d" name="Valor ($)" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Usuários por Status</CardTitle>
+                  <CardDescription>Ativos vs Inativos</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'Ativos', value: stats.users.active },
+                          { name: 'Inativos', value: stats.users.inactive },
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {[0, 1].map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Status de Pagamentos</CardTitle>
+                  <CardDescription>Distribuição por status</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={[
+                      { name: 'Confirmados', value: stats.payments.confirmed },
+                      { name: 'Pendentes', value: stats.payments.pending },
+                      { name: 'Rejeitados', value: stats.payments.rejected },
+                    ]}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="value" fill="#8884d8" name="Quantidade" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Top 5 Usuários</CardTitle>
+                  <CardDescription>Por valor total de pagamentos</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {stats.topUsers.map((user, index) => (
+                      <div key={user.userId} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+                            <span className="text-sm font-bold">{index + 1}</span>
+                          </div>
+                          <span className="font-mono text-xs">{user.userId.slice(0, 8)}...</span>
+                        </div>
+                        <span className="font-bold">${user.amount.toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        ) : null}
 
         <Card>
           <CardHeader>
