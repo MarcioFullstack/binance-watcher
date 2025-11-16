@@ -1,6 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import nottifyLogo from "@/assets/nottify-logo.png";
@@ -13,7 +19,8 @@ import {
   BarChart3, 
   Lock,
   ArrowRight,
-  CheckCircle2
+  CheckCircle2,
+  HelpCircle
 } from "lucide-react";
 
 const Index = () => {
@@ -348,6 +355,173 @@ const Index = () => {
                 )}
               </motion.div>
             ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 px-4 bg-card/30 backdrop-blur-sm">
+        <div className="max-w-4xl mx-auto">
+          <motion.div 
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <motion.div 
+              className="flex items-center justify-center gap-3 mb-4"
+              initial={{ scale: 0.8, opacity: 0 }}
+              whileInView={{ scale: 1, opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <HelpCircle className="h-10 w-10 text-primary" />
+              <h2 className="text-4xl md:text-5xl font-bold">
+                Perguntas Frequentes
+              </h2>
+            </motion.div>
+            <p className="text-xl text-muted-foreground">
+              Tire suas dúvidas sobre o NOTTIFY
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <Accordion type="single" collapsible className="space-y-4">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+              >
+                <AccordionItem value="item-1" className="bg-card/50 backdrop-blur-sm border-2 border-border rounded-lg px-6">
+                  <AccordionTrigger className="text-lg font-semibold hover:text-primary">
+                    Como funciona o monitoramento em tempo real?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">
+                    O NOTTIFY se conecta diretamente à API da Binance Futures usando suas credenciais seguras. 
+                    A cada 5 segundos, coletamos informações atualizadas sobre seu saldo, posições abertas e PnL. 
+                    Todos os dados são processados em tempo real e exibidos no dashboard de forma clara e organizada.
+                  </AccordionContent>
+                </AccordionItem>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+              >
+                <AccordionItem value="item-2" className="bg-card/50 backdrop-blur-sm border-2 border-border rounded-lg px-6">
+                  <AccordionTrigger className="text-lg font-semibold hover:text-primary">
+                    Minhas API keys da Binance estão seguras?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">
+                    Sim! Utilizamos criptografia de ponta a ponta para armazenar suas credenciais. Suas API keys 
+                    são criptografadas antes de serem salvas no banco de dados. Além disso, implementamos autenticação 
+                    2FA (TOTP) para proteger o acesso à sua conta. Recomendamos criar API keys apenas com permissões 
+                    de leitura e execução de ordens, sem permissão de saque.
+                  </AccordionContent>
+                </AccordionItem>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3 }}
+              >
+                <AccordionItem value="item-3" className="bg-card/50 backdrop-blur-sm border-2 border-border rounded-lg px-6">
+                  <AccordionTrigger className="text-lg font-semibold hover:text-primary">
+                    Como funciona o Kill-Switch automático?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">
+                    O Kill-Switch é uma proteção automática que fecha todas as suas posições abertas quando sua perda 
+                    atinge o limite configurado. Você define a porcentagem máxima de perda aceitável e o saldo inicial. 
+                    Quando o limite é atingido, o sistema fecha todas as posições instantaneamente para proteger sua banca. 
+                    Você pode ativar/desativar e configurar o reset diário nas configurações.
+                  </AccordionContent>
+                </AccordionItem>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.4 }}
+              >
+                <AccordionItem value="item-4" className="bg-card/50 backdrop-blur-sm border-2 border-border rounded-lg px-6">
+                  <AccordionTrigger className="text-lg font-semibold hover:text-primary">
+                    Posso conectar múltiplas contas da Binance?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">
+                    Sim! O NOTTIFY permite adicionar e gerenciar múltiplas contas Binance. Você pode alternar entre 
+                    elas facilmente no dashboard e configurar alertas e proteções específicas para cada conta. 
+                    Todas as contas são protegidas com a mesma segurança e podem ser monitoradas simultaneamente.
+                  </AccordionContent>
+                </AccordionItem>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.5 }}
+              >
+                <AccordionItem value="item-5" className="bg-card/50 backdrop-blur-sm border-2 border-border rounded-lg px-6">
+                  <AccordionTrigger className="text-lg font-semibold hover:text-primary">
+                    Como funcionam os alertas personalizados?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">
+                    Você pode configurar alertas para diversos eventos: lucro atingido, perda máxima, mudança de saldo, 
+                    e muito mais. Os alertas aparecem em tempo real no dashboard e podem ser customizados com diferentes 
+                    níveis de severidade. Configure os limites que fazem sentido para sua estratégia de trading.
+                  </AccordionContent>
+                </AccordionItem>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.6 }}
+              >
+                <AccordionItem value="item-6" className="bg-card/50 backdrop-blur-sm border-2 border-border rounded-lg px-6">
+                  <AccordionTrigger className="text-lg font-semibold hover:text-primary">
+                    Qual é a política de cancelamento?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">
+                    A assinatura mensal de $15 dá acesso completo por 30 dias. Você pode cancelar a qualquer momento 
+                    através das configurações da sua conta. Não há período de fidelidade ou taxas de cancelamento. 
+                    Seu acesso permanece ativo até o fim do período pago. Também oferecemos vouchers para períodos 
+                    específicos de acesso.
+                  </AccordionContent>
+                </AccordionItem>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.7 }}
+              >
+                <AccordionItem value="item-7" className="bg-card/50 backdrop-blur-sm border-2 border-border rounded-lg px-6">
+                  <AccordionTrigger className="text-lg font-semibold hover:text-primary">
+                    Quais métodos de pagamento são aceitos?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">
+                    Aceitamos pagamentos em criptomoedas (valor equivalente a $15 USD) através de várias redes blockchain. 
+                    O pagamento é confirmado automaticamente após 3 confirmações na rede. Também oferecemos vouchers 
+                    que podem ser ativados instantaneamente para acesso imediato. O processo é rápido, seguro e totalmente automatizado.
+                  </AccordionContent>
+                </AccordionItem>
+              </motion.div>
+            </Accordion>
           </motion.div>
         </div>
       </section>
