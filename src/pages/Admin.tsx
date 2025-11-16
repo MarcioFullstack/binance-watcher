@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Loader2, Check, X, ArrowLeft, Shield, TrendingUp, Users, DollarSign, Activity } from "lucide-react";
+import { Loader2, Check, X, ArrowLeft, Shield, TrendingUp, Users, DollarSign, Activity, Ticket, Copy } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
@@ -43,6 +45,16 @@ interface AdminStats {
   topUsers: Array<{ userId: string; amount: number }>;
 }
 
+interface Voucher {
+  id: string;
+  code: string;
+  days: number;
+  is_used: boolean;
+  used_by: string | null;
+  used_at: string | null;
+  created_at: string;
+}
+
 const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -50,6 +62,10 @@ const Admin = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [vouchers, setVouchers] = useState<Voucher[]>([]);
+  const [voucherCode, setVoucherCode] = useState("");
+  const [voucherDays, setVoucherDays] = useState("30");
+  const [creatingVoucher, setCreatingVoucher] = useState(false);
   const navigate = useNavigate();
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
@@ -83,6 +99,7 @@ const Admin = () => {
       setIsAdmin(true);
       loadPayments();
       loadStats();
+      loadVouchers();
     } catch (error) {
       console.error("Error checking admin access:", error);
       navigate("/dashboard");
@@ -491,6 +508,132 @@ const Admin = () => {
                 </TabsContent>
               ))}
             </Tabs>
+          </CardContent>
+        </Card>
+
+        {/* Vouchers Card */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Ticket className="h-5 w-5 text-primary" />
+              <CardTitle>Gerenciar Vouchers</CardTitle>
+            </div>
+            <CardDescription>
+              Criar novos vouchers para ativar assinaturas
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Formulário de Criação */}
+            <div className="grid gap-4 rounded-lg border p-4 bg-card/50">
+              <h3 className="font-semibold">Criar Novo Voucher</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="voucherCode">Código do Voucher</Label>
+                  <Input
+                    id="voucherCode"
+                    placeholder="XXXX-XXXX-XXXX-XXXX"
+                    value={voucherCode}
+                    onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+                    maxLength={19}
+                    disabled={creatingVoucher}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Use apenas letras e números (formato: XXXX-XXXX-XXXX-XXXX)
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="voucherDays">Dias de Validade</Label>
+                  <Input
+                    id="voucherDays"
+                    type="number"
+                    min="1"
+                    max="365"
+                    value={voucherDays}
+                    onChange={(e) => setVoucherDays(e.target.value)}
+                    disabled={creatingVoucher}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Entre 1 e 365 dias
+                  </p>
+                </div>
+              </div>
+              <Button 
+                onClick={handleCreateVoucher}
+                disabled={creatingVoucher}
+                className="w-full sm:w-auto"
+              >
+                {creatingVoucher ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Criando...
+                  </>
+                ) : (
+                  <>
+                    <Ticket className="mr-2 h-4 w-4" />
+                    Criar Voucher
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Lista de Vouchers */}
+            <div>
+              <h3 className="font-semibold mb-4">Vouchers Recentes ({vouchers.length})</h3>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Código</TableHead>
+                      <TableHead>Dias</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Usado Por</TableHead>
+                      <TableHead>Criado Em</TableHead>
+                      <TableHead>Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {vouchers.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-muted-foreground">
+                          Nenhum voucher criado ainda
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      vouchers.map((voucher) => (
+                        <TableRow key={voucher.id}>
+                          <TableCell className="font-mono font-bold">
+                            {voucher.code}
+                          </TableCell>
+                          <TableCell>{voucher.days} dias</TableCell>
+                          <TableCell>
+                            {voucher.is_used ? (
+                              <Badge variant="secondary">Usado</Badge>
+                            ) : (
+                              <Badge className="bg-success">Disponível</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="font-mono text-xs">
+                            {voucher.used_by ? voucher.used_by.slice(0, 8) + "..." : "-"}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {new Date(voucher.created_at).toLocaleString("pt-BR")}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleCopyVoucher(voucher.code)}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
