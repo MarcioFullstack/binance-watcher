@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import nottifyLogo from "@/assets/nottify-logo.png";
 
 const Signup = () => {
@@ -97,14 +97,19 @@ const Signup = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-md border-border">
-        <CardHeader className="space-y-2">
-          <div className="flex items-center gap-3 mb-4">
-            <img src={nottifyLogo} alt="NOTTIFY" className="w-12 h-12" />
-            <CardTitle className="text-2xl">NOTTIFY</CardTitle>
-          </div>
-          <CardDescription>Crie sua conta para começar a monitorar</CardDescription>
-        </CardHeader>
+      <div className="w-full max-w-md space-y-4">
+        <Link to="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="w-4 h-4" />
+          <span>Voltar para página inicial</span>
+        </Link>
+        <Card className="w-full border-border">
+          <CardHeader className="space-y-2">
+            <div className="flex items-center gap-3 mb-4">
+              <img src={nottifyLogo} alt="NOTTIFY" className="w-12 h-12" />
+              <CardTitle className="text-2xl">NOTTIFY</CardTitle>
+            </div>
+            <CardDescription>Crie sua conta para começar a monitorar</CardDescription>
+          </CardHeader>
         <CardContent>
           <form onSubmit={handleSignup} className="space-y-4">
             <div className="space-y-2">
@@ -199,7 +204,8 @@ const Signup = () => {
             </p>
           </form>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 };
