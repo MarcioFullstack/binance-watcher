@@ -1,1 +1,7 @@
 project_id = "snkdhcilyorroeyeveul"
+
+[functions.test-binance-connection]
+verify_jwt = false
+
+[functions.crypto-payment-webhook]
+verify_jwt = false

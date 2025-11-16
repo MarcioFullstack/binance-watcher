@@ -47,6 +47,48 @@ export type Database = {
         }
         Relationships: []
       }
+      pending_payments: {
+        Row: {
+          confirmed_amount: number | null
+          confirmed_at: string | null
+          created_at: string
+          currency: string
+          expected_amount: number
+          id: string
+          status: string
+          transaction_hash: string | null
+          updated_at: string
+          user_id: string
+          wallet_address: string
+        }
+        Insert: {
+          confirmed_amount?: number | null
+          confirmed_at?: string | null
+          created_at?: string
+          currency?: string
+          expected_amount?: number
+          id?: string
+          status?: string
+          transaction_hash?: string | null
+          updated_at?: string
+          user_id: string
+          wallet_address: string
+        }
+        Update: {
+          confirmed_amount?: number | null
+          confirmed_at?: string | null
+          created_at?: string
+          currency?: string
+          expected_amount?: number
+          id?: string
+          status?: string
+          transaction_hash?: string | null
+          updated_at?: string
+          user_id?: string
+          wallet_address?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
