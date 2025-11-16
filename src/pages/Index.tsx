@@ -35,6 +35,7 @@ import {
   XCircle,
   X
 } from "lucide-react";
+import { useSubscriptionRealtime } from "@/hooks/useSubscriptionRealtime";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -45,6 +46,9 @@ const Index = () => {
   const [user, setUser] = useState<any>(null);
   const [subscription, setSubscription] = useState<any>(null);
   const [showBanner, setShowBanner] = useState(true);
+
+  // Enable realtime subscription notifications
+  useSubscriptionRealtime(user?.id);
 
   useEffect(() => {
     checkUserStatus();

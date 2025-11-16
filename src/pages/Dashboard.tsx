@@ -9,6 +9,7 @@ import { AlertsConfig } from "@/components/dashboard/AlertsConfig";
 import { Loader2, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useSubscriptionRealtime } from "@/hooks/useSubscriptionRealtime";
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -16,6 +17,9 @@ const Dashboard = () => {
   const [hasAccount, setHasAccount] = useState<boolean | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
+
+  // Enable realtime subscription notifications
+  useSubscriptionRealtime(user?.id);
 
   useEffect(() => {
     checkUser();
