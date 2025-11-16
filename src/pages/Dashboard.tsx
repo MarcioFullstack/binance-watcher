@@ -14,6 +14,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [hasAccount, setHasAccount] = useState<boolean | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,6 +31,16 @@ const Dashboard = () => {
       }
 
       setUser(user);
+
+      // Verificar se é admin
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+
+      setIsAdmin(!!roles);
 
       // Verificar assinatura
       const { data: subscription } = await supabase
@@ -85,7 +96,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        <DashboardHeader onLogout={handleLogout} />
+        <DashboardHeader onLogout={handleLogout} isAdmin={isAdmin} />
         
         {hasAccount ? (
           <>
