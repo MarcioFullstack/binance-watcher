@@ -15,7 +15,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import nottifyLogo from "@/assets/nottify-logo.png";
 import { motion, useScroll, useTransform } from "framer-motion";
@@ -30,7 +30,10 @@ import {
   CheckCircle2,
   HelpCircle,
   Star,
-  Quote
+  Quote,
+  AlertCircle,
+  XCircle,
+  X
 } from "lucide-react";
 
 const Index = () => {
@@ -38,8 +41,49 @@ const Index = () => {
   const { scrollYProgress } = useScroll();
   const y = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  
+  const [user, setUser] = useState<any>(null);
+  const [subscription, setSubscription] = useState<any>(null);
+  const [showBanner, setShowBanner] = useState(true);
 
-  // Removed auto-redirect to allow users to stay on landing page
+  useEffect(() => {
+    checkUserStatus();
+  }, []);
+
+  const checkUserStatus = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      setUser(user);
+      
+      const { data: sub } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      setSubscription(sub);
+    }
+  };
+
+  const getSubscriptionStatus = () => {
+    if (!subscription) return { status: 'inactive', label: 'Sem Assinatura', color: 'bg-destructive/10 text-destructive border-destructive/20' };
+    
+    if (subscription.status === 'active') {
+      const expiresAt = new Date(subscription.expires_at);
+      const now = new Date();
+      const daysRemaining = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (daysRemaining <= 0) {
+        return { status: 'expired', label: 'Assinatura Expirada', color: 'bg-destructive/10 text-destructive border-destructive/20' };
+      } else if (daysRemaining <= 7) {
+        return { status: 'expiring', label: `Assinatura expira em ${daysRemaining} dias`, color: 'bg-warning/10 text-warning border-warning/20' };
+      } else {
+        return { status: 'active', label: `Assinatura ativa até ${expiresAt.toLocaleDateString('pt-BR')}`, color: 'bg-success/10 text-success border-success/20' };
+      }
+    }
+    
+    return { status: 'inactive', label: 'Assinatura Inativa', color: 'bg-muted text-muted-foreground border-border' };
+  };
 
   const features = [
     {
@@ -176,11 +220,59 @@ const Index = () => {
     }
   ];
 
+  const subscriptionStatus = getSubscriptionStatus();
+
   return (
     <div className="min-h-screen bg-background overflow-hidden">
+      {/* Subscription Status Banner */}
+      {user && showBanner && (
+        <motion.div 
+          className={`fixed top-0 left-0 right-0 z-50 border-b ${subscriptionStatus.color}`}
+          initial={{ y: -100 }}
+          animate={{ y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {subscriptionStatus.status === 'active' && <CheckCircle2 className="h-5 w-5" />}
+              {subscriptionStatus.status === 'expiring' && <AlertCircle className="h-5 w-5" />}
+              {(subscriptionStatus.status === 'inactive' || subscriptionStatus.status === 'expired') && <XCircle className="h-5 w-5" />}
+              <div>
+                <p className="font-medium">{subscriptionStatus.label}</p>
+                {(subscriptionStatus.status === 'inactive' || subscriptionStatus.status === 'expired') && (
+                  <button 
+                    onClick={() => navigate('/payment')}
+                    className="text-sm underline hover:no-underline"
+                  >
+                    Ativar assinatura agora
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/dashboard')}
+                className="hidden sm:flex"
+              >
+                Ir para Dashboard
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowBanner(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Hero Section */}
-      <motion.section 
-        className="relative min-h-screen flex items-center justify-center px-4 py-20"
+      <motion.section
+        className={`relative min-h-screen flex items-center justify-center px-4 py-20 ${user && showBanner ? 'pt-32' : ''}`}
         style={{ y, opacity }}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-background" />
