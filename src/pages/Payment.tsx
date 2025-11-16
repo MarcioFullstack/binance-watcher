@@ -98,14 +98,23 @@ const Payment = () => {
   };
 
   const handleActivateVoucher = async () => {
-    if (!voucherCode.trim()) {
+    const trimmedCode = voucherCode.trim().toUpperCase();
+    
+    if (!trimmedCode) {
       toast.error("Digite o código do voucher");
+      return;
+    }
+
+    // Validação do formato: XXXX-XXXX-XXXX-XXXX
+    const voucherRegex = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+    if (!voucherRegex.test(trimmedCode)) {
+      toast.error("Formato inválido. Use: XXXX-XXXX-XXXX-XXXX");
       return;
     }
 
     setLoading(true);
     try {
-      const result = await activateVoucher(voucherCode);
+      const result = await activateVoucher(trimmedCode);
       toast.success(result.message);
       navigate("/setup-binance");
     } catch (error: any) {
@@ -208,9 +217,10 @@ const Payment = () => {
                     <Label htmlFor="voucher">Código do Voucher</Label>
                     <Input
                       id="voucher"
-                      placeholder="XXXX-XXXX-XXXX-XXXX"
+                      placeholder="NOTT-IFY2-025B-OT01"
                       value={voucherCode}
                       onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+                      maxLength={19}
                       disabled={loading}
                     />
                   </div>
