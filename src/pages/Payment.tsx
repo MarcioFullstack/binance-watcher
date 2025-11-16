@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Payment = () => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
   const [voucherCode, setVoucherCode] = useState("");
@@ -67,7 +69,7 @@ const Payment = () => {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Não autenticado");
+      if (!user) throw new Error(t("payment.errors.notAuthenticated"));
 
       const { error } = await supabase
         .from("pending_payments")
@@ -81,10 +83,10 @@ const Payment = () => {
 
       if (error) throw error;
 
-      toast.success("Pagamento registrado! Aguardando confirmação...");
+      toast.success(t("payment.success.paymentRegistered"));
       await checkPaymentStatus();
     } catch (error: any) {
-      toast.error(error.message || "Erro ao registrar pagamento");
+      toast.error(error.message || t("payment.errors.registerPaymentError"));
     } finally {
       setLoading(false);
     }
@@ -93,7 +95,7 @@ const Payment = () => {
   const handleCopyWallet = () => {
     navigator.clipboard.writeText(walletAddress);
     setCopied(true);
-    toast.success("Endereço copiado!");
+    toast.success(t("payment.addressCopied"));
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -101,14 +103,14 @@ const Payment = () => {
     const trimmedCode = voucherCode.trim().toUpperCase();
     
     if (!trimmedCode) {
-      toast.error("Digite o código do voucher");
+      toast.error(t("payment.errors.enterCode"));
       return;
     }
 
     // Validação do formato: XXXX-XXXX-XXXX-XXXX
     const voucherRegex = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
     if (!voucherRegex.test(trimmedCode)) {
-      toast.error("Formato inválido. Use: XXXX-XXXX-XXXX-XXXX");
+      toast.error(t("payment.errors.invalidFormat"));
       return;
     }
 
@@ -118,7 +120,7 @@ const Payment = () => {
       toast.success(result.message);
       navigate("/setup-binance");
     } catch (error: any) {
-      toast.error(error.message || "Erro ao ativar voucher");
+      toast.error(error.message || t("payment.errors.defaultError"));
     } finally {
       setLoading(false);
     }
@@ -134,16 +136,16 @@ const Payment = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Ativar Assinatura</CardTitle>
+            <CardTitle>{t("payment.activateSubscription")}</CardTitle>
             <CardDescription>
-              Escolha entre pagamento em criptomoedas ou use um voucher
+              {t("payment.choosePaymentMethod")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="crypto" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="crypto">Criptomoedas</TabsTrigger>
-                <TabsTrigger value="voucher">Voucher</TabsTrigger>
+                <TabsTrigger value="crypto">{t("payment.cryptoPayment")}</TabsTrigger>
+                <TabsTrigger value="voucher">{t("payment.voucherPayment")}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="crypto" className="space-y-4">
@@ -155,21 +157,21 @@ const Payment = () => {
                   <div className="text-center space-y-4">
                     <div className="p-6 bg-primary/5 rounded-lg">
                       <p className="text-4xl font-bold text-primary mb-2">$15.00</p>
-                      <p className="text-sm text-muted-foreground">Pagamento único em USD ou criptomoedas</p>
+                      <p className="text-sm text-muted-foreground">{t("payment.oneTimePayment")}</p>
                     </div>
 
                     {pendingPayment ? (
                       <Alert className="bg-blue-500/10 border-blue-500/20">
                         <AlertDescription className="text-blue-600 dark:text-blue-400">
-                          ⏳ Pagamento pendente detectado! Aguardando confirmação na blockchain (mínimo 3 confirmações).
+                          ⏳ {t("payment.pendingPayment")}
                           <br />
-                          <span className="text-xs">Criado em: {new Date(pendingPayment.created_at).toLocaleString('pt-BR')}</span>
+                          <span className="text-xs">{t("payment.createdAt")} {new Date(pendingPayment.created_at).toLocaleString()}</span>
                         </AlertDescription>
                       </Alert>
                     ) : null}
 
                     <div className="space-y-2">
-                      <Label>Endereço da Carteira</Label>
+                      <Label>{t("payment.walletAddress")}</Label>
                       <div className="flex gap-2">
                         <Input
                           value={walletAddress}
@@ -185,7 +187,7 @@ const Payment = () => {
                         </Button>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Envie $15 em USD ou equivalente em criptomoedas para este endereço
+                        {t("payment.sendPayment")}
                       </p>
                     </div>
 
@@ -196,15 +198,15 @@ const Payment = () => {
                         className="w-full"
                       >
                         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Registrar Pagamento
+                        {t("payment.registerPayment")}
                       </Button>
                     )}
 
                     <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4">
                       <p className="text-sm text-amber-600 dark:text-amber-400">
                         {pendingPayment 
-                          ? "Seu pagamento será verificado automaticamente. A ativação ocorre após 3 confirmações na blockchain."
-                          : "Após enviar o pagamento, clique em 'Registrar Pagamento' para iniciar o monitoramento automático."}
+                          ? t("payment.paymentWillBeVerified")
+                          : t("payment.clickAfterSending")}
                       </p>
                     </div>
                   </div>
@@ -214,10 +216,10 @@ const Payment = () => {
               <TabsContent value="voucher" className="space-y-4">
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="voucher">Código do Voucher</Label>
+                    <Label htmlFor="voucher">{t("payment.voucherCode")}</Label>
                     <Input
                       id="voucher"
-                      placeholder="NOTT-IFY2-025B-OT01"
+                      placeholder={t("payment.voucherPlaceholder")}
                       value={voucherCode}
                       onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
                       maxLength={19}
@@ -231,8 +233,14 @@ const Payment = () => {
                     className="w-full"
                   >
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Ativar Voucher
+                    {t("payment.activate")}
                   </Button>
+
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                    <p className="text-sm text-blue-600 dark:text-blue-400">
+                      💡 {t("payment.haveVoucher")}
+                    </p>
+                  </div>
                 </div>
               </TabsContent>
             </Tabs>
