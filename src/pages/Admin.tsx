@@ -66,6 +66,10 @@ const Admin = () => {
   const [voucherCode, setVoucherCode] = useState("");
   const [voucherDays, setVoucherDays] = useState("30");
   const [creatingVoucher, setCreatingVoucher] = useState(false);
+  const [voucherFilter, setVoucherFilter] = useState<"all" | "used" | "available">("all");
+  const [voucherSearch, setVoucherSearch] = useState("");
+  const [invalidatingVoucher, setInvalidatingVoucher] = useState<string | null>(null);
+  const [voucherCount, setVoucherCount] = useState(1);
   const navigate = useNavigate();
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
@@ -235,6 +239,102 @@ const Admin = () => {
     } catch (error) {
       toast.error("Erro ao copiar código");
     }
+  };
+
+  const handleInvalidateVoucher = async (voucherId: string) => {
+    if (!confirm("Tem certeza que deseja invalidar este voucher? Esta ação não pode ser desfeita.")) {
+      return;
+    }
+
+    setInvalidatingVoucher(voucherId);
+    try {
+      const { error } = await supabase.functions.invoke("invalidate-voucher", {
+        body: { voucherId },
+      });
+
+      if (error) throw error;
+
+      toast.success("Voucher invalidado com sucesso!");
+      loadVouchers();
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao invalidar voucher");
+    } finally {
+      setInvalidatingVoucher(null);
+    }
+  };
+
+  const generateMultipleVouchers = async () => {
+    if (voucherCount < 1 || voucherCount > 50) {
+      toast.error("Quantidade deve ser entre 1 e 50");
+      return;
+    }
+
+    const days = parseInt(voucherDays);
+    if (isNaN(days) || days < 1 || days > 365) {
+      toast.error("Dias deve ser um número entre 1 e 365");
+      return;
+    }
+
+    setCreatingVoucher(true);
+    try {
+      const promises = [];
+      for (let i = 0; i < voucherCount; i++) {
+        const code = generateVoucherCode();
+        promises.push(
+          supabase.functions.invoke("create-voucher", {
+            body: { code, days },
+          })
+        );
+      }
+
+      await Promise.all(promises);
+      toast.success(`${voucherCount} vouchers criados com sucesso!`);
+      setVoucherCount(1);
+      loadVouchers();
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao criar vouchers");
+    } finally {
+      setCreatingVoucher(false);
+    }
+  };
+
+  const generateVoucherCode = () => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    const parts = [];
+    for (let i = 0; i < 4; i++) {
+      let part = "";
+      for (let j = 0; j < 4; j++) {
+        part += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      parts.push(part);
+    }
+    return parts.join("-");
+  };
+
+  const filterVouchers = () => {
+    let filtered = vouchers;
+
+    // Filtrar por status
+    if (voucherFilter === "used") {
+      filtered = filtered.filter((v) => v.is_used);
+    } else if (voucherFilter === "available") {
+      filtered = filtered.filter((v) => !v.is_used);
+    }
+
+    // Filtrar por busca
+    if (voucherSearch.trim()) {
+      filtered = filtered.filter((v) =>
+        v.code.toLowerCase().includes(voucherSearch.toLowerCase())
+      );
+    }
+
+    return filtered;
+  };
+
+  const voucherStats = {
+    total: vouchers.length,
+    used: vouchers.filter((v) => v.is_used).length,
+    available: vouchers.filter((v) => !v.is_used).length,
   };
 
   const getStatusBadge = (status: string) => {
@@ -580,66 +680,178 @@ const Admin = () => {
               <CardTitle>Gerenciar Vouchers</CardTitle>
             </div>
             <CardDescription>
-              Criar novos vouchers para ativar assinaturas
+              Criar, visualizar e invalidar vouchers para ativar assinaturas
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Estatísticas de Vouchers */}
+            <div className="grid gap-4 md:grid-cols-3">
+              <Card className="bg-card/50">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{voucherStats.total}</div>
+                </CardContent>
+              </Card>
+              <Card className="bg-card/50">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Disponíveis</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-success">{voucherStats.available}</div>
+                </CardContent>
+              </Card>
+              <Card className="bg-card/50">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Usados</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-muted-foreground">{voucherStats.used}</div>
+                </CardContent>
+              </Card>
+            </div>
+
             {/* Formulário de Criação */}
             <div className="grid gap-4 rounded-lg border p-4 bg-card/50">
-              <h3 className="font-semibold">Criar Novo Voucher</h3>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="voucherCode">Código do Voucher</Label>
-                  <Input
-                    id="voucherCode"
-                    placeholder="XXXX-XXXX-XXXX-XXXX"
-                    value={voucherCode}
-                    onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
-                    maxLength={19}
+              <h3 className="font-semibold">Criar Novos Vouchers</h3>
+              <Tabs defaultValue="single" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="single">Único</TabsTrigger>
+                  <TabsTrigger value="multiple">Múltiplos</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="single" className="space-y-4 mt-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="voucherCode">Código do Voucher</Label>
+                      <Input
+                        id="voucherCode"
+                        placeholder="XXXX-XXXX-XXXX-XXXX"
+                        value={voucherCode}
+                        onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+                        maxLength={19}
+                        disabled={creatingVoucher}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Use apenas letras e números (formato: XXXX-XXXX-XXXX-XXXX)
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="voucherDays">Dias de Validade</Label>
+                      <Input
+                        id="voucherDays"
+                        type="number"
+                        min="1"
+                        max="365"
+                        value={voucherDays}
+                        onChange={(e) => setVoucherDays(e.target.value)}
+                        disabled={creatingVoucher}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Entre 1 e 365 dias
+                      </p>
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={handleCreateVoucher}
                     disabled={creatingVoucher}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Use apenas letras e números (formato: XXXX-XXXX-XXXX-XXXX)
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="voucherDays">Dias de Validade</Label>
-                  <Input
-                    id="voucherDays"
-                    type="number"
-                    min="1"
-                    max="365"
-                    value={voucherDays}
-                    onChange={(e) => setVoucherDays(e.target.value)}
+                    className="w-full sm:w-auto"
+                  >
+                    {creatingVoucher ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Criando...
+                      </>
+                    ) : (
+                      <>
+                        <Ticket className="mr-2 h-4 w-4" />
+                        Criar Voucher
+                      </>
+                    )}
+                  </Button>
+                </TabsContent>
+
+                <TabsContent value="multiple" className="space-y-4 mt-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="voucherCount">Quantidade</Label>
+                      <Input
+                        id="voucherCount"
+                        type="number"
+                        min="1"
+                        max="50"
+                        value={voucherCount}
+                        onChange={(e) => setVoucherCount(parseInt(e.target.value) || 1)}
+                        disabled={creatingVoucher}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Entre 1 e 50 vouchers
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="voucherDaysMultiple">Dias de Validade</Label>
+                      <Input
+                        id="voucherDaysMultiple"
+                        type="number"
+                        min="1"
+                        max="365"
+                        value={voucherDays}
+                        onChange={(e) => setVoucherDays(e.target.value)}
+                        disabled={creatingVoucher}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Entre 1 e 365 dias para todos
+                      </p>
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={generateMultipleVouchers}
                     disabled={creatingVoucher}
-                  />
+                    className="w-full sm:w-auto"
+                  >
+                    {creatingVoucher ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Criando...
+                      </>
+                    ) : (
+                      <>
+                        <Ticket className="mr-2 h-4 w-4" />
+                        Gerar {voucherCount} Voucher{voucherCount > 1 ? "s" : ""}
+                      </>
+                    )}
+                  </Button>
                   <p className="text-xs text-muted-foreground">
-                    Entre 1 e 365 dias
+                    Os códigos serão gerados automaticamente
                   </p>
-                </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+
+            {/* Filtros e Busca */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <Input
+                  placeholder="Buscar por código..."
+                  value={voucherSearch}
+                  onChange={(e) => setVoucherSearch(e.target.value)}
+                />
               </div>
-              <Button 
-                onClick={handleCreateVoucher}
-                disabled={creatingVoucher}
-                className="w-full sm:w-auto"
-              >
-                {creatingVoucher ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Criando...
-                  </>
-                ) : (
-                  <>
-                    <Ticket className="mr-2 h-4 w-4" />
-                    Criar Voucher
-                  </>
-                )}
-              </Button>
+              <Tabs value={voucherFilter} onValueChange={(v) => setVoucherFilter(v as any)} className="w-full sm:w-auto">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="all">Todos</TabsTrigger>
+                  <TabsTrigger value="available">Disponíveis</TabsTrigger>
+                  <TabsTrigger value="used">Usados</TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
 
             {/* Lista de Vouchers */}
             <div>
-              <h3 className="font-semibold mb-4">Vouchers Recentes ({vouchers.length})</h3>
+              <h3 className="font-semibold mb-4">
+                Vouchers ({filterVouchers().length} de {vouchers.length})
+              </h3>
               <div className="rounded-md border">
                 <Table>
                   <TableHeader>
@@ -648,19 +860,20 @@ const Admin = () => {
                       <TableHead>Dias</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Usado Por</TableHead>
+                      <TableHead>Usado Em</TableHead>
                       <TableHead>Criado Em</TableHead>
                       <TableHead>Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {vouchers.length === 0 ? (
+                    {filterVouchers().length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center text-muted-foreground">
-                          Nenhum voucher criado ainda
+                        <TableCell colSpan={7} className="text-center text-muted-foreground">
+                          Nenhum voucher encontrado
                         </TableCell>
                       </TableRow>
                     ) : (
-                      vouchers.map((voucher) => (
+                      filterVouchers().map((voucher) => (
                         <TableRow key={voucher.id}>
                           <TableCell className="font-mono font-bold">
                             {voucher.code}
@@ -677,16 +890,38 @@ const Admin = () => {
                             {voucher.used_by ? voucher.used_by.slice(0, 8) + "..." : "-"}
                           </TableCell>
                           <TableCell className="text-xs">
+                            {voucher.used_at ? new Date(voucher.used_at).toLocaleString("pt-BR") : "-"}
+                          </TableCell>
+                          <TableCell className="text-xs">
                             {new Date(voucher.created_at).toLocaleString("pt-BR")}
                           </TableCell>
                           <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleCopyVoucher(voucher.code)}
-                            >
-                              <Copy className="h-4 w-4" />
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleCopyVoucher(voucher.code)}
+                                title="Copiar código"
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                              {!voucher.is_used && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleInvalidateVoucher(voucher.id)}
+                                  disabled={invalidatingVoucher === voucher.id}
+                                  title="Invalidar voucher"
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  {invalidatingVoucher === voucher.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <X className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))
