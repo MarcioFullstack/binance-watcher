@@ -12,41 +12,101 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Starting voucher activation...');
+    
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error('No authorization header provided');
+      return new Response(
+        JSON.stringify({ error: 'Não autenticado. Faça login novamente.' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
         global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
+          headers: { Authorization: authHeader },
         },
       }
     );
 
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) {
-      throw new Error('Unauthorized');
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    
+    if (userError || !user) {
+      console.error('User authentication error:', userError);
+      return new Response(
+        JSON.stringify({ error: 'Sessão inválida. Faça login novamente.' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
+
+    console.log('User authenticated:', user.id);
 
     const { code } = await req.json();
 
-    if (!code) {
-      throw new Error('Código do voucher é obrigatório');
+    if (!code || typeof code !== 'string') {
+      console.error('Invalid voucher code provided:', code);
+      return new Response(
+        JSON.stringify({ error: 'Código do voucher é obrigatório' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
+
+    console.log('Attempting to activate voucher:', code);
 
     // Buscar voucher
     const { data: voucher, error: voucherError } = await supabaseClient
       .from('vouchers')
       .select('*')
-      .eq('code', code)
+      .eq('code', code.trim().toUpperCase())
       .single();
 
-    if (voucherError || !voucher) {
-      throw new Error('Voucher inválido');
+    if (voucherError) {
+      console.error('Error fetching voucher:', voucherError);
+      return new Response(
+        JSON.stringify({ error: 'Voucher não encontrado ou inválido' }),
+        {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    if (!voucher) {
+      console.error('Voucher not found:', code);
+      return new Response(
+        JSON.stringify({ error: 'Voucher não encontrado' }),
+        {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     if (voucher.is_used) {
-      throw new Error('Este voucher já foi utilizado');
+      console.error('Voucher already used:', code);
+      return new Response(
+        JSON.stringify({ error: 'Este voucher já foi utilizado' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
+
+    console.log('Voucher found and valid, marking as used...');
 
     // Marcar voucher como usado
     const { error: updateVoucherError } = await supabaseClient
@@ -56,11 +116,20 @@ serve(async (req) => {
         used_by: user.id,
         used_at: new Date().toISOString(),
       })
-      .eq('code', code);
+      .eq('code', code.trim().toUpperCase());
 
     if (updateVoucherError) {
-      throw new Error('Erro ao ativar voucher');
+      console.error('Error updating voucher:', updateVoucherError);
+      return new Response(
+        JSON.stringify({ error: 'Erro ao marcar voucher como usado' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
+
+    console.log('Voucher marked as used, creating/updating subscription...');
 
     // Calcular data de expiração
     const expiresAt = new Date();
@@ -100,8 +169,16 @@ serve(async (req) => {
 
     if (subError) {
       console.error('Subscription error:', subError);
-      throw new Error('Erro ao ativar assinatura');
+      return new Response(
+        JSON.stringify({ error: 'Erro ao ativar assinatura. Contate o suporte.' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
+
+    console.log('Subscription activated successfully for user:', user.id);
 
     return new Response(
       JSON.stringify({
@@ -109,15 +186,20 @@ serve(async (req) => {
         message: `Voucher ativado com sucesso! ${voucher.days} dias de acesso.`,
         expiresAt: expiresAt.toISOString(),
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     );
 
   } catch (error: any) {
-    console.error('Error in activate-voucher function:', error);
+    console.error('Unexpected error in activate-voucher function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message || 'Erro inesperado ao ativar voucher. Tente novamente.' 
+      }),
       {
-        status: 400,
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
