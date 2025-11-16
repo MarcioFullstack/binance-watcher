@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,13 +10,85 @@ import { Loader2, Copy, Check } from "lucide-react";
 import { activateVoucher } from "@/hooks/useBinanceData";
 import nottifyLogo from "@/assets/nottify-logo.png";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Payment = () => {
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [voucherCode, setVoucherCode] = useState("");
   const [copied, setCopied] = useState(false);
+  const [pendingPayment, setPendingPayment] = useState<any>(null);
   const navigate = useNavigate();
   const walletAddress = "0xf9ef22c89bd224f911eaf61c43a39460540eac4f";
+
+  useEffect(() => {
+    checkPaymentStatus();
+    const interval = setInterval(checkPaymentStatus, 10000); // Check every 10 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const checkPaymentStatus = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/login");
+        return;
+      }
+
+      // Verificar se tem assinatura ativa
+      const { data: subscription } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (subscription?.status === "active") {
+        navigate("/setup-binance");
+        return;
+      }
+
+      // Verificar se tem pagamento pendente
+      const { data: payment } = await supabase
+        .from("pending_payments")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("status", "pending")
+        .maybeSingle();
+
+      setPendingPayment(payment);
+    } catch (error) {
+      console.error("Error checking payment:", error);
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const createPendingPayment = async () => {
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Não autenticado");
+
+      const { error } = await supabase
+        .from("pending_payments")
+        .insert({
+          user_id: user.id,
+          wallet_address: walletAddress,
+          expected_amount: 15.00,
+          currency: "USD",
+          status: "pending",
+        });
+
+      if (error) throw error;
+
+      toast.success("Pagamento registrado! Aguardando confirmação...");
+      await checkPaymentStatus();
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao registrar pagamento");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCopyWallet = () => {
     navigator.clipboard.writeText(walletAddress);
@@ -65,39 +138,68 @@ const Payment = () => {
               </TabsList>
 
               <TabsContent value="crypto" className="space-y-4">
-                <div className="text-center space-y-4">
-                  <div className="p-6 bg-primary/5 rounded-lg">
-                    <p className="text-4xl font-bold text-primary mb-2">$15.00</p>
-                    <p className="text-sm text-muted-foreground">Pagamento único em USD ou criptomoedas</p>
+                {checking ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
-
-                  <div className="space-y-2">
-                    <Label>Endereço da Carteira</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={walletAddress}
-                        readOnly
-                        className="font-mono text-sm"
-                      />
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={handleCopyWallet}
-                      >
-                        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                      </Button>
+                ) : (
+                  <div className="text-center space-y-4">
+                    <div className="p-6 bg-primary/5 rounded-lg">
+                      <p className="text-4xl font-bold text-primary mb-2">$15.00</p>
+                      <p className="text-sm text-muted-foreground">Pagamento único em USD ou criptomoedas</p>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Envie $15 em USD ou equivalente em criptomoedas para este endereço
-                    </p>
-                  </div>
 
-                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4">
-                    <p className="text-sm text-amber-600 dark:text-amber-400">
-                      Após realizar o pagamento, entre em contato com o suporte para ativar sua assinatura.
-                    </p>
+                    {pendingPayment ? (
+                      <Alert className="bg-blue-500/10 border-blue-500/20">
+                        <AlertDescription className="text-blue-600 dark:text-blue-400">
+                          ⏳ Pagamento pendente detectado! Aguardando confirmação na blockchain (mínimo 3 confirmações).
+                          <br />
+                          <span className="text-xs">Criado em: {new Date(pendingPayment.created_at).toLocaleString('pt-BR')}</span>
+                        </AlertDescription>
+                      </Alert>
+                    ) : null}
+
+                    <div className="space-y-2">
+                      <Label>Endereço da Carteira</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={walletAddress}
+                          readOnly
+                          className="font-mono text-sm"
+                        />
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={handleCopyWallet}
+                        >
+                          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Envie $15 em USD ou equivalente em criptomoedas para este endereço
+                      </p>
+                    </div>
+
+                    {!pendingPayment && (
+                      <Button
+                        onClick={createPendingPayment}
+                        disabled={loading}
+                        className="w-full"
+                      >
+                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Registrar Pagamento
+                      </Button>
+                    )}
+
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4">
+                      <p className="text-sm text-amber-600 dark:text-amber-400">
+                        {pendingPayment 
+                          ? "Seu pagamento será verificado automaticamente. A ativação ocorre após 3 confirmações na blockchain."
+                          : "Após enviar o pagamento, clique em 'Registrar Pagamento' para iniciar o monitoramento automático."}
+                      </p>
+                    </div>
                   </div>
-                </div>
+                )}
               </TabsContent>
 
               <TabsContent value="voucher" className="space-y-4">
