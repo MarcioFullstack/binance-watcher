@@ -4,10 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Bell, CheckCircle2, AlertCircle, XCircle, ArrowLeft, Trash2 } from "lucide-react";
+import { Loader2, Bell, CheckCircle2, AlertCircle, XCircle, ArrowLeft, Trash2, CalendarIcon, Filter } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 interface Notification {
   id: string;
@@ -21,12 +25,52 @@ interface Notification {
 const NotificationHistory = () => {
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [filteredNotifications, setFilteredNotifications] = useState<Notification[]>([]);
   const [user, setUser] = useState<any>(null);
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
   const navigate = useNavigate();
 
   useEffect(() => {
     checkUserAndFetchNotifications();
   }, []);
+
+  useEffect(() => {
+    applyFilters();
+  }, [notifications, typeFilter, startDate, endDate]);
+
+  const applyFilters = () => {
+    let filtered = [...notifications];
+
+    // Filter by type
+    if (typeFilter !== "all") {
+      filtered = filtered.filter(n => n.type === typeFilter);
+    }
+
+    // Filter by date range
+    if (startDate) {
+      filtered = filtered.filter(n => 
+        isAfter(new Date(n.created_at), startOfDay(startDate)) ||
+        new Date(n.created_at).toDateString() === startDate.toDateString()
+      );
+    }
+
+    if (endDate) {
+      filtered = filtered.filter(n => 
+        isBefore(new Date(n.created_at), endOfDay(endDate)) ||
+        new Date(n.created_at).toDateString() === endDate.toDateString()
+      );
+    }
+
+    setFilteredNotifications(filtered);
+  };
+
+  const clearFilters = () => {
+    setTypeFilter("all");
+    setStartDate(undefined);
+    setEndDate(undefined);
+  };
 
   const checkUserAndFetchNotifications = async () => {
     try {
@@ -73,9 +117,10 @@ const NotificationHistory = () => {
       .eq('id', notificationId);
 
     if (!error) {
-      setNotifications(notifications.map(n => 
+      const updatedNotifications = notifications.map(n => 
         n.id === notificationId ? { ...n, is_read: true } : n
-      ));
+      );
+      setNotifications(updatedNotifications);
     }
   };
 
@@ -175,7 +220,8 @@ const NotificationHistory = () => {
     );
   }
 
-  const unreadCount = notifications.filter(n => !n.is_read).length;
+  const unreadCount = filteredNotifications.filter(n => !n.is_read).length;
+  const hasActiveFilters = typeFilter !== "all" || startDate !== undefined || endDate !== undefined;
 
   return (
     <div className="min-h-screen bg-background">
@@ -195,9 +241,107 @@ const NotificationHistory = () => {
                 ? `${unreadCount} notificação${unreadCount > 1 ? 'ões' : ''} não lida${unreadCount > 1 ? 's' : ''}`
                 : 'Todas as notificações lidas'
               }
+              {hasActiveFilters && ` • ${filteredNotifications.length} de ${notifications.length} notificações`}
             </p>
           </div>
         </div>
+
+        {/* Filters Section */}
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Filter className="h-5 w-5" />
+                <CardTitle>Filtros</CardTitle>
+              </div>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  Limpar filtros
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Type Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Tipo</label>
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="success">Sucesso</SelectItem>
+                    <SelectItem value="warning">Aviso</SelectItem>
+                    <SelectItem value="error">Erro</SelectItem>
+                    <SelectItem value="info">Info</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Start Date Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Data inicial</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !startDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, "dd/MM/yyyy") : "Selecione"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={setStartDate}
+                      disabled={(date) => date > new Date()}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* End Date Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Data final</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !endDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {endDate ? format(endDate, "dd/MM/yyyy") : "Selecione"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={endDate}
+                      onSelect={setEndDate}
+                      disabled={(date) => 
+                        date > new Date() || (startDate ? date < startDate : false)
+                      }
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {notifications.length > 0 && (
           <div className="flex gap-2 mb-6">
@@ -214,15 +358,25 @@ const NotificationHistory = () => {
         )}
 
         <div className="space-y-4">
-          {notifications.length === 0 ? (
+          {filteredNotifications.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Bell className="h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-lg text-muted-foreground">Nenhuma notificação no histórico</p>
+                <p className="text-lg text-muted-foreground">
+                  {hasActiveFilters 
+                    ? "Nenhuma notificação encontrada com os filtros aplicados"
+                    : "Nenhuma notificação no histórico"
+                  }
+                </p>
+                {hasActiveFilters && (
+                  <Button variant="link" onClick={clearFilters} className="mt-2">
+                    Limpar filtros
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ) : (
-            notifications.map((notification) => (
+            filteredNotifications.map((notification) => (
               <Card 
                 key={notification.id} 
                 className={`transition-all ${!notification.is_read ? 'border-primary/50 bg-primary/5' : ''}`}
