@@ -66,17 +66,40 @@ serve(async (req) => {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + voucher.days);
 
-    // Atualizar assinatura do usuário
-    const { error: subError } = await supabaseClient
+    // Verificar se já existe assinatura
+    const { data: existingSub } = await supabaseClient
       .from('subscriptions')
-      .upsert({
-        user_id: user.id,
-        status: 'active',
-        expires_at: expiresAt.toISOString(),
-        updated_at: new Date().toISOString(),
-      });
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    let subError;
+    
+    if (existingSub) {
+      // Atualizar assinatura existente
+      const { error } = await supabaseClient
+        .from('subscriptions')
+        .update({
+          status: 'active',
+          expires_at: expiresAt.toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', user.id);
+      subError = error;
+    } else {
+      // Criar nova assinatura
+      const { error } = await supabaseClient
+        .from('subscriptions')
+        .insert({
+          user_id: user.id,
+          status: 'active',
+          expires_at: expiresAt.toISOString(),
+        });
+      subError = error;
+    }
 
     if (subError) {
+      console.error('Subscription error:', subError);
       throw new Error('Erro ao ativar assinatura');
     }
 
