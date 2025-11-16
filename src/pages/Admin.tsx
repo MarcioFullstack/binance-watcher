@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Loader2, Check, X, ArrowLeft, Shield, TrendingUp, Users, DollarSign, Activity, Ticket, Copy } from "lucide-react";
+import { Loader2, Check, X, ArrowLeft, Shield, TrendingUp, Users, DollarSign, Activity, Ticket, Copy, Download } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
@@ -309,6 +309,44 @@ const Admin = () => {
       parts.push(part);
     }
     return parts.join("-");
+  };
+
+  const exportVouchersToCSV = () => {
+    const filtered = filterVouchers();
+    
+    // CSV Header
+    const headers = ['Código', 'Dias de Validade', 'Status', 'Usado Por', 'Usado Em', 'Criado Em'];
+    
+    // CSV Rows
+    const rows = filtered.map(voucher => [
+      voucher.code,
+      voucher.days.toString(),
+      voucher.is_used ? 'Usado' : 'Disponível',
+      voucher.used_by || '-',
+      voucher.used_at ? new Date(voucher.used_at).toLocaleString('pt-BR') : '-',
+      new Date(voucher.created_at).toLocaleString('pt-BR')
+    ]);
+    
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+    
+    // Create blob and download
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `vouchers_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success(`${filtered.length} vouchers exportados com sucesso!`);
   };
 
   const filterVouchers = () => {
@@ -838,13 +876,24 @@ const Admin = () => {
                   onChange={(e) => setVoucherSearch(e.target.value)}
                 />
               </div>
-              <Tabs value={voucherFilter} onValueChange={(v) => setVoucherFilter(v as any)} className="w-full sm:w-auto">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="all">Todos</TabsTrigger>
-                  <TabsTrigger value="available">Disponíveis</TabsTrigger>
-                  <TabsTrigger value="used">Usados</TabsTrigger>
-                </TabsList>
-              </Tabs>
+              <div className="flex gap-2">
+                <Button
+                  onClick={exportVouchersToCSV}
+                  variant="outline"
+                  size="default"
+                  className="gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  Exportar CSV
+                </Button>
+                <Tabs value={voucherFilter} onValueChange={(v) => setVoucherFilter(v as any)} className="w-auto">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="all">Todos</TabsTrigger>
+                    <TabsTrigger value="available">Disponíveis</TabsTrigger>
+                    <TabsTrigger value="used">Usados</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
             </div>
 
             {/* Lista de Vouchers */}
