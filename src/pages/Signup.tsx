@@ -8,6 +8,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, ArrowLeft } from "lucide-react";
 import nottifyLogo from "@/assets/nottify-logo.png";
+import PasswordStrengthIndicator from "@/components/PasswordStrengthIndicator";
+import { z } from "zod";
+
+const passwordSchema = z.string()
+  .min(8, "A senha deve ter pelo menos 8 caracteres")
+  .regex(/[a-z]/, "A senha deve conter pelo menos uma letra minúscula")
+  .regex(/[A-Z]/, "A senha deve conter pelo menos uma letra maiúscula")
+  .regex(/[0-9]/, "A senha deve conter pelo menos um número")
+  .regex(/[^a-zA-Z0-9]/, "A senha deve conter pelo menos um caractere especial");
 
 const Signup = () => {
   const [step, setStep] = useState(1); // 1: email/senha, 2: 2FA
@@ -29,9 +38,14 @@ const Signup = () => {
       return;
     }
 
-    if (password.length < 6) {
-      toast.error("A senha deve ter pelo menos 6 caracteres");
-      return;
+    // Validar força da senha
+    try {
+      passwordSchema.parse(password);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+        return;
+      }
     }
 
     setLoading(true);
@@ -145,6 +159,7 @@ const Signup = () => {
                 required
                 disabled={loading}
               />
+              <PasswordStrengthIndicator password={password} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirmar Senha</Label>
