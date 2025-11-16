@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import nottifyLogo from "@/assets/nottify-logo.png";
 
 const Signup = () => {
   const [email, setEmail] = useState("");
@@ -74,10 +75,8 @@ const Signup = () => {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md border-border">
         <CardHeader className="space-y-2">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">N</span>
-            </div>
+          <div className="flex items-center gap-3 mb-4">
+            <img src={nottifyLogo} alt="NOTTIFY" className="w-12 h-12" />
             <CardTitle className="text-2xl">NOTTIFY</CardTitle>
           </div>
           <CardDescription>Crie sua conta para começar a monitorar</CardDescription>
