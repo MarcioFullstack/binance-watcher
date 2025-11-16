@@ -85,6 +85,7 @@ const Admin = () => {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [auditLogsLoading, setAuditLogsLoading] = useState(false);
   const [auditFilter, setAuditFilter] = useState<string>("all");
+  const [userProfiles, setUserProfiles] = useState<Record<string, string>>({});
   const navigate = useNavigate();
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
@@ -154,6 +155,19 @@ const Admin = () => {
 
       if (error) throw error;
       setAuditLogs(data || []);
+
+      // Carregar perfis de usuários únicos
+      const uniqueUserIds = [...new Set(data?.map(log => log.user_id) || [])];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, email")
+        .in("id", uniqueUserIds);
+
+      const profileMap: Record<string, string> = {};
+      profiles?.forEach(profile => {
+        profileMap[profile.id] = profile.email;
+      });
+      setUserProfiles(profileMap);
     } catch (error) {
       console.error("Error loading audit logs:", error);
       toast.error("Erro ao carregar logs de auditoria");
@@ -408,6 +422,66 @@ const Admin = () => {
     if (auditFilter === 'all') return auditLogs;
     return auditLogs.filter(log => log.action === auditFilter);
   };
+
+  // Métricas de Auditoria
+  const getAuditMetrics = () => {
+    // Ações por dia (últimos 7 dias)
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (6 - i));
+      return date.toISOString().split('T')[0];
+    });
+
+    const actionsByDay = last7Days.map(date => {
+      const count = auditLogs.filter(log => 
+        log.created_at.split('T')[0] === date
+      ).length;
+      return {
+        date: new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+        count
+      };
+    });
+
+    // Ações por tipo
+    const actionCounts: Record<string, number> = {};
+    auditLogs.forEach(log => {
+      actionCounts[log.action] = (actionCounts[log.action] || 0) + 1;
+    });
+
+    const actionsByType = Object.entries(actionCounts).map(([action, count]) => ({
+      name: getActionLabel(action),
+      value: count,
+      action
+    }));
+
+    // Top usuários administrativos
+    const userActionCounts: Record<string, number> = {};
+    auditLogs.forEach(log => {
+      userActionCounts[log.user_id] = (userActionCounts[log.user_id] || 0) + 1;
+    });
+
+    const topUsers = Object.entries(userActionCounts)
+      .map(([userId, count]) => ({
+        userId,
+        email: userProfiles[userId] || userId.slice(0, 8) + '...',
+        count
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    return {
+      actionsByDay,
+      actionsByType,
+      topUsers,
+      totalActions: auditLogs.length,
+      actionsToday: auditLogs.filter(log => 
+        log.created_at.split('T')[0] === new Date().toISOString().split('T')[0]
+      ).length,
+      uniqueUsers: new Set(auditLogs.map(log => log.user_id)).size
+    };
+  };
+
+  const auditMetrics = getAuditMetrics();
 
   const filterVouchers = () => {
     let filtered = vouchers;
@@ -1039,6 +1113,151 @@ const Admin = () => {
                 </Table>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Audit Metrics Dashboard */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              <CardTitle>Métricas de Administração</CardTitle>
+            </div>
+            <CardDescription>
+              Dashboard com estatísticas e análises de ações administrativas
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Estatísticas Resumidas */}
+            <div className="grid gap-4 md:grid-cols-3">
+              <Card className="bg-card/50">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total de Ações</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{auditMetrics.totalActions}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {auditMetrics.actionsToday} hoje
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="bg-card/50">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Usuários Ativos</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{auditMetrics.uniqueUsers}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Administradores únicos
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="bg-card/50">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Média Diária</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {Math.round(auditMetrics.totalActions / 7)}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Últimos 7 dias
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Gráficos */}
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Gráfico de Ações ao Longo do Tempo */}
+              <Card className="bg-card/50">
+                <CardHeader>
+                  <CardTitle className="text-base">Ações ao Longo do Tempo</CardTitle>
+                  <CardDescription>Últimos 7 dias</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <LineChart data={auditMetrics.actionsByDay}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line 
+                        type="monotone" 
+                        dataKey="count" 
+                        stroke="hsl(var(--primary))" 
+                        strokeWidth={2}
+                        name="Ações"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              {/* Gráfico de Distribuição por Tipo */}
+              <Card className="bg-card/50">
+                <CardHeader>
+                  <CardTitle className="text-base">Distribuição por Tipo</CardTitle>
+                  <CardDescription>Total de ações por categoria</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                      <Pie
+                        data={auditMetrics.actionsByType}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {auditMetrics.actionsByType.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Top Usuários Administrativos */}
+            <Card className="bg-card/50">
+              <CardHeader>
+                <CardTitle className="text-base">Top Administradores</CardTitle>
+                <CardDescription>Usuários mais ativos no sistema</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {auditMetrics.topUsers.map((user, index) => (
+                    <div key={user.userId} className="flex items-center gap-4">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-bold">
+                        {index + 1}
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <p className="text-sm font-medium">{user.email}</p>
+                        <p className="text-xs text-muted-foreground font-mono">
+                          {user.userId.slice(0, 8)}...
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-bold">{user.count}</div>
+                        <p className="text-xs text-muted-foreground">ações</p>
+                      </div>
+                    </div>
+                  ))}
+                  {auditMetrics.topUsers.length === 0 && (
+                    <p className="text-center text-muted-foreground py-4">
+                      Nenhum dado disponível
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </CardContent>
         </Card>
 
