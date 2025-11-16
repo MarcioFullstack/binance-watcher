@@ -18,6 +18,7 @@ const Signup = () => {
   const [totpSecret, setTotpSecret] = useState("");
   const [qrCodeUrl, setQrCodeUrl] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState("");
   const navigate = useNavigate();
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -34,6 +35,7 @@ const Signup = () => {
     }
 
     setLoading(true);
+    setLoadingMessage("Criando sua conta...");
 
     try {
       const redirectUrl = `${window.location.origin}/dashboard`;
@@ -50,12 +52,14 @@ const Signup = () => {
 
       // Create profile
       if (data.user) {
+        setLoadingMessage("Configurando seu perfil...");
         const { error: profileError } = await supabase
           .from("profiles")
           .insert([{ id: data.user.id, email }]);
 
         if (profileError) console.error("Error creating profile:", profileError);
 
+        setLoadingMessage("Configurando alertas de risco...");
         // Create initial risk settings
         const { error: riskError } = await supabase
           .from("risk_settings")
@@ -63,6 +67,7 @@ const Signup = () => {
 
         if (riskError) console.error("Error creating risk settings:", riskError);
 
+        setLoadingMessage("Ativando assinatura...");
         // Create subscription
         const { error: subError } = await supabase
           .from("subscriptions")
@@ -71,12 +76,17 @@ const Signup = () => {
         if (subError) console.error("Error creating subscription:", subError);
       }
 
-      toast.success("Conta criada com sucesso!");
-      navigate("/dashboard");
+      toast.success("Conta criada com sucesso! Redirecionando...");
+      setLoadingMessage("Redirecionando para o dashboard...");
+      
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 500);
     } catch (error: any) {
       toast.error(error.message || "Erro ao criar conta");
     } finally {
       setLoading(false);
+      setLoadingMessage("");
     }
   };
 
@@ -152,7 +162,7 @@ const Signup = () => {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Criando conta...
+                  {loadingMessage || "Criando conta..."}
                 </>
               ) : (
                 "Criar Conta"
