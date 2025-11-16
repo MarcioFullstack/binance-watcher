@@ -55,6 +55,18 @@ interface Voucher {
   created_at: string;
 }
 
+interface AuditLog {
+  id: string;
+  user_id: string;
+  action: string;
+  entity_type: string;
+  entity_id: string | null;
+  details: any;
+  ip_address: string | null;
+  user_agent: string | null;
+  created_at: string;
+}
+
 const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -70,6 +82,9 @@ const Admin = () => {
   const [voucherSearch, setVoucherSearch] = useState("");
   const [invalidatingVoucher, setInvalidatingVoucher] = useState<string | null>(null);
   const [voucherCount, setVoucherCount] = useState(1);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [auditLogsLoading, setAuditLogsLoading] = useState(false);
+  const [auditFilter, setAuditFilter] = useState<string>("all");
   const navigate = useNavigate();
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
@@ -104,6 +119,7 @@ const Admin = () => {
       loadPayments();
       loadStats();
       loadVouchers();
+      loadAuditLogs();
     } catch (error) {
       console.error("Error checking admin access:", error);
       navigate("/dashboard");
@@ -124,6 +140,25 @@ const Admin = () => {
       toast.error("Erro ao carregar estatísticas");
     } finally {
       setStatsLoading(false);
+    }
+  };
+
+  const loadAuditLogs = async () => {
+    try {
+      setAuditLogsLoading(true);
+      const { data, error } = await supabase
+        .from("audit_logs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      if (error) throw error;
+      setAuditLogs(data || []);
+    } catch (error) {
+      console.error("Error loading audit logs:", error);
+      toast.error("Erro ao carregar logs de auditoria");
+    } finally {
+      setAuditLogsLoading(false);
     }
   };
 
@@ -347,6 +382,31 @@ const Admin = () => {
     document.body.removeChild(link);
     
     toast.success(`${filtered.length} vouchers exportados com sucesso!`);
+  };
+
+  const getActionLabel = (action: string) => {
+    const labels: Record<string, string> = {
+      CREATE_VOUCHER: 'Criou Voucher',
+      INVALIDATE_VOUCHER: 'Invalidou Voucher',
+      APPROVE_PAYMENT: 'Aprovou Pagamento',
+      REJECT_PAYMENT: 'Rejeitou Pagamento',
+    };
+    return labels[action] || action;
+  };
+
+  const getActionColor = (action: string) => {
+    const colors: Record<string, string> = {
+      CREATE_VOUCHER: 'bg-blue-500/10 text-blue-500',
+      INVALIDATE_VOUCHER: 'bg-orange-500/10 text-orange-500',
+      APPROVE_PAYMENT: 'bg-green-500/10 text-green-500',
+      REJECT_PAYMENT: 'bg-red-500/10 text-red-500',
+    };
+    return colors[action] || 'bg-gray-500/10 text-gray-500';
+  };
+
+  const filterAuditLogs = () => {
+    if (auditFilter === 'all') return auditLogs;
+    return auditLogs.filter(log => log.action === auditFilter);
   };
 
   const filterVouchers = () => {
@@ -979,6 +1039,104 @@ const Admin = () => {
                 </Table>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Audit Logs Card */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-primary" />
+              <CardTitle>Logs de Auditoria</CardTitle>
+            </div>
+            <CardDescription>
+              Histórico completo de ações administrativas no sistema
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Filtros */}
+            <div className="flex gap-2">
+              <Tabs value={auditFilter} onValueChange={setAuditFilter} className="w-full">
+                <TabsList className="grid w-full grid-cols-5">
+                  <TabsTrigger value="all">Todos</TabsTrigger>
+                  <TabsTrigger value="CREATE_VOUCHER">Vouchers Criados</TabsTrigger>
+                  <TabsTrigger value="INVALIDATE_VOUCHER">Vouchers Invalidados</TabsTrigger>
+                  <TabsTrigger value="APPROVE_PAYMENT">Pagamentos Aprovados</TabsTrigger>
+                  <TabsTrigger value="REJECT_PAYMENT">Pagamentos Rejeitados</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+
+            {/* Tabela de Logs */}
+            {auditLogsLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Ação</TableHead>
+                      <TableHead>Entidade</TableHead>
+                      <TableHead>Detalhes</TableHead>
+                      <TableHead>Usuário</TableHead>
+                      <TableHead>IP</TableHead>
+                      <TableHead>Data</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filterAuditLogs().length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-muted-foreground">
+                          Nenhum log encontrado
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filterAuditLogs().map((log) => (
+                        <TableRow key={log.id}>
+                          <TableCell>
+                            <Badge className={getActionColor(log.action)}>
+                              {getActionLabel(log.action)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-medium capitalize">{log.entity_type}</span>
+                              {log.entity_id && (
+                                <span className="text-xs text-muted-foreground font-mono">
+                                  {log.entity_id.slice(0, 8)}...
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-xs font-mono max-w-xs overflow-hidden text-ellipsis">
+                              {log.details && (
+                                <div className="space-y-1">
+                                  {log.details.code && <div>Código: {log.details.code}</div>}
+                                  {log.details.days && <div>Dias: {log.details.days}</div>}
+                                  {log.details.amount && <div>Valor: {log.details.amount} {log.details.currency}</div>}
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-mono text-xs">
+                            {log.user_id.slice(0, 8)}...
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {log.ip_address || '-'}
+                          </TableCell>
+                          <TableCell className="text-xs whitespace-nowrap">
+                            {new Date(log.created_at).toLocaleString("pt-BR")}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
