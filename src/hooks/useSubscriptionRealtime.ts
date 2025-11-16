@@ -71,13 +71,24 @@ export const useSubscriptionRealtime = (userId: string | undefined) => {
     };
   }, [userId]);
 
-  const checkAndNotify = (subscription: any) => {
+  const checkAndNotify = async (subscription: any) => {
     if (!subscription.expires_at || subscription.status !== 'active') {
       if (subscription.status === 'inactive') {
+        const title = "Assinatura Inativa";
+        const description = "Sua assinatura está inativa. Ative agora para continuar usando o NOTTIFY.";
+        
         toast({
-          title: "Assinatura Inativa",
-          description: "Sua assinatura está inativa. Ative agora para continuar usando o NOTTIFY.",
+          title,
+          description,
           variant: "destructive",
+        });
+
+        // Save to history
+        await supabase.from('notification_history').insert({
+          user_id: userId,
+          title,
+          description,
+          type: 'error'
         });
       }
       return;
@@ -87,28 +98,44 @@ export const useSubscriptionRealtime = (userId: string | undefined) => {
     const now = new Date();
     const daysRemaining = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
+    let title = "";
+    let description = "";
+    let type = "info";
+    let variant: "default" | "destructive" = "default";
+
     if (daysRemaining <= 0) {
-      toast({
-        title: "Assinatura Expirada",
-        description: "Sua assinatura expirou. Renove agora para continuar usando todos os recursos.",
-        variant: "destructive",
-      });
+      title = "Assinatura Expirada";
+      description = "Sua assinatura expirou. Renove agora para continuar usando todos os recursos.";
+      type = "error";
+      variant = "destructive";
     } else if (daysRemaining <= 3) {
-      toast({
-        title: "Assinatura Expirando em Breve",
-        description: `Sua assinatura expira em ${daysRemaining} ${daysRemaining === 1 ? 'dia' : 'dias'}. Renove agora para evitar interrupções.`,
-        variant: "destructive",
-      });
+      title = "Assinatura Expirando em Breve";
+      description = `Sua assinatura expira em ${daysRemaining} ${daysRemaining === 1 ? 'dia' : 'dias'}. Renove agora para evitar interrupções.`;
+      type = "warning";
+      variant = "destructive";
     } else if (daysRemaining <= 7) {
-      toast({
-        title: "Lembrete de Renovação",
-        description: `Sua assinatura expira em ${daysRemaining} dias. Planeje sua renovação.`,
-      });
+      title = "Lembrete de Renovação";
+      description = `Sua assinatura expira em ${daysRemaining} dias. Planeje sua renovação.`;
+      type = "warning";
     } else if (daysRemaining > 7 && subscription.status === 'active') {
-      // Only show this on subscription activation/renewal
+      title = "Assinatura Ativa";
+      description = `Sua assinatura está ativa até ${expiresAt.toLocaleDateString('pt-BR')}.`;
+      type = "success";
+    }
+
+    if (title && description) {
       toast({
-        title: "Assinatura Ativa",
-        description: `Sua assinatura está ativa até ${expiresAt.toLocaleDateString('pt-BR')}.`,
+        title,
+        description,
+        variant,
+      });
+
+      // Save to history
+      await supabase.from('notification_history').insert({
+        user_id: userId,
+        title,
+        description,
+        type
       });
     }
   };
