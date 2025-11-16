@@ -1,15 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Settings, LogOut, Bell } from "lucide-react";
+import { Settings, LogOut, Bell, Shield } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import nottifyLogo from "@/assets/nottify-logo.png";
 
 interface DashboardHeaderProps {
   onLogout: () => void;
+  isAdmin?: boolean;
 }
 
-export const DashboardHeader = ({ onLogout }: DashboardHeaderProps) => {
+export const DashboardHeader = ({ onLogout, isAdmin = false }: DashboardHeaderProps) => {
   const [alertsOn, setAlertsOn] = useState(true);
   const navigate = useNavigate();
 
@@ -32,6 +33,12 @@ export const DashboardHeader = ({ onLogout }: DashboardHeaderProps) => {
           <Bell className="w-3 h-3 mr-1" />
           Alertas {alertsOn ? "ON" : "OFF"}
         </Badge>
+        {isAdmin && (
+          <Button variant="outline" onClick={() => navigate("/admin")}>
+            <Shield className="mr-2 h-4 w-4" />
+            Admin
+          </Button>
+        )}
         <Button variant="outline" size="icon" onClick={() => navigate("/settings")}>
           <Settings className="h-4 w-4" />
         </Button>
