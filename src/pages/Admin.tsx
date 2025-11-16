@@ -126,6 +126,95 @@ const Admin = () => {
     loadAlertConfigs();
   }, []);
 
+  // Real-time subscription for alerts
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    console.log('Setting up realtime subscription for alerts...');
+
+    const channel = supabase
+      .channel('admin-alerts')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'alerts'
+        },
+        async (payload) => {
+          console.log('New alert received:', payload);
+          
+          const newAlert = payload.new as Alert;
+          
+          // Add to alerts list
+          setAlerts(prev => [newAlert, ...prev]);
+
+          // Find the config for this alert
+          const config = alertConfigs.find(c => c.id === newAlert.alert_config_id);
+          
+          // Show toast notification
+          toast.error(
+            `🚨 ${getAlertTypeLabel(config?.alert_type || '')}`,
+            {
+              description: newAlert.details?.message || 'Novo alerta disparado',
+              duration: 10000,
+              action: {
+                label: 'Ver Detalhes',
+                onClick: () => {
+                  document.getElementById('active-alerts')?.scrollIntoView({ behavior: 'smooth' });
+                }
+              }
+            }
+          );
+
+          // Play notification sound (optional)
+          try {
+            const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZUQ0PVKvo8bViFgU7k9n0yHosBSh+zPLZjzsIGmm98OScTgwOUKbh8bllHAY7k9n0yHosBSh+zPLZjzsIG');
+            audio.volume = 0.3;
+            audio.play().catch(e => console.log('Audio play failed:', e));
+          } catch (e) {
+            console.log('Could not play notification sound:', e);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'alerts'
+        },
+        (payload) => {
+          console.log('Alert updated:', payload);
+          
+          const updatedAlert = payload.new as Alert;
+          
+          // Update in alerts list
+          setAlerts(prev => 
+            prev.map(alert => 
+              alert.id === updatedAlert.id ? updatedAlert : alert
+            )
+          );
+
+          // Show toast if resolved
+          if (updatedAlert.is_resolved && !payload.old.is_resolved) {
+            toast.success('Alerta resolvido com sucesso');
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('Realtime subscription status:', status);
+        if (status === 'SUBSCRIBED') {
+          console.log('Successfully subscribed to alerts realtime updates');
+        }
+      });
+
+    return () => {
+      console.log('Cleaning up realtime subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [isAdmin, alertConfigs]);
+
   const checkAdminAccess = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -1583,15 +1672,30 @@ const Admin = () => {
         </Card>
 
         {/* Active Alerts Card */}
-        <Card>
+        <Card id="active-alerts">
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-orange-500" />
-              <CardTitle>Alertas Ativos</CardTitle>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-orange-500" />
+                  <CardTitle>Alertas Ativos</CardTitle>
+                  {alerts.filter(a => !a.is_resolved).length > 0 && (
+                    <Badge variant="destructive" className="ml-2">
+                      {alerts.filter(a => !a.is_resolved).length}
+                    </Badge>
+                  )}
+                </div>
+                <CardDescription>
+                  Alertas disparados que requerem atenção • Atualizações em tempo real
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                  <span>Conectado</span>
+                </div>
+              </div>
             </div>
-            <CardDescription>
-              Alertas disparados que requerem atenção
-            </CardDescription>
           </CardHeader>
           <CardContent>
             {alertsLoading ? (
