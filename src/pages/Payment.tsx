@@ -76,7 +76,7 @@ const Payment = () => {
         .insert({
           user_id: user.id,
           wallet_address: walletAddress,
-          expected_amount: 15.00,
+          expected_amount: 10.00,
           currency: "USD",
           status: "pending",
         });
@@ -160,7 +160,7 @@ const Payment = () => {
                 ) : (
                   <div className="text-center space-y-4">
                     <div className="p-6 bg-primary/5 rounded-lg">
-                      <p className="text-4xl font-bold text-primary mb-2">$15.00</p>
+                      <p className="text-4xl font-bold text-primary mb-2">$10.00</p>
                       <p className="text-sm text-muted-foreground">{t("payment.oneTimePayment")}</p>
                     </div>
 
