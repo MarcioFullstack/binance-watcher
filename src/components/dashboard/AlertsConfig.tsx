@@ -3,10 +3,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
 
 export const AlertsConfig = () => {
   const [loading, setLoading] = useState(false);
@@ -14,6 +24,8 @@ export const AlertsConfig = () => {
   const [gainPercent, setGainPercent] = useState("5");
   const [lossEnabled, setLossEnabled] = useState(true);
   const [gainEnabled, setGainEnabled] = useState(true);
+  const [showDisableDialog, setShowDisableDialog] = useState(false);
+  const [pendingLossEnabled, setPendingLossEnabled] = useState(true);
 
   useEffect(() => {
     loadSettings();
@@ -34,10 +46,35 @@ export const AlertsConfig = () => {
 
       if (data) {
         setLossPercent(data.risk_percent.toString());
+        setLossEnabled(data.risk_active || true);
+        setPendingLossEnabled(data.risk_active || true);
       }
     } catch (error) {
       console.error("Error loading settings:", error);
     }
+  };
+
+  const handleLossEnabledChange = (checked: boolean) => {
+    if (!checked && lossEnabled) {
+      // Tentar desabilitar alerta crítico - mostrar confirmação
+      setPendingLossEnabled(false);
+      setShowDisableDialog(true);
+    } else {
+      // Habilitar alerta - não precisa confirmação
+      setLossEnabled(checked);
+      setPendingLossEnabled(checked);
+    }
+  };
+
+  const confirmDisableLossAlert = () => {
+    setLossEnabled(false);
+    setShowDisableDialog(false);
+    toast.warning("Alerta de perda desabilitado. Seu capital não está mais protegido!");
+  };
+
+  const cancelDisableLossAlert = () => {
+    setPendingLossEnabled(true);
+    setShowDisableDialog(false);
   };
 
   const handleSave = async () => {
@@ -87,11 +124,12 @@ export const AlertsConfig = () => {
             <Checkbox 
               id="loss-alert" 
               checked={lossEnabled}
-              onCheckedChange={(checked) => setLossEnabled(checked as boolean)}
+              onCheckedChange={handleLossEnabledChange}
               disabled={loading}
             />
-            <Label htmlFor="loss-alert" className="text-destructive font-semibold">
-              Alerta de Perda
+            <Label htmlFor="loss-alert" className="text-destructive font-semibold flex items-center gap-1">
+              <AlertTriangle className="w-4 h-4" />
+              Alerta de Perda (Crítico)
             </Label>
           </div>
           <Label htmlFor="loss-percent" className="text-sm text-muted-foreground">
@@ -158,6 +196,44 @@ export const AlertsConfig = () => {
           </span>
         </Button>
       </div>
+
+      <AlertDialog open={showDisableDialog} onOpenChange={setShowDisableDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" />
+              Desabilitar Alerta de Perda?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p className="font-semibold">
+                ⚠️ ATENÇÃO: Você está prestes a desabilitar um alerta crítico de proteção!
+              </p>
+              <p>
+                Ao desabilitar o alerta de perda, você não receberá notificações quando suas perdas atingirem o limite configurado. Isso pode resultar em:
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                <li>Perda de capital significativa sem aviso prévio</li>
+                <li>Dificuldade em controlar o risco das operações</li>
+                <li>Possibilidade de liquidação de posições</li>
+              </ul>
+              <p className="font-semibold text-destructive">
+                Tem certeza que deseja continuar?
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDisableLossAlert}>
+              Cancelar (Recomendado)
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDisableLossAlert}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Sim, Desabilitar Alerta
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };
