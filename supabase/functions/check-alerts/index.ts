@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.81.1";
+import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -185,6 +186,82 @@ serve(async (req) => {
       if (insertError) {
         console.error('Error inserting alerts:', insertError);
         throw insertError;
+      }
+
+      // Send email notifications to admins
+      try {
+        console.log('Sending email notifications to admins...');
+        
+        // Get admin users
+        const { data: adminRoles, error: rolesError } = await supabase
+          .from('user_roles')
+          .select('user_id')
+          .eq('role', 'admin');
+
+        if (rolesError) {
+          console.error('Error fetching admin roles:', rolesError);
+        } else if (adminRoles && adminRoles.length > 0) {
+          const adminIds = adminRoles.map(r => r.user_id);
+          
+          // Get admin emails from auth.users via profiles
+          const { data: profiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('email')
+            .in('id', adminIds);
+
+          if (profilesError) {
+            console.error('Error fetching admin emails:', profilesError);
+          } else if (profiles && profiles.length > 0) {
+            const resend = new Resend(Deno.env.get('RESEND_API_KEY') as string);
+            const adminEmails = profiles.map(p => p.email);
+
+            // Create email content
+            const alertsList = triggeredAlerts.map(alert => {
+              const details = alert.details as any;
+              return `• ${details.message}`;
+            }).join('\n');
+
+            const emailHtml = `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h1 style="color: #ef4444; border-bottom: 2px solid #ef4444; padding-bottom: 10px;">
+                  ⚠️ Alertas Críticos Atingidos
+                </h1>
+                <p style="font-size: 16px; color: #333; margin: 20px 0;">
+                  Os seguintes alertas críticos foram acionados no sistema:
+                </p>
+                <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0;">
+                  ${triggeredAlerts.map(alert => {
+                    const details = alert.details as any;
+                    return `<p style="margin: 10px 0; color: #333;"><strong>${details.message}</strong></p>`;
+                  }).join('')}
+                </div>
+                <p style="font-size: 14px; color: #666; margin-top: 30px;">
+                  Acesse o painel administrativo para mais detalhes e ações.
+                </p>
+                <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+                <p style="font-size: 12px; color: #999; text-align: center;">
+                  Esta é uma notificação automática do sistema NOTTIFY
+                </p>
+              </div>
+            `;
+
+            const { error: emailError } = await resend.emails.send({
+              from: 'NOTTIFY Alertas <onboarding@resend.dev>',
+              to: adminEmails,
+              subject: `⚠️ ${triggeredAlerts.length} Alerta${triggeredAlerts.length > 1 ? 's' : ''} Crítico${triggeredAlerts.length > 1 ? 's' : ''} Acionado${triggeredAlerts.length > 1 ? 's' : ''}`,
+              html: emailHtml,
+            });
+
+            if (emailError) {
+              console.error('Error sending email:', emailError);
+            } else {
+              console.log(`Email notifications sent to ${adminEmails.length} admin(s)`);
+            }
+          }
+        }
+      } catch (emailErr) {
+        console.error('Error in email notification process:', emailErr);
+        // Don't throw error, just log it - we don't want to fail the whole function
       }
     }
 
