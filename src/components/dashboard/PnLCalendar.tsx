@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, BarChart3, Calendar as CalendarIcon, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, BarChart3, Calendar as CalendarIcon, Loader2, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, addMonths, subMonths } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -18,9 +18,10 @@ interface DailyPnL {
 interface PnLCalendarProps {
   isSyncing?: boolean;
   syncProgress?: { current: number; total: number };
+  onManualSync?: () => void;
 }
 
-export const PnLCalendar = ({ isSyncing = false, syncProgress }: PnLCalendarProps) => {
+export const PnLCalendar = ({ isSyncing = false, syncProgress, onManualSync }: PnLCalendarProps) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [marketType, setMarketType] = useState<"USDT" | "COIN">("USDT");
   const [pnlData, setPnlData] = useState<Record<string, DailyPnL>>({});
@@ -109,6 +110,18 @@ export const PnLCalendar = ({ isSyncing = false, syncProgress }: PnLCalendarProp
               {isSyncing && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
             </div>
             <div className="flex items-center gap-2">
+              {onManualSync && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onManualSync}
+                  disabled={isSyncing}
+                  className="gap-2"
+                >
+                  <RefreshCw className={cn("h-4 w-4", isSyncing && "animate-spin")} />
+                  Sync
+                </Button>
+              )}
               <Button
                 variant={viewMode === "chart" ? "default" : "ghost"}
                 size="sm"
