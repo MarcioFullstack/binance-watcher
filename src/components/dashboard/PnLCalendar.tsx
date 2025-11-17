@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, BarChart3, Calendar as CalendarIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, BarChart3, Calendar as CalendarIcon, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, addMonths, subMonths } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Progress } from "@/components/ui/progress";
 
 interface DailyPnL {
   date: string;
@@ -14,7 +15,12 @@ interface DailyPnL {
   market_type: string;
 }
 
-export const PnLCalendar = () => {
+interface PnLCalendarProps {
+  isSyncing?: boolean;
+  syncProgress?: { current: number; total: number };
+}
+
+export const PnLCalendar = ({ isSyncing = false, syncProgress }: PnLCalendarProps) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [marketType, setMarketType] = useState<"USDT" | "COIN">("USDT");
   const [pnlData, setPnlData] = useState<Record<string, DailyPnL>>({});
@@ -96,24 +102,41 @@ export const PnLCalendar = () => {
   return (
     <Card className="w-full">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">Daily Gains and Losses Analysis</CardTitle>
-          <div className="flex items-center gap-2">
-            <Button
-              variant={viewMode === "chart" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("chart")}
-            >
-              <BarChart3 className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === "calendar" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("calendar")}
-            >
-              <CalendarIcon className="h-4 w-4" />
-            </Button>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-lg">Daily Gains and Losses Analysis</CardTitle>
+              {isSyncing && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={viewMode === "chart" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("chart")}
+              >
+                <BarChart3 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "calendar" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("calendar")}
+              >
+                <CalendarIcon className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
+          {isSyncing && syncProgress && (
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Syncing PnL data from Binance...</span>
+                <span>{syncProgress.current}/{syncProgress.total}</span>
+              </div>
+              <Progress 
+                value={(syncProgress.current / syncProgress.total) * 100} 
+                className="h-1"
+              />
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">

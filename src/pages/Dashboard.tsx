@@ -28,7 +28,7 @@ const Dashboard = () => {
   useAlertsRealtime(user?.id, isAdmin);
 
   // Sync daily PnL data
-  useDailyPnLSync(user?.id);
+  const { isSyncing, syncProgress } = useDailyPnLSync(user?.id);
 
   useEffect(() => {
     checkUser();
@@ -130,7 +130,7 @@ const Dashboard = () => {
             <BalanceCards />
             <PnLCards />
             <AlertsConfig />
-            <PnLCalendar />
+            <PnLCalendar isSyncing={isSyncing} syncProgress={syncProgress} />
           </>
         ) : (
           <div className="flex items-center justify-center py-12">
