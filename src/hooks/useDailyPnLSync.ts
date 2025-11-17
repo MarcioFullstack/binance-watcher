@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { startOfMonth, endOfMonth, eachDayOfInterval, format, subDays } from "date-fns";
+import { startOfMonth, subDays, eachDayOfInterval, format } from "date-fns";
 
 export const useDailyPnLSync = (userId?: string) => {
   useEffect(() => {
@@ -8,42 +8,39 @@ export const useDailyPnLSync = (userId?: string) => {
 
     const syncPnLData = async () => {
       try {
-        // Generate sample data for the current month and last 15 days
         const today = new Date();
         const start = startOfMonth(subDays(today, 30));
-        const end = today;
+        const days = eachDayOfInterval({ start, end: today });
         
-        const days = eachDayOfInterval({ start, end });
+        // Sync historical data for both market types
+        const marketTypes = ['USDT', 'COIN'];
         
-        const records = days.map(day => {
-          // Generate realistic PnL values
-          const isProfit = Math.random() > 0.45; // 55% chance of profit
-          const magnitude = Math.random() * 8; // 0 to 8
-          const pnlUsd = isProfit ? magnitude : -magnitude;
-          const pnlPercentage = (pnlUsd / 1000) * 100; // Assuming 1000 USD base
-          
-          return {
-            user_id: userId,
-            date: format(day, 'yyyy-MM-dd'),
-            pnl_usd: parseFloat(pnlUsd.toFixed(2)),
-            pnl_percentage: parseFloat(pnlPercentage.toFixed(2)),
-            market_type: 'USDT',
-          };
-        });
-
-        // Upsert all records
-        const { error } = await supabase
-          .from('daily_pnl')
-          .upsert(records, {
-            onConflict: 'user_id,date,market_type',
-            ignoreDuplicates: false,
-          });
-
-        if (error) {
-          console.error('Error syncing PnL data:', error);
-        } else {
-          console.log('Successfully synced PnL data for', records.length, 'days');
+        for (const marketType of marketTypes) {
+          for (const day of days) {
+            const dateStr = format(day, 'yyyy-MM-dd');
+            
+            // Skip future dates
+            if (day > today) continue;
+            
+            try {
+              // Call edge function to sync data for this specific date
+              const { error } = await supabase.functions.invoke('sync-daily-pnl', {
+                body: { 
+                  date: dateStr,
+                  market_type: marketType
+                }
+              });
+              
+              if (error) {
+                console.error(`Error syncing PnL for ${dateStr} (${marketType}):`, error);
+              }
+            } catch (error) {
+              console.error(`Error syncing ${dateStr}:`, error);
+            }
+          }
         }
+        
+        console.log('Successfully initiated PnL sync for historical data');
       } catch (error) {
         console.error('Error in useDailyPnLSync:', error);
       }
@@ -52,8 +49,8 @@ export const useDailyPnLSync = (userId?: string) => {
     // Run sync immediately
     syncPnLData();
 
-    // Optionally, set up periodic sync (e.g., every hour)
-    const interval = setInterval(syncPnLData, 60 * 60 * 1000); // 1 hour
+    // Set up periodic sync every 6 hours
+    const interval = setInterval(syncPnLData, 6 * 60 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, [userId]);
