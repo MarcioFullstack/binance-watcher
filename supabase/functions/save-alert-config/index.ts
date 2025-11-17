@@ -1,0 +1,126 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.81.1';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+Deno.serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const authHeader = req.headers.get('Authorization')!;
+
+    // Cliente para autenticação do usuário
+    const supabaseClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    // Cliente com privilégios de serviço para inserir histórico
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Verificar autenticação
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) {
+      console.error('Authentication error:', authError);
+      return new Response(
+        JSON.stringify({ error: 'Não autenticado' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { risk_percent, risk_active } = await req.json();
+
+    console.log(`Saving alert config for user ${user.id}:`, { risk_percent, risk_active });
+
+    // Buscar configurações atuais para comparar
+    const { data: currentSettings, error: fetchError } = await supabaseClient
+      .from('risk_settings')
+      .select('risk_percent, risk_active')
+      .eq('user_id', user.id)
+      .single();
+
+    if (fetchError) {
+      console.error('Error fetching current settings:', fetchError);
+      return new Response(
+        JSON.stringify({ error: 'Erro ao buscar configurações atuais' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Atualizar configurações
+    const { error: updateError } = await supabaseClient
+      .from('risk_settings')
+      .update({
+        risk_percent: parseFloat(risk_percent),
+        risk_active: risk_active,
+      })
+      .eq('user_id', user.id);
+
+    if (updateError) {
+      console.error('Error updating settings:', updateError);
+      return new Response(
+        JSON.stringify({ error: 'Erro ao atualizar configurações' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Registrar mudanças no histórico usando o cliente admin
+    const historyEntries = [];
+
+    // Verificar mudança no percentual
+    if (currentSettings.risk_percent !== parseFloat(risk_percent)) {
+      historyEntries.push({
+        user_id: user.id,
+        alert_type: 'loss_alert',
+        field_changed: 'threshold',
+        old_value: currentSettings.risk_percent?.toString() || null,
+        new_value: risk_percent.toString(),
+        changed_by: user.id,
+      });
+    }
+
+    // Verificar mudança no status de ativo
+    if (currentSettings.risk_active !== risk_active) {
+      historyEntries.push({
+        user_id: user.id,
+        alert_type: 'loss_alert',
+        field_changed: 'enabled',
+        old_value: currentSettings.risk_active?.toString() || null,
+        new_value: risk_active.toString(),
+        changed_by: user.id,
+      });
+    }
+
+    // Inserir histórico se houver mudanças
+    if (historyEntries.length > 0) {
+      const { error: historyError } = await supabaseAdmin
+        .from('alert_config_history')
+        .insert(historyEntries);
+
+      if (historyError) {
+        console.error('Error inserting history:', historyError);
+        // Não falhar a operação se o histórico falhar, apenas logar
+      } else {
+        console.log(`Registered ${historyEntries.length} history entries`);
+      }
+    }
+
+    return new Response(
+      JSON.stringify({ success: true, message: 'Configurações salvas com sucesso' }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error: any) {
+    console.error('Error in save-alert-config function:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
