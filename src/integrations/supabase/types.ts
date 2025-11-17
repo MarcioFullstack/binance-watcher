@@ -208,6 +208,39 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_pnl: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          market_type: string
+          pnl_percentage: number
+          pnl_usd: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          market_type?: string
+          pnl_percentage?: number
+          pnl_usd?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          market_type?: string
+          pnl_percentage?: number
+          pnl_usd?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notification_history: {
         Row: {
           created_at: string
