@@ -12,6 +12,7 @@ import Payment from "./pages/Payment";
 import SetupBinance from "./pages/SetupBinance";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
+import SecuritySettings from "./pages/SecuritySettings";
 import Admin from "./pages/Admin";
 import NotificationHistory from "./pages/NotificationHistory";
 import NotFound from "./pages/NotFound";
@@ -34,6 +35,7 @@ const App = () => {
             <Route path="/setup-binance" element={<SetupBinance />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/security" element={<SecuritySettings />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/notifications" element={<NotificationHistory />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
