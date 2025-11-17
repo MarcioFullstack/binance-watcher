@@ -12,11 +12,11 @@ import PasswordStrengthIndicator from "@/components/PasswordStrengthIndicator";
 import { z } from "zod";
 
 const passwordSchema = z.string()
-  .min(8, "A senha deve ter pelo menos 8 caracteres")
-  .regex(/[a-z]/, "A senha deve conter pelo menos uma letra minúscula")
-  .regex(/[A-Z]/, "A senha deve conter pelo menos uma letra maiúscula")
-  .regex(/[0-9]/, "A senha deve conter pelo menos um número")
-  .regex(/[^a-zA-Z0-9]/, "A senha deve conter pelo menos um caractere especial");
+  .min(8, "Password must be at least 8 characters")
+  .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+  .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+  .regex(/[0-9]/, "Password must contain at least one number")
+  .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character");
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
@@ -43,7 +43,7 @@ const ResetPassword = () => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      toast.error("As senhas não coincidem");
+      toast.error("Passwords do not match");
       return;
     }
 
@@ -71,7 +71,7 @@ const ResetPassword = () => {
         navigate("/login");
       }, 2000);
     } catch (error: any) {
-      toast.error(error.message || "Erro ao alterar senha");
+      toast.error(error.message || "Error changing password");
     } finally {
       setLoading(false);
     }

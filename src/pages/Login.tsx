@@ -15,7 +15,7 @@ import { authenticator } from "otplib";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { z } from "zod";
 
-const emailSchema = z.string().email("Email inválido");
+const emailSchema = z.string().email("Invalid email");
 
 const Login = () => {
   const { t } = useTranslation();
@@ -86,7 +86,7 @@ const Login = () => {
 
     // Validate email
     if (!validateEmail(email)) {
-      toast.error("Por favor, insira um email válido");
+      toast.error("Please enter a valid email");
       return;
     }
 
@@ -100,7 +100,7 @@ const Login = () => {
 
       if (error) throw error;
       
-      if (!data.user) throw new Error("Usuário não encontrado");
+      if (!data.user) throw new Error("User not found");
 
       // Check if user has 2FA enabled
       const { data: twoFAData, error: twoFAError } = await supabase
@@ -126,7 +126,7 @@ const Login = () => {
         navigate("/dashboard");
       }
     } catch (error: any) {
-      toast.error(error.message || "Erro ao fazer login");
+      toast.error(error.message || "Error logging in");
     } finally {
       setLoading(false);
     }
