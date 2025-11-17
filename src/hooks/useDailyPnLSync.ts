@@ -159,5 +159,13 @@ export const useDailyPnLSync = (userId?: string) => {
     };
   }, [userId, hasAccount, syncPnLData, checkBinanceAccount]);
 
-  return { isSyncing, syncProgress };
+  const manualSync = useCallback(() => {
+    if (isSyncing) {
+      toast.info("Sync already in progress");
+      return;
+    }
+    syncPnLData();
+  }, [isSyncing, syncPnLData]);
+
+  return { isSyncing, syncProgress, manualSync };
 };
