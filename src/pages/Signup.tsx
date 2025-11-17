@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, Eye, EyeOff, Shield, Copy, Check } from "lucide-react";
+import { Loader2, ArrowLeft, Eye, EyeOff, Shield, Copy, Check, Sparkles } from "lucide-react";
 import nottifyLogo from "@/assets/nottify-logo.png";
 import PasswordStrengthIndicator from "@/components/PasswordStrengthIndicator";
 import { z } from "zod";
@@ -236,6 +236,40 @@ const Signup = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const generateStrongPassword = () => {
+    const length = 16;
+    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const numbers = '0123456789';
+    const special = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+    
+    // Garantir pelo menos um de cada tipo
+    let password = '';
+    password += lowercase[Math.floor(Math.random() * lowercase.length)];
+    password += uppercase[Math.floor(Math.random() * uppercase.length)];
+    password += numbers[Math.floor(Math.random() * numbers.length)];
+    password += special[Math.floor(Math.random() * special.length)];
+    
+    // Preencher o resto aleatoriamente
+    const allChars = lowercase + uppercase + numbers + special;
+    for (let i = password.length; i < length; i++) {
+      password += allChars[Math.floor(Math.random() * allChars.length)];
+    }
+    
+    // Embaralhar a senha
+    password = password.split('').sort(() => Math.random() - 0.5).join('');
+    
+    setPassword(password);
+    setConfirmPassword(password);
+    setShowPassword(true);
+    
+    // Copiar automaticamente para área de transferência
+    navigator.clipboard.writeText(password);
+    toast.success("Senha forte gerada e copiada! Guarde em um local seguro.", {
+      duration: 5000,
+    });
+  };
+
   if (step === 2) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -361,7 +395,20 @@ const Signup = () => {
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Senha</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={generateStrongPassword}
+                  disabled={loading}
+                  className="h-auto py-1 px-2 text-xs gap-1"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  Gerar senha forte
+                </Button>
+              </div>
               <div className="relative">
                 <Input
                   id="password"
