@@ -1,5 +1,5 @@
 import { Progress } from "@/components/ui/progress";
-import { Check, X } from "lucide-react";
+import { Check, X, ShieldCheck } from "lucide-react";
 
 interface PasswordStrengthIndicatorProps {
   password: string;
@@ -11,7 +11,7 @@ interface PasswordCriteria {
 }
 
 const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicatorProps) => {
-  const calculateStrength = (pwd: string): { strength: number; label: string; color: string } => {
+  const calculateStrength = (pwd: string): { strength: number; label: string; color: string; bgColor: string } => {
     let strength = 0;
     
     if (pwd.length >= 8) strength += 25;
@@ -21,43 +21,65 @@ const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicatorProps)
     if (/[0-9]/.test(pwd)) strength += 15;
     if (/[^a-zA-Z0-9]/.test(pwd)) strength += 10;
 
-    if (strength < 40) return { strength, label: "Fraca", color: "text-destructive" };
-    if (strength < 70) return { strength, label: "Média", color: "text-yellow-500" };
-    return { strength, label: "Forte", color: "text-green-500" };
+    if (strength < 40) return { strength, label: "Fraca", color: "text-destructive", bgColor: "bg-destructive" };
+    if (strength < 70) return { strength, label: "Média", color: "text-yellow-500", bgColor: "bg-yellow-500" };
+    return { strength, label: "Forte", color: "text-green-500", bgColor: "bg-green-500" };
   };
 
   const getCriteria = (pwd: string): PasswordCriteria[] => [
     { label: "Mínimo de 8 caracteres", met: pwd.length >= 8 },
-    { label: "Pelo menos uma letra maiúscula", met: /[A-Z]/.test(pwd) },
-    { label: "Pelo menos uma letra minúscula", met: /[a-z]/.test(pwd) },
-    { label: "Pelo menos um número", met: /[0-9]/.test(pwd) },
-    { label: "Pelo menos um caractere especial", met: /[^a-zA-Z0-9]/.test(pwd) },
+    { label: "Pelo menos uma letra maiúscula (A-Z)", met: /[A-Z]/.test(pwd) },
+    { label: "Pelo menos uma letra minúscula (a-z)", met: /[a-z]/.test(pwd) },
+    { label: "Pelo menos um número (0-9)", met: /[0-9]/.test(pwd) },
+    { label: "Pelo menos um caractere especial (!@#$%)", met: /[^a-zA-Z0-9]/.test(pwd) },
   ];
 
   if (!password) return null;
 
-  const { strength, label, color } = calculateStrength(password);
+  const { strength, label, color, bgColor } = calculateStrength(password);
   const criteria = getCriteria(password);
+  const metCriteria = criteria.filter(c => c.met).length;
 
   return (
-    <div className="space-y-3 mt-2">
+    <div className="space-y-3 mt-2 p-3 rounded-lg border bg-card">
       <div className="space-y-2">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Força da senha:</span>
-          <span className={`font-medium ${color}`}>{label}</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className={`w-4 h-4 ${color}`} />
+            <span className="text-sm font-medium">Força da senha:</span>
+          </div>
+          <span className={`font-semibold text-sm ${color}`}>{label}</span>
         </div>
-        <Progress value={strength} className="h-2" />
+        <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">
+          <div 
+            className={`h-full ${bgColor} transition-all duration-300 ease-out`}
+            style={{ width: `${strength}%` }}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground text-right">
+          {metCriteria} de {criteria.length} requisitos cumpridos
+        </p>
       </div>
       
-      <div className="space-y-1">
+      <div className="space-y-1.5 pt-2 border-t">
+        <p className="text-xs font-medium text-muted-foreground mb-2">Requisitos:</p>
         {criteria.map((criterion, index) => (
-          <div key={index} className="flex items-center gap-2 text-xs">
-            {criterion.met ? (
-              <Check className="w-3 h-3 text-green-500" />
-            ) : (
-              <X className="w-3 h-3 text-muted-foreground" />
-            )}
-            <span className={criterion.met ? "text-foreground" : "text-muted-foreground"}>
+          <div 
+            key={index} 
+            className={`flex items-center gap-2 text-xs transition-all duration-200 ${
+              criterion.met ? 'opacity-100' : 'opacity-60'
+            }`}
+          >
+            <div className={`flex items-center justify-center w-4 h-4 rounded-full ${
+              criterion.met ? 'bg-green-500/10' : 'bg-muted'
+            }`}>
+              {criterion.met ? (
+                <Check className="w-3 h-3 text-green-500" />
+              ) : (
+                <X className="w-3 h-3 text-muted-foreground" />
+              )}
+            </div>
+            <span className={`${criterion.met ? 'text-green-600 dark:text-green-400 font-medium' : 'text-muted-foreground'}`}>
               {criterion.label}
             </span>
           </div>
