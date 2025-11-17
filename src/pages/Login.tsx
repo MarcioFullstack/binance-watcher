@@ -5,14 +5,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { Loader2, ArrowLeft, Eye, EyeOff, Shield } from "lucide-react";
 import nottifyLogo from "@/assets/nottify-logo.png";
 import { useTranslation } from "react-i18next";
+import { authenticator } from "otplib";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 const Login = () => {
   const { t } = useTranslation();
+  const [step, setStep] = useState(1); // 1: email/senha, 2: 2FA
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,6 +24,10 @@ const Login = () => {
   const [resetEmail, setResetEmail] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [userId, setUserId] = useState("");
+  const [totpSecret, setTotpSecret] = useState("");
+  const [totpCode, setTotpCode] = useState("");
+  const [backupCode, setBackupCode] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -33,11 +41,100 @@ const Login = () => {
       });
 
       if (error) throw error;
+      
+      if (!data.user) throw new Error("Usuário não encontrado");
+
+      // Check if user has 2FA enabled
+      const { data: twoFAData, error: twoFAError } = await supabase
+        .from("user_2fa")
+        .select("*")
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+
+      if (twoFAError && twoFAError.code !== "PGRST116") {
+        console.error("Error checking 2FA:", twoFAError);
+      }
+
+      if (twoFAData && twoFAData.is_enabled) {
+        // User has 2FA enabled - logout and show 2FA verification
+        setUserId(data.user.id);
+        setTotpSecret(twoFAData.totp_secret);
+        await supabase.auth.signOut();
+        setStep(2);
+        toast.info("Digite o código de autenticação");
+      } else {
+        // No 2FA - proceed to dashboard
+        toast.success("Login realizado com sucesso!");
+        navigate("/dashboard");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao fazer login");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerify2FA = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      let isValid = false;
+
+      // Try TOTP code first
+      if (totpCode.length === 6) {
+        isValid = authenticator.verify({
+          token: totpCode,
+          secret: totpSecret
+        });
+      }
+
+      // If TOTP is invalid and backup code is provided, try backup code
+      if (!isValid && backupCode) {
+        const { data: backupData, error: backupError } = await supabase
+          .from("backup_codes")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("code", backupCode.toUpperCase())
+          .eq("is_used", false)
+          .maybeSingle();
+
+        if (backupError && backupError.code !== "PGRST116") {
+          console.error("Error checking backup code:", backupError);
+        }
+
+        if (backupData) {
+          isValid = true;
+          
+          // Mark backup code as used
+          await supabase
+            .from("backup_codes")
+            .update({ 
+              is_used: true,
+              used_at: new Date().toISOString()
+            })
+            .eq("id", backupData.id);
+        }
+      }
+
+      if (!isValid) {
+        toast.error("Código inválido. Tente novamente.");
+        setLoading(false);
+        return;
+      }
+
+      // Login again after successful 2FA verification
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (loginError) throw loginError;
 
       toast.success("Login realizado com sucesso!");
       navigate("/dashboard");
     } catch (error: any) {
-      toast.error(error.message || "Erro ao fazer login");
+      toast.error(error.message || "Erro ao verificar código");
     } finally {
       setLoading(false);
     }
@@ -84,6 +181,118 @@ const Login = () => {
       setResetLoading(false);
     }
   };
+
+  if (step === 2) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="w-full max-w-md space-y-4">
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setStep(1);
+              setTotpCode("");
+              setBackupCode("");
+            }}
+            className="gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Voltar
+          </Button>
+          <Card className="w-full border-border">
+            <CardHeader className="space-y-2">
+              <div className="flex items-center gap-3 mb-4">
+                <Shield className="w-12 h-12 text-primary" />
+                <CardTitle className="text-2xl">Verificação 2FA</CardTitle>
+              </div>
+              <CardDescription>Digite o código de autenticação</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="totp" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="totp">Authenticator</TabsTrigger>
+                  <TabsTrigger value="backup">Código de Backup</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="totp" className="space-y-4">
+                  <form onSubmit={handleVerify2FA} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Código do Google Authenticator</Label>
+                      <InputOTP
+                        maxLength={6}
+                        value={totpCode}
+                        onChange={setTotpCode}
+                        disabled={loading}
+                      >
+                        <InputOTPGroup className="gap-2 justify-center w-full">
+                          <InputOTPSlot index={0} className="w-12 h-12 text-lg" />
+                          <InputOTPSlot index={1} className="w-12 h-12 text-lg" />
+                          <InputOTPSlot index={2} className="w-12 h-12 text-lg" />
+                          <InputOTPSlot index={3} className="w-12 h-12 text-lg" />
+                          <InputOTPSlot index={4} className="w-12 h-12 text-lg" />
+                          <InputOTPSlot index={5} className="w-12 h-12 text-lg" />
+                        </InputOTPGroup>
+                      </InputOTP>
+                    </div>
+
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={loading || totpCode.length !== 6}
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Verificando...
+                        </>
+                      ) : (
+                        "Verificar"
+                      )}
+                    </Button>
+                  </form>
+                </TabsContent>
+
+                <TabsContent value="backup" className="space-y-4">
+                  <form onSubmit={handleVerify2FA} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="backup-code">Código de Backup</Label>
+                      <Input
+                        id="backup-code"
+                        type="text"
+                        placeholder="XXXXXXXX"
+                        value={backupCode}
+                        onChange={(e) => setBackupCode(e.target.value.toUpperCase())}
+                        disabled={loading}
+                        className="font-mono text-center text-lg"
+                        maxLength={8}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Use um dos códigos de backup gerados nas configurações
+                      </p>
+                    </div>
+
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={loading || !backupCode}
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Verificando...
+                        </>
+                      ) : (
+                        "Verificar"
+                      )}
+                    </Button>
+                  </form>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
