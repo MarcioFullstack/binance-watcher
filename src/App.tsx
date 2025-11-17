@@ -15,6 +15,7 @@ import Settings from "./pages/Settings";
 import SecuritySettings from "./pages/SecuritySettings";
 import Admin from "./pages/Admin";
 import NotificationHistory from "./pages/NotificationHistory";
+import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 
 const App = () => {
@@ -38,6 +39,7 @@ const App = () => {
             <Route path="/security" element={<SecuritySettings />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/notifications" element={<NotificationHistory />} />
+            <Route path="/install" element={<Install />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
