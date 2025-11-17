@@ -55,17 +55,96 @@ serve(async (req) => {
 
     const { date, market_type = "USDT" } = await req.json();
 
-    // Calculate PnL for the specified date
-    // This is a simplified version - you would need to implement actual Binance API calls
-    // to fetch historical PnL data for the specific date
-    
     const startTime = new Date(date).setUTCHours(0, 0, 0, 0);
     const endTime = new Date(date).setUTCHours(23, 59, 59, 999);
 
-    // Here you would call Binance API to get income history for the date
-    // For now, we'll use mock data
-    const pnlUsd = Math.random() * 10 - 5; // Random value between -5 and +5
-    const pnlPercentage = Math.random() * 2 - 1; // Random percentage between -1% and +1%
+    // Prepare query parameters for Binance API
+    const timestamp = Date.now();
+    const queryString = `startTime=${startTime}&endTime=${endTime}&incomeType=REALIZED_PNL&timestamp=${timestamp}&recvWindow=5000`;
+
+    // Create signature
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(binanceAccount.api_secret);
+    const key = await crypto.subtle.importKey(
+      "raw",
+      keyData,
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    const signature = await crypto.subtle.sign(
+      "HMAC",
+      key,
+      encoder.encode(queryString)
+    );
+    const signatureHex = Array.from(new Uint8Array(signature))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    // Fetch income history from Binance
+    const incomeResponse = await fetch(
+      `https://fapi.binance.com/fapi/v1/income?${queryString}&signature=${signatureHex}`,
+      {
+        headers: {
+          "X-MBX-APIKEY": binanceAccount.api_key,
+        },
+      }
+    );
+
+    if (!incomeResponse.ok) {
+      const errorText = await incomeResponse.text();
+      console.error("Binance income API error:", errorText);
+      throw new Error(`Failed to fetch income data: ${errorText}`);
+    }
+
+    const incomeData = await incomeResponse.json();
+
+    // Calculate total realized PnL for the day
+    let pnlUsd = 0;
+    if (Array.isArray(incomeData)) {
+      pnlUsd = incomeData.reduce((sum: number, item: any) => {
+        return sum + parseFloat(item.income || "0");
+      }, 0);
+    }
+
+    // Calculate percentage based on account balance
+    // Fetch current balance to calculate percentage
+    const balanceQueryString = `timestamp=${timestamp}&recvWindow=5000`;
+    const balanceKey = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(binanceAccount.api_secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    const balanceSignature = await crypto.subtle.sign(
+      "HMAC",
+      balanceKey,
+      encoder.encode(balanceQueryString)
+    );
+    const balanceSignatureHex = Array.from(new Uint8Array(balanceSignature))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    const balanceResponse = await fetch(
+      `https://fapi.binance.com/fapi/v2/balance?${balanceQueryString}&signature=${balanceSignatureHex}`,
+      {
+        headers: {
+          "X-MBX-APIKEY": binanceAccount.api_key,
+        },
+      }
+    );
+
+    let totalBalance = 1000; // Default fallback
+    if (balanceResponse.ok) {
+      const balances = await balanceResponse.json();
+      const usdtBalance = balances.find((b: any) => b.asset === "USDT");
+      if (usdtBalance) {
+        totalBalance = parseFloat(usdtBalance.balance || "1000");
+      }
+    }
+
+    const pnlPercentage = totalBalance > 0 ? (pnlUsd / totalBalance) * 100 : 0;
 
     // Upsert the daily PnL record
     const { data: pnlRecord, error: pnlError } = await supabaseClient
