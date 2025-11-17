@@ -6,6 +6,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { BalanceCards } from "@/components/dashboard/BalanceCards";
 import { PnLCards } from "@/components/dashboard/PnLCards";
 import { AlertsConfig } from "@/components/dashboard/AlertsConfig";
+import { PnLAlertsConfig } from "@/components/dashboard/PnLAlertsConfig";
 import { PnLCalendar } from "@/components/dashboard/PnLCalendar";
 import { Loader2, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -129,6 +130,7 @@ const Dashboard = () => {
           <>
             <BalanceCards />
             <PnLCards />
+            <PnLAlertsConfig />
             <AlertsConfig />
             <PnLCalendar 
               isSyncing={isSyncing} 
