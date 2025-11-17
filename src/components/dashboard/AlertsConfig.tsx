@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,7 +17,7 @@ import {
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle, Bell, BellOff } from "lucide-react";
 import { z } from "zod";
 
 const alertPercentSchema = z.object({
@@ -52,6 +53,8 @@ export const AlertsConfig = () => {
   const [pendingLossEnabled, setPendingLossEnabled] = useState(true);
   const [lossPercentError, setLossPercentError] = useState<string>("");
   const [gainPercentError, setGainPercentError] = useState<string>("");
+  const [lossPushNotifications, setLossPushNotifications] = useState(false);
+  const [gainPushNotifications, setGainPushNotifications] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -74,6 +77,8 @@ export const AlertsConfig = () => {
         setLossPercent(data.risk_percent.toString());
         setLossEnabled(data.risk_active || true);
         setPendingLossEnabled(data.risk_active || true);
+        setLossPushNotifications(data.loss_push_notifications || false);
+        setGainPushNotifications(data.gain_push_notifications || false);
       }
     } catch (error) {
       console.error("Error loading settings:", error);
@@ -167,6 +172,8 @@ export const AlertsConfig = () => {
         body: {
           risk_percent: lossPercent,
           risk_active: lossEnabled,
+          loss_push_notifications: lossPushNotifications,
+          gain_push_notifications: gainPushNotifications,
         },
       });
 
@@ -237,6 +244,29 @@ export const AlertsConfig = () => {
           <p className="text-xs text-muted-foreground mt-2">
             ⚠️ Será alertado quando sua perda atingir este percentual (Mín: 1%, Máx: 50%)
           </p>
+          
+          <div className="flex items-center justify-between mt-4 p-3 bg-background rounded-lg border border-destructive/20">
+            <div className="flex items-center gap-2">
+              {lossPushNotifications ? (
+                <Bell className="w-4 h-4 text-destructive" />
+              ) : (
+                <BellOff className="w-4 h-4 text-muted-foreground" />
+              )}
+              <Label htmlFor="loss-push" className="text-sm font-medium cursor-pointer">
+                Notificações Push de Perda
+              </Label>
+            </div>
+            <Switch
+              id="loss-push"
+              checked={lossPushNotifications}
+              onCheckedChange={setLossPushNotifications}
+              disabled={!lossEnabled || loading}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+            <Bell className="w-3 h-3" />
+            Receba alertas em balões no celular ou notebook quando atingir o limite de perda
+          </p>
         </Card>
 
         <Card className={`p-4 border-success bg-success/10 transition-opacity duration-300 ${loading ? 'opacity-50' : 'opacity-100'}`}>
@@ -275,6 +305,29 @@ export const AlertsConfig = () => {
           </div>
           <p className="text-xs text-muted-foreground mt-2">
             🎯 Será alertado quando seu ganho atingir este percentual (Mín: 1%, Máx: 50%)
+          </p>
+          
+          <div className="flex items-center justify-between mt-4 p-3 bg-background rounded-lg border border-success/20">
+            <div className="flex items-center gap-2">
+              {gainPushNotifications ? (
+                <Bell className="w-4 h-4 text-success" />
+              ) : (
+                <BellOff className="w-4 h-4 text-muted-foreground" />
+              )}
+              <Label htmlFor="gain-push" className="text-sm font-medium cursor-pointer">
+                Notificações Push de Ganho
+              </Label>
+            </div>
+            <Switch
+              id="gain-push"
+              checked={gainPushNotifications}
+              onCheckedChange={setGainPushNotifications}
+              disabled={!gainEnabled || loading}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+            <Bell className="w-3 h-3" />
+            Receba alertas em balões no celular ou notebook quando atingir o ganho desejado
           </p>
         </Card>
 
