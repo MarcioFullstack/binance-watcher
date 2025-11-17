@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { risk_percent, risk_active } = await req.json();
+    const { risk_percent, risk_active, loss_push_notifications, gain_push_notifications } = await req.json();
 
     // Validação de entrada no servidor
     const riskPercentNum = parseFloat(risk_percent);
@@ -71,12 +71,17 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`Saving alert config for user ${user.id}:`, { risk_percent: riskPercentNum, risk_active });
+    console.log(`Saving alert config for user ${user.id}:`, { 
+      risk_percent: riskPercentNum, 
+      risk_active,
+      loss_push_notifications,
+      gain_push_notifications
+    });
 
     // Buscar configurações atuais para comparar
     const { data: currentSettings, error: fetchError } = await supabaseClient
       .from('risk_settings')
-      .select('risk_percent, risk_active')
+      .select('risk_percent, risk_active, loss_push_notifications, gain_push_notifications')
       .eq('user_id', user.id)
       .single();
 
@@ -94,6 +99,8 @@ Deno.serve(async (req) => {
       .update({
         risk_percent: riskPercentNum,
         risk_active: risk_active,
+        loss_push_notifications: loss_push_notifications ?? false,
+        gain_push_notifications: gain_push_notifications ?? false,
       })
       .eq('user_id', user.id);
 
@@ -136,6 +143,30 @@ Deno.serve(async (req) => {
       if (currentSettings.risk_active === true && risk_active === false) {
         shouldNotifyAdmins = true;
       }
+    }
+
+    // Verificar mudança nas notificações push de perda
+    if (currentSettings.loss_push_notifications !== loss_push_notifications) {
+      historyEntries.push({
+        user_id: user.id,
+        alert_type: 'loss_alert',
+        field_changed: 'push_notifications',
+        old_value: currentSettings.loss_push_notifications?.toString() || 'false',
+        new_value: loss_push_notifications?.toString() || 'false',
+        changed_by: user.id,
+      });
+    }
+
+    // Verificar mudança nas notificações push de ganho
+    if (currentSettings.gain_push_notifications !== gain_push_notifications) {
+      historyEntries.push({
+        user_id: user.id,
+        alert_type: 'gain_alert',
+        field_changed: 'push_notifications',
+        old_value: currentSettings.gain_push_notifications?.toString() || 'false',
+        new_value: gain_push_notifications?.toString() || 'false',
+        changed_by: user.id,
+      });
     }
 
     // Inserir histórico se houver mudanças

@@ -305,9 +305,11 @@ export type Database = {
         Row: {
           created_at: string | null
           daily_reset: boolean | null
+          gain_push_notifications: boolean | null
           id: string
           initial_balance: number | null
           kill_switch_enabled: boolean | null
+          loss_push_notifications: boolean | null
           risk_active: boolean | null
           risk_percent: number | null
           updated_at: string | null
@@ -316,9 +318,11 @@ export type Database = {
         Insert: {
           created_at?: string | null
           daily_reset?: boolean | null
+          gain_push_notifications?: boolean | null
           id?: string
           initial_balance?: number | null
           kill_switch_enabled?: boolean | null
+          loss_push_notifications?: boolean | null
           risk_active?: boolean | null
           risk_percent?: number | null
           updated_at?: string | null
@@ -327,9 +331,11 @@ export type Database = {
         Update: {
           created_at?: string | null
           daily_reset?: boolean | null
+          gain_push_notifications?: boolean | null
           id?: string
           initial_balance?: number | null
           kill_switch_enabled?: boolean | null
+          loss_push_notifications?: boolean | null
           risk_active?: boolean | null
           risk_percent?: number | null
           updated_at?: string | null
