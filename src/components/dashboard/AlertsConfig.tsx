@@ -17,7 +17,7 @@ import {
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, AlertTriangle, Bell, BellOff } from "lucide-react";
+import { Loader2, AlertTriangle, Bell, BellOff, TestTube } from "lucide-react";
 import { z } from "zod";
 
 const alertPercentSchema = z.object({
@@ -55,6 +55,7 @@ export const AlertsConfig = () => {
   const [gainPercentError, setGainPercentError] = useState<string>("");
   const [lossPushNotifications, setLossPushNotifications] = useState(false);
   const [gainPushNotifications, setGainPushNotifications] = useState(false);
+  const [testingAlerts, setTestingAlerts] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -186,6 +187,42 @@ export const AlertsConfig = () => {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const testAlerts = async () => {
+    setTestingAlerts(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('check-pnl-alerts');
+
+      if (error) throw error;
+
+      if (data) {
+        const { checked, alerts_triggered, alerts } = data;
+        
+        if (alerts_triggered > 0) {
+          toast.success(
+            `Verificação concluída! ${alerts_triggered} alerta(s) disparado(s)`,
+            {
+              description: alerts.map((a: any) => a.title).join(', '),
+              duration: 5000,
+            }
+          );
+        } else {
+          toast.info(
+            `Verificação concluída! Nenhum alerta disparado`,
+            {
+              description: `${checked} usuário(s) verificado(s)`,
+              duration: 4000,
+            }
+          );
+        }
+      }
+    } catch (error: any) {
+      toast.error("Erro ao testar alertas: " + (error.message || "Erro desconhecido"));
+      console.error(error);
+    } finally {
+      setTestingAlerts(false);
     }
   };
 
@@ -331,25 +368,46 @@ export const AlertsConfig = () => {
           </p>
         </Card>
 
-        <Button 
-          onClick={handleSave} 
-          className="w-full bg-primary hover:bg-primary/90 relative overflow-hidden"
-          disabled={loading || !!lossPercentError || !!gainPercentError}
-        >
-          {loading && (
-            <div className="absolute inset-0 bg-primary/20 animate-pulse" />
-          )}
-          <span className="relative z-10 flex items-center justify-center">
-            {loading ? (
+        <div className="flex gap-3">
+          <Button 
+            onClick={testAlerts} 
+            variant="outline"
+            className="flex-1 border-primary/50 hover:bg-primary/10"
+            disabled={testingAlerts || loading}
+          >
+            {testingAlerts ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Salvando configurações...
+                Testando...
               </>
             ) : (
-              <>💾 Salvar Configurações de Alertas</>
+              <>
+                <TestTube className="mr-2 h-4 w-4" />
+                Testar Alertas
+              </>
             )}
-          </span>
-        </Button>
+          </Button>
+
+          <Button 
+            onClick={handleSave} 
+            className="flex-1 bg-primary hover:bg-primary/90 relative overflow-hidden"
+            disabled={loading || !!lossPercentError || !!gainPercentError}
+          >
+            {loading && (
+              <div className="absolute inset-0 bg-primary/20 animate-pulse" />
+            )}
+            <span className="relative z-10 flex items-center justify-center">
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                <>💾 Salvar</>
+              )}
+            </span>
+          </Button>
+        </div>
       </div>
 
       <AlertDialog open={showDisableDialog} onOpenChange={setShowDisableDialog}>
