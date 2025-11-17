@@ -42,7 +42,7 @@ const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicatorProps)
   const isEmpty = !password || password.length === 0;
 
   return (
-    <div className="space-y-3 mt-2 p-3 rounded-lg border bg-card">
+    <div className="space-y-3 mt-2 p-3 rounded-lg border bg-card animate-fade-in">
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -53,9 +53,9 @@ const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicatorProps)
             {isEmpty ? 'Digite uma senha' : label}
           </span>
         </div>
-        <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">
+        <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted animate-scale-in">
           <div 
-            className={`h-full ${isEmpty ? 'bg-muted-foreground/20' : bgColor} transition-all duration-300 ease-out`}
+            className={`h-full ${isEmpty ? 'bg-muted-foreground/20' : bgColor} transition-all duration-500 ease-out`}
             style={{ width: isEmpty ? '0%' : `${strength}%` }}
           />
         </div>
@@ -64,14 +64,15 @@ const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicatorProps)
         </p>
       </div>
       
-      <div className="space-y-1.5 pt-2 border-t">
+      <div className="space-y-1.5 pt-2 border-t animate-fade-in" style={{ animationDelay: '100ms' }}>
         <p className="text-xs font-medium text-muted-foreground mb-2">Requisitos:</p>
         {criteria.map((criterion, index) => (
           <div 
             key={index} 
-            className={`flex items-center gap-2 text-xs transition-all duration-200 ${
-              criterion.met ? 'opacity-100' : 'opacity-60'
+            className={`flex items-center gap-2 text-xs transition-all duration-300 ${
+              criterion.met ? 'opacity-100 translate-x-0' : 'opacity-60 translate-x-[-2px]'
             }`}
+            style={{ animationDelay: `${index * 50}ms` }}
           >
             <div className={`flex items-center justify-center w-4 h-4 rounded-full ${
               criterion.met ? 'bg-green-500/10' : 'bg-muted'
