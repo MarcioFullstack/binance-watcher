@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAlertsRealtime } from "@/hooks/useAlertsRealtime";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -105,6 +106,7 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [statsLoading, setStatsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userId, setUserId] = useState<string | undefined>();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -134,6 +136,9 @@ const Admin = () => {
   const [configHistoryLoading, setConfigHistoryLoading] = useState(false);
   const [historyDateRange, setHistoryDateRange] = useState<"week" | "month" | "3months" | "all">("week");
   const navigate = useNavigate();
+  
+  // Enable realtime alerts notifications for admins
+  useAlertsRealtime(userId, isAdmin);
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
@@ -240,6 +245,8 @@ const Admin = () => {
         navigate("/login");
         return;
       }
+      
+      setUserId(user.id);
 
       // Verificar se é admin
       const { data: roles } = await supabase
