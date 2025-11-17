@@ -6,10 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { Loader2, ArrowLeft, Eye, EyeOff, Shield, Copy, Check } from "lucide-react";
 import nottifyLogo from "@/assets/nottify-logo.png";
 import PasswordStrengthIndicator from "@/components/PasswordStrengthIndicator";
 import { z } from "zod";
+import { authenticator } from "otplib";
+import { QRCodeSVG } from "qrcode.react";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 const passwordSchema = z.string()
   .min(8, "A senha deve ter pelo menos 8 caracteres")
@@ -19,20 +22,22 @@ const passwordSchema = z.string()
   .regex(/[^a-zA-Z0-9]/, "A senha deve conter pelo menos um caractere especial");
 
 const Signup = () => {
-  const [step, setStep] = useState(1); // 1: email/senha, 2: 2FA
+  const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [totpCode, setTotpCode] = useState("");
   const [totpSecret, setTotpSecret] = useState("");
   const [qrCodeUrl, setQrCodeUrl] = useState("");
+  const [userId, setUserId] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleInitialSignup = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
@@ -40,7 +45,6 @@ const Signup = () => {
       return;
     }
 
-    // Validar força da senha
     try {
       passwordSchema.parse(password);
     } catch (error) {
@@ -66,8 +70,9 @@ const Signup = () => {
 
       if (error) throw error;
 
-      // Create profile
       if (data.user) {
+        setUserId(data.user.id);
+        
         setLoadingMessage("Configurando seu perfil...");
         const { error: profileError } = await supabase
           .from("profiles")
@@ -76,7 +81,6 @@ const Signup = () => {
         if (profileError) console.error("Error creating profile:", profileError);
 
         setLoadingMessage("Configurando alertas de risco...");
-        // Create initial risk settings
         const { error: riskError } = await supabase
           .from("risk_settings")
           .insert([{ user_id: data.user.id }]);
@@ -84,22 +88,79 @@ const Signup = () => {
         if (riskError) console.error("Error creating risk settings:", riskError);
 
         setLoadingMessage("Ativando assinatura...");
-        // Create subscription
         const { error: subError } = await supabase
           .from("subscriptions")
           .insert([{ user_id: data.user.id, status: "inactive" }]);
 
         if (subError) console.error("Error creating subscription:", subError);
+
+        // Generate TOTP secret
+        const secret = authenticator.generateSecret();
+        setTotpSecret(secret);
+        
+        const otpauth = authenticator.keyuri(email, "NOTTIFY", secret);
+        setQrCodeUrl(otpauth);
+
+        toast.success("Conta criada! Agora configure a autenticação de dois fatores.");
+        setStep(2);
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao criar conta");
+    } finally {
+      setLoading(false);
+      setLoadingMessage("");
+    }
+  };
+
+  const handleVerify2FA = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (totpCode.length !== 6) {
+      toast.error("O código deve ter 6 dígitos");
+      return;
+    }
+
+    setLoading(true);
+    setLoadingMessage("Verificando código...");
+
+    try {
+      const isValid = authenticator.verify({
+        token: totpCode,
+        secret: totpSecret
+      });
+
+      if (!isValid) {
+        toast.error("Código inválido. Tente novamente.");
+        setLoading(false);
+        setLoadingMessage("");
+        return;
       }
 
-      toast.success("Conta criada com sucesso! Redirecionando...");
+      // Save 2FA secret to database
+      const { error: twoFAError } = await supabase
+        .from("user_2fa")
+        .insert([{
+          user_id: userId,
+          totp_secret: totpSecret,
+          is_enabled: true
+        }]);
+
+      if (twoFAError) {
+        console.error("Error saving 2FA:", twoFAError);
+        toast.error("Erro ao salvar configurações de 2FA");
+        setLoading(false);
+        setLoadingMessage("");
+        return;
+      }
+
+      toast.success("Autenticação de dois fatores configurada com sucesso!");
       setLoadingMessage("Redirecionando para o dashboard...");
       
       setTimeout(() => {
         navigate("/dashboard");
       }, 500);
     } catch (error: any) {
-      toast.error(error.message || "Erro ao criar conta");
+      toast.error(error.message || "Erro ao verificar código");
     } finally {
       setLoading(false);
       setLoadingMessage("");
@@ -121,6 +182,104 @@ const Signup = () => {
     }
   };
 
+  const copySecret = () => {
+    navigator.clipboard.writeText(totpSecret);
+    setCopied(true);
+    toast.success("Chave copiada para a área de transferência");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  if (step === 2) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="w-full max-w-md space-y-4">
+          <Card className="w-full border-border">
+            <CardHeader className="space-y-2">
+              <div className="flex items-center gap-3 mb-4">
+                <Shield className="w-12 h-12 text-primary" />
+                <CardTitle className="text-2xl">Autenticação de Dois Fatores</CardTitle>
+              </div>
+              <CardDescription>
+                Configure o Google Authenticator para proteger sua conta
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleVerify2FA} className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex flex-col items-center space-y-4">
+                    <div className="bg-white p-4 rounded-lg">
+                      <QRCodeSVG value={qrCodeUrl} size={200} />
+                    </div>
+                    
+                    <div className="w-full space-y-2">
+                      <Label className="text-sm font-medium">Ou digite a chave manualmente:</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={totpSecret}
+                          readOnly
+                          className="font-mono text-sm"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={copySecret}
+                        >
+                          {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="totp" className="text-sm font-medium">
+                      Instruções:
+                    </Label>
+                    <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                      <li>Abra o Google Authenticator no seu celular</li>
+                      <li>Escaneie o QR Code ou digite a chave manualmente</li>
+                      <li>Digite o código de 6 dígitos gerado</li>
+                    </ol>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="totp">Código de Verificação</Label>
+                    <InputOTP
+                      maxLength={6}
+                      value={totpCode}
+                      onChange={setTotpCode}
+                      disabled={loading}
+                    >
+                      <InputOTPGroup className="gap-2 justify-center w-full">
+                        <InputOTPSlot index={0} className="w-12 h-12 text-lg" />
+                        <InputOTPSlot index={1} className="w-12 h-12 text-lg" />
+                        <InputOTPSlot index={2} className="w-12 h-12 text-lg" />
+                        <InputOTPSlot index={3} className="w-12 h-12 text-lg" />
+                        <InputOTPSlot index={4} className="w-12 h-12 text-lg" />
+                        <InputOTPSlot index={5} className="w-12 h-12 text-lg" />
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+                </div>
+
+                <Button type="submit" className="w-full" disabled={loading || totpCode.length !== 6}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {loadingMessage || "Verificando..."}
+                    </>
+                  ) : (
+                    "Verificar e Ativar 2FA"
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md space-y-4">
@@ -137,7 +296,7 @@ const Signup = () => {
             <CardDescription>Crie sua conta para começar a monitorar</CardDescription>
           </CardHeader>
         <CardContent>
-          <form onSubmit={handleSignup} className="space-y-4">
+          <form onSubmit={handleInitialSignup} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
