@@ -116,6 +116,9 @@ const Admin = () => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [alertsLoading, setAlertsLoading] = useState(false);
   const [updatingConfig, setUpdatingConfig] = useState<string | null>(null);
+  const [resolvedAlertsFilter, setResolvedAlertsFilter] = useState<string>("all");
+  const [resolvedDateRange, setResolvedDateRange] = useState<"week" | "month" | "3months" | "all">("month");
+  const [resolvedByUserId, setResolvedByUserId] = useState<string>("all");
   const navigate = useNavigate();
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
@@ -644,6 +647,95 @@ const Admin = () => {
       high_payment_volume: 'Alto Volume de Pagamentos'
     };
     return labels[type] || type;
+  };
+
+  const getResolvedAlerts = () => {
+    let filtered = alerts.filter(a => a.is_resolved);
+
+    // Filter by alert type
+    if (resolvedAlertsFilter !== "all") {
+      const config = alertConfigs.find(c => c.alert_type === resolvedAlertsFilter);
+      if (config) {
+        filtered = filtered.filter(a => a.alert_config_id === config.id);
+      }
+    }
+
+    // Filter by date range
+    if (resolvedDateRange !== "all") {
+      const now = new Date();
+      let startDate: Date;
+
+      switch (resolvedDateRange) {
+        case "week":
+          startDate = subDays(now, 7);
+          break;
+        case "month":
+          startDate = subMonths(now, 1);
+          break;
+        case "3months":
+          startDate = subMonths(now, 3);
+          break;
+        default:
+          startDate = new Date(0);
+      }
+
+      filtered = filtered.filter(a => new Date(a.resolved_at || a.triggered_at) >= startDate);
+    }
+
+    // Filter by resolved by user
+    if (resolvedByUserId !== "all") {
+      filtered = filtered.filter(a => a.resolved_by === resolvedByUserId);
+    }
+
+    return filtered;
+  };
+
+  const getResolutionMetrics = () => {
+    const resolved = getResolvedAlerts();
+    
+    if (resolved.length === 0) {
+      return {
+        totalResolved: 0,
+        averageResolutionTime: 0,
+        fastestResolution: 0,
+        slowestResolution: 0
+      };
+    }
+
+    const resolutionTimes = resolved
+      .filter(a => a.resolved_at)
+      .map(a => {
+        const triggered = new Date(a.triggered_at).getTime();
+        const resolved = new Date(a.resolved_at!).getTime();
+        return resolved - triggered;
+      });
+
+    const totalResolved = resolved.length;
+    const averageResolutionTime = resolutionTimes.reduce((a, b) => a + b, 0) / resolutionTimes.length;
+    const fastestResolution = Math.min(...resolutionTimes);
+    const slowestResolution = Math.max(...resolutionTimes);
+
+    return {
+      totalResolved,
+      averageResolutionTime,
+      fastestResolution,
+      slowestResolution
+    };
+  };
+
+  const formatDuration = (ms: number) => {
+    const minutes = Math.floor(ms / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) return `${days}d ${hours % 24}h`;
+    if (hours > 0) return `${hours}h ${minutes % 60}m`;
+    return `${minutes}m`;
+  };
+
+  const getUniqueResolvers = () => {
+    const resolvers = new Set(alerts.filter(a => a.resolved_by).map(a => a.resolved_by));
+    return Array.from(resolvers);
   };
 
   // Métricas de Auditoria
@@ -1735,6 +1827,185 @@ const Admin = () => {
                     </AlertDescription>
                   </Alert>
                 ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Resolved Alerts History Card */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-green-500" />
+              <CardTitle>Histórico de Alertas Resolvidos</CardTitle>
+            </div>
+            <CardDescription>
+              Análise completa de alertas resolvidos com métricas de desempenho
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Resolution Metrics */}
+            <div className="grid gap-4 md:grid-cols-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>Total Resolvido</CardDescription>
+                  <CardTitle className="text-2xl">
+                    {getResolutionMetrics().totalResolved}
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>Tempo Médio</CardDescription>
+                  <CardTitle className="text-2xl">
+                    {formatDuration(getResolutionMetrics().averageResolutionTime)}
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>Mais Rápido</CardDescription>
+                  <CardTitle className="text-2xl text-green-500">
+                    {formatDuration(getResolutionMetrics().fastestResolution)}
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>Mais Lento</CardDescription>
+                  <CardTitle className="text-2xl text-orange-500">
+                    {formatDuration(getResolutionMetrics().slowestResolution)}
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+            </div>
+
+            {/* Filters */}
+            <div className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-3">
+                {/* Alert Type Filter */}
+                <div className="space-y-2">
+                  <Label>Tipo de Alerta</Label>
+                  <Tabs value={resolvedAlertsFilter} onValueChange={setResolvedAlertsFilter}>
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="all">Todos</TabsTrigger>
+                      <TabsTrigger value="vouchers_per_day">Vouchers</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                  <Tabs value={resolvedAlertsFilter} onValueChange={setResolvedAlertsFilter}>
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="payment_rejection_rate">Rejeições</TabsTrigger>
+                      <TabsTrigger value="high_payment_volume">Volume</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </div>
+
+                {/* Date Range Filter */}
+                <div className="space-y-2">
+                  <Label>Período</Label>
+                  <Tabs value={resolvedDateRange} onValueChange={(v) => setResolvedDateRange(v as any)}>
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="week">Semana</TabsTrigger>
+                      <TabsTrigger value="month">Mês</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                  <Tabs value={resolvedDateRange} onValueChange={(v) => setResolvedDateRange(v as any)}>
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="3months">3 Meses</TabsTrigger>
+                      <TabsTrigger value="all">Todos</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </div>
+
+                {/* Resolved By Filter */}
+                <div className="space-y-2">
+                  <Label>Resolvido Por</Label>
+                  <Tabs value={resolvedByUserId} onValueChange={setResolvedByUserId}>
+                    <TabsList className="grid w-full grid-cols-1">
+                      <TabsTrigger value="all">Todos Usuários</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                  {getUniqueResolvers().length > 0 && (
+                    <Tabs value={resolvedByUserId} onValueChange={setResolvedByUserId}>
+                      <TabsList className="grid w-full grid-cols-1">
+                        {getUniqueResolvers().slice(0, 3).map((userId) => (
+                          <TabsTrigger key={userId} value={userId || ""}>
+                            {userId?.slice(0, 8)}...
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
+                    </Tabs>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Resolved Alerts Table */}
+            {alertsLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : getResolvedAlerts().length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Check className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>Nenhum alerta resolvido encontrado para os filtros selecionados</p>
+              </div>
+            ) : (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Mensagem</TableHead>
+                      <TableHead>Disparado</TableHead>
+                      <TableHead>Resolvido</TableHead>
+                      <TableHead>Tempo</TableHead>
+                      <TableHead>Por</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {getResolvedAlerts().map((alert) => {
+                      const config = alertConfigs.find(c => c.id === alert.alert_config_id);
+                      const resolutionTime = alert.resolved_at 
+                        ? new Date(alert.resolved_at).getTime() - new Date(alert.triggered_at).getTime()
+                        : 0;
+
+                      return (
+                        <TableRow key={alert.id}>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {getAlertTypeLabel(config?.alert_type || '')}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="max-w-xs">
+                            <div className="text-sm truncate">
+                              {alert.details?.message}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-xs whitespace-nowrap">
+                            {new Date(alert.triggered_at).toLocaleString("pt-BR")}
+                          </TableCell>
+                          <TableCell className="text-xs whitespace-nowrap">
+                            {alert.resolved_at 
+                              ? new Date(alert.resolved_at).toLocaleString("pt-BR")
+                              : '-'}
+                          </TableCell>
+                          <TableCell>
+                            <Badge 
+                              variant={resolutionTime < 3600000 ? "default" : "secondary"}
+                              className={resolutionTime < 3600000 ? "bg-green-500" : ""}
+                            >
+                              {formatDuration(resolutionTime)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="font-mono text-xs">
+                            {alert.resolved_by?.slice(0, 8)}...
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
               </div>
             )}
           </CardContent>
