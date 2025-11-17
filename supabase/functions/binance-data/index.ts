@@ -178,6 +178,25 @@ serve(async (req) => {
         });
     }
 
+    // Verificar alertas de PnL configurados pelo usuário
+    try {
+      await supabaseClient.functions.invoke('check-pnl-alerts', {
+        body: {
+          userId: user.id,
+          pnlData: {
+            today: todayPnL,
+            todayPercent: todayPnLPercent,
+            unrealized: unrealizedPnL,
+            totalFromInitial: totalPnLFromInitial,
+            totalPercent: totalPnLPercent,
+          },
+        },
+      });
+    } catch (alertError) {
+      console.error('Error checking PnL alerts:', alertError);
+      // Não lançar erro para não interromper o fluxo principal
+    }
+
     const response = {
       balance: {
         total: totalBalance.toFixed(2),

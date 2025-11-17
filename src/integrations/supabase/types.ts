@@ -313,6 +313,45 @@ export type Database = {
         }
         Relationships: []
       }
+      pnl_alert_configs: {
+        Row: {
+          alert_type: string
+          created_at: string
+          enabled: boolean
+          id: string
+          push_enabled: boolean
+          sound_enabled: boolean
+          threshold: number
+          trigger_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          push_enabled?: boolean
+          sound_enabled?: boolean
+          threshold: number
+          trigger_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          push_enabled?: boolean
+          sound_enabled?: boolean
+          threshold?: number
+          trigger_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
