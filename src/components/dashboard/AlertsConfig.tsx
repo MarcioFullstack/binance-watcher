@@ -17,6 +17,30 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, AlertTriangle } from "lucide-react";
+import { z } from "zod";
+
+const alertPercentSchema = z.object({
+  lossPercent: z.string()
+    .refine((val) => !isNaN(parseFloat(val)), {
+      message: "Deve ser um número válido"
+    })
+    .refine((val) => parseFloat(val) >= 1, {
+      message: "O percentual mínimo é 1%"
+    })
+    .refine((val) => parseFloat(val) <= 50, {
+      message: "O percentual máximo é 50%"
+    }),
+  gainPercent: z.string()
+    .refine((val) => !isNaN(parseFloat(val)), {
+      message: "Deve ser um número válido"
+    })
+    .refine((val) => parseFloat(val) >= 1, {
+      message: "O percentual mínimo é 1%"
+    })
+    .refine((val) => parseFloat(val) <= 50, {
+      message: "O percentual máximo é 50%"
+    }),
+});
 
 export const AlertsConfig = () => {
   const [loading, setLoading] = useState(false);
@@ -26,6 +50,8 @@ export const AlertsConfig = () => {
   const [gainEnabled, setGainEnabled] = useState(true);
   const [showDisableDialog, setShowDisableDialog] = useState(false);
   const [pendingLossEnabled, setPendingLossEnabled] = useState(true);
+  const [lossPercentError, setLossPercentError] = useState<string>("");
+  const [gainPercentError, setGainPercentError] = useState<string>("");
 
   useEffect(() => {
     loadSettings();
@@ -77,7 +103,62 @@ export const AlertsConfig = () => {
     setShowDisableDialog(false);
   };
 
+  const handleLossPercentChange = (value: string) => {
+    setLossPercent(value);
+    setLossPercentError("");
+    
+    // Validação em tempo real
+    if (value) {
+      try {
+        alertPercentSchema.shape.lossPercent.parse(value);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          setLossPercentError(error.errors[0].message);
+        }
+      }
+    }
+  };
+
+  const handleGainPercentChange = (value: string) => {
+    setGainPercent(value);
+    setGainPercentError("");
+    
+    // Validação em tempo real
+    if (value) {
+      try {
+        alertPercentSchema.shape.gainPercent.parse(value);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          setGainPercentError(error.errors[0].message);
+        }
+      }
+    }
+  };
+
   const handleSave = async () => {
+    // Validar valores antes de salvar
+    try {
+      alertPercentSchema.parse({
+        lossPercent,
+        gainPercent,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const lossError = error.errors.find(e => e.path[0] === 'lossPercent');
+        const gainError = error.errors.find(e => e.path[0] === 'gainPercent');
+        
+        if (lossError) {
+          setLossPercentError(lossError.message);
+          toast.error(`Alerta de Perda: ${lossError.message}`);
+        }
+        if (gainError) {
+          setGainPercentError(gainError.message);
+          toast.error(`Alerta de Ganho: ${gainError.message}`);
+        }
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('save-alert-config', {
@@ -132,16 +213,27 @@ export const AlertsConfig = () => {
           <Label htmlFor="loss-percent" className="text-sm text-muted-foreground">
             Percentual de perda máximo aceito (%)
           </Label>
-          <Input
-            id="loss-percent"
-            type="number"
-            value={lossPercent}
-            onChange={(e) => setLossPercent(e.target.value)}
-            className="mt-2 bg-background border-destructive"
-            disabled={!lossEnabled || loading}
-          />
+          <div className="space-y-2">
+            <Input
+              id="loss-percent"
+              type="number"
+              min="1"
+              max="50"
+              step="0.1"
+              value={lossPercent}
+              onChange={(e) => handleLossPercentChange(e.target.value)}
+              className={`mt-2 bg-background border-destructive ${lossPercentError ? 'border-red-500' : ''}`}
+              disabled={!lossEnabled || loading}
+            />
+            {lossPercentError && (
+              <p className="text-xs text-red-500 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {lossPercentError}
+              </p>
+            )}
+          </div>
           <p className="text-xs text-muted-foreground mt-2">
-            ⚠️ Será alertado quando sua perda atingir este percentual
+            ⚠️ Será alertado quando sua perda atingir este percentual (Mín: 1%, Máx: 50%)
           </p>
         </Card>
 
@@ -160,23 +252,34 @@ export const AlertsConfig = () => {
           <Label htmlFor="gain-percent" className="text-sm text-muted-foreground">
             Percentual de ganho desejado (%)
           </Label>
-          <Input
-            id="gain-percent"
-            type="number"
-            value={gainPercent}
-            onChange={(e) => setGainPercent(e.target.value)}
-            className="mt-2 bg-background border-success"
-            disabled={!gainEnabled || loading}
-          />
+          <div className="space-y-2">
+            <Input
+              id="gain-percent"
+              type="number"
+              min="1"
+              max="50"
+              step="0.1"
+              value={gainPercent}
+              onChange={(e) => handleGainPercentChange(e.target.value)}
+              className={`mt-2 bg-background border-success ${gainPercentError ? 'border-red-500' : ''}`}
+              disabled={!gainEnabled || loading}
+            />
+            {gainPercentError && (
+              <p className="text-xs text-red-500 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {gainPercentError}
+              </p>
+            )}
+          </div>
           <p className="text-xs text-muted-foreground mt-2">
-            🎯 Será alertado quando seu ganho atingir este percentual
+            🎯 Será alertado quando seu ganho atingir este percentual (Mín: 1%, Máx: 50%)
           </p>
         </Card>
 
         <Button 
           onClick={handleSave} 
           className="w-full bg-primary hover:bg-primary/90 relative overflow-hidden"
-          disabled={loading}
+          disabled={loading || !!lossPercentError || !!gainPercentError}
         >
           {loading && (
             <div className="absolute inset-0 bg-primary/20 animate-pulse" />

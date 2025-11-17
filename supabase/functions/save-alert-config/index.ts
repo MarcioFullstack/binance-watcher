@@ -36,7 +36,42 @@ Deno.serve(async (req) => {
 
     const { risk_percent, risk_active } = await req.json();
 
-    console.log(`Saving alert config for user ${user.id}:`, { risk_percent, risk_active });
+    // Validação de entrada no servidor
+    const riskPercentNum = parseFloat(risk_percent);
+    
+    if (isNaN(riskPercentNum)) {
+      console.error('Invalid risk_percent: not a number');
+      return new Response(
+        JSON.stringify({ error: 'Percentual inválido: deve ser um número' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (riskPercentNum < 1) {
+      console.error('Invalid risk_percent: below minimum');
+      return new Response(
+        JSON.stringify({ error: 'Percentual inválido: o mínimo é 1%' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (riskPercentNum > 50) {
+      console.error('Invalid risk_percent: above maximum');
+      return new Response(
+        JSON.stringify({ error: 'Percentual inválido: o máximo é 50%' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (typeof risk_active !== 'boolean') {
+      console.error('Invalid risk_active: not a boolean');
+      return new Response(
+        JSON.stringify({ error: 'Status do alerta inválido' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Saving alert config for user ${user.id}:`, { risk_percent: riskPercentNum, risk_active });
 
     // Buscar configurações atuais para comparar
     const { data: currentSettings, error: fetchError } = await supabaseClient
@@ -57,7 +92,7 @@ Deno.serve(async (req) => {
     const { error: updateError } = await supabaseClient
       .from('risk_settings')
       .update({
-        risk_percent: parseFloat(risk_percent),
+        risk_percent: riskPercentNum,
         risk_active: risk_active,
       })
       .eq('user_id', user.id);
@@ -74,13 +109,13 @@ Deno.serve(async (req) => {
     const historyEntries = [];
 
     // Verificar mudança no percentual
-    if (currentSettings.risk_percent !== parseFloat(risk_percent)) {
+    if (currentSettings.risk_percent !== riskPercentNum) {
       historyEntries.push({
         user_id: user.id,
         alert_type: 'loss_alert',
         field_changed: 'threshold',
         old_value: currentSettings.risk_percent?.toString() || null,
-        new_value: risk_percent.toString(),
+        new_value: riskPercentNum.toString(),
         changed_by: user.id,
       });
     }
