@@ -25,6 +25,16 @@ const Dashboard = () => {
     checkUser();
   }, []);
 
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        navigate("/login");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
   const checkUser = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -46,34 +56,38 @@ const Dashboard = () => {
 
       setIsAdmin(!!roles);
 
-      // Verificar assinatura
-      const { data: subscription } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      // Verificar assinatura apenas na primeira carga
+      if (loading) {
+        const { data: subscription } = await supabase
+          .from('subscriptions')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
 
-      if (!subscription || subscription.status !== 'active') {
-        navigate("/payment");
-        return;
-      }
+        if (!subscription || subscription.status !== 'active') {
+          navigate("/payment");
+          return;
+        }
 
-      // Verificar se existe conta Binance configurada
-      const { data: accounts } = await supabase
-        .from('binance_accounts')
-        .select('id, is_active')
-        .eq('user_id', user.id)
-        .eq('is_active', true);
+        // Verificar se existe conta Binance configurada
+        const { data: accounts } = await supabase
+          .from('binance_accounts')
+          .select('id, is_active')
+          .eq('user_id', user.id)
+          .eq('is_active', true);
 
-      if (!accounts || accounts.length === 0) {
-        navigate("/setup-binance");
-        return;
+        if (!accounts || accounts.length === 0) {
+          navigate("/setup-binance");
+          return;
+        }
       }
 
       setHasAccount(true);
     } catch (error) {
       console.error("Error checking user:", error);
-      navigate("/login");
+      if (loading) {
+        navigate("/login");
+      }
     } finally {
       setLoading(false);
     }
