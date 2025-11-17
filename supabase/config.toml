@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.notify-admins-alert-disabled]
 verify_jwt = false
+
+[functions.check-pnl-alerts]
+verify_jwt = false
