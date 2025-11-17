@@ -13,6 +13,9 @@ import { z } from "zod";
 import { authenticator } from "otplib";
 import { QRCodeSVG } from "qrcode.react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Slider } from "@/components/ui/slider";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const passwordSchema = z.string()
   .min(8, "A senha deve ter pelo menos 8 caracteres")
@@ -38,6 +41,12 @@ const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [passwordLength, setPasswordLength] = useState(16);
+  const [includeLowercase, setIncludeLowercase] = useState(true);
+  const [includeUppercase, setIncludeUppercase] = useState(true);
+  const [includeNumbers, setIncludeNumbers] = useState(true);
+  const [includeSpecial, setIncludeSpecial] = useState(true);
+  const [showPasswordGenerator, setShowPasswordGenerator] = useState(false);
   const navigate = useNavigate();
 
   const validateEmail = (value: string) => {
@@ -237,23 +246,41 @@ const Signup = () => {
   };
 
   const generateStrongPassword = () => {
-    const length = 16;
     const lowercase = 'abcdefghijklmnopqrstuvwxyz';
     const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const numbers = '0123456789';
     const special = '!@#$%^&*()_+-=[]{}|;:,.<>?';
     
-    // Garantir pelo menos um de cada tipo
+    let charPool = '';
     let password = '';
-    password += lowercase[Math.floor(Math.random() * lowercase.length)];
-    password += uppercase[Math.floor(Math.random() * uppercase.length)];
-    password += numbers[Math.floor(Math.random() * numbers.length)];
-    password += special[Math.floor(Math.random() * special.length)];
+    
+    // Verificar se pelo menos um tipo está selecionado
+    if (!includeLowercase && !includeUppercase && !includeNumbers && !includeSpecial) {
+      toast.error("Selecione pelo menos um tipo de caractere");
+      return;
+    }
+    
+    // Garantir pelo menos um de cada tipo selecionado
+    if (includeLowercase) {
+      password += lowercase[Math.floor(Math.random() * lowercase.length)];
+      charPool += lowercase;
+    }
+    if (includeUppercase) {
+      password += uppercase[Math.floor(Math.random() * uppercase.length)];
+      charPool += uppercase;
+    }
+    if (includeNumbers) {
+      password += numbers[Math.floor(Math.random() * numbers.length)];
+      charPool += numbers;
+    }
+    if (includeSpecial) {
+      password += special[Math.floor(Math.random() * special.length)];
+      charPool += special;
+    }
     
     // Preencher o resto aleatoriamente
-    const allChars = lowercase + uppercase + numbers + special;
-    for (let i = password.length; i < length; i++) {
-      password += allChars[Math.floor(Math.random() * allChars.length)];
+    for (let i = password.length; i < passwordLength; i++) {
+      password += charPool[Math.floor(Math.random() * charPool.length)];
     }
     
     // Embaralhar a senha
@@ -262,6 +289,7 @@ const Signup = () => {
     setPassword(password);
     setConfirmPassword(password);
     setShowPassword(true);
+    setShowPasswordGenerator(false);
     
     // Copiar automaticamente para área de transferência
     navigator.clipboard.writeText(password);
@@ -397,17 +425,110 @@ const Signup = () => {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Senha</Label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={generateStrongPassword}
-                  disabled={loading}
-                  className="h-auto py-1 px-2 text-xs gap-1"
-                >
-                  <Sparkles className="w-3 h-3" />
-                  Gerar senha forte
-                </Button>
+                <Dialog open={showPasswordGenerator} onOpenChange={setShowPasswordGenerator}>
+                  <DialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={loading}
+                      className="h-auto py-1 px-2 text-xs gap-1"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      Gerar senha forte
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Gerar senha forte</DialogTitle>
+                      <DialogDescription>
+                        Customize as opções para gerar uma senha segura
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-6 py-4">
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label>Comprimento: {passwordLength} caracteres</Label>
+                          </div>
+                          <Slider
+                            value={[passwordLength]}
+                            onValueChange={(value) => setPasswordLength(value[0])}
+                            min={8}
+                            max={32}
+                            step={1}
+                            className="w-full"
+                          />
+                        </div>
+                        <div className="space-y-3">
+                          <Label>Tipos de caracteres:</Label>
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="lowercase"
+                                checked={includeLowercase}
+                                onCheckedChange={(checked) => setIncludeLowercase(checked as boolean)}
+                              />
+                              <label
+                                htmlFor="lowercase"
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                              >
+                                Letras minúsculas (a-z)
+                              </label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="uppercase"
+                                checked={includeUppercase}
+                                onCheckedChange={(checked) => setIncludeUppercase(checked as boolean)}
+                              />
+                              <label
+                                htmlFor="uppercase"
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                              >
+                                Letras maiúsculas (A-Z)
+                              </label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="numbers"
+                                checked={includeNumbers}
+                                onCheckedChange={(checked) => setIncludeNumbers(checked as boolean)}
+                              />
+                              <label
+                                htmlFor="numbers"
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                              >
+                                Números (0-9)
+                              </label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="special"
+                                checked={includeSpecial}
+                                onCheckedChange={(checked) => setIncludeSpecial(checked as boolean)}
+                              />
+                              <label
+                                htmlFor="special"
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                              >
+                                Caracteres especiais (!@#$%...)
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        onClick={generateStrongPassword}
+                        className="w-full gap-2"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        Gerar senha
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
               <div className="relative">
                 <Input
