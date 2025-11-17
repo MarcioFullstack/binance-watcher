@@ -917,7 +917,7 @@ const Index = () => {
               className="text-lg px-8"
               onClick={() => navigate("/signup")}
             >
-              Criar Conta Grátis
+              {t('landing.cta.button')}
             </Button>
           </motion.div>
         </motion.div>
