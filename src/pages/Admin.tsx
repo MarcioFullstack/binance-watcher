@@ -1197,21 +1197,21 @@ const Admin = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>Status de Pagamentos</CardTitle>
-                  <CardDescription>Distribuição por status</CardDescription>
+                  <CardDescription>Distribution by status</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={[
-                      { name: 'Confirmados', value: stats.payments.confirmed },
-                      { name: 'Pendentes', value: stats.payments.pending },
-                      { name: 'Rejeitados', value: stats.payments.rejected },
+                      { name: 'Confirmed', value: stats.payments.confirmed },
+                      { name: 'Pending', value: stats.payments.pending },
+                      { name: 'Rejected', value: stats.payments.rejected },
                     ]}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" />
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="value" fill="#8884d8" name="Quantidade" />
+                      <Bar dataKey="value" fill="#8884d8" name="Quantity" />
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -1219,8 +1219,8 @@ const Admin = () => {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Top 5 Usuários</CardTitle>
-                  <CardDescription>Por valor total de pagamentos</CardDescription>
+                  <CardTitle>Top 5 Users</CardTitle>
+                  <CardDescription>By total payment amount</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -1244,25 +1244,25 @@ const Admin = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Pagamentos em Criptomoedas</CardTitle>
+            <CardTitle>Cryptocurrency Payments</CardTitle>
             <CardDescription>
-              Visualize e gerencie todos os pagamentos do sistema
+              View and manage all system payments
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="pending" className="w-full">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="all">
-                  Todos ({payments.length})
+                  All ({payments.length})
                 </TabsTrigger>
                 <TabsTrigger value="pending">
-                  Pendentes ({pendingCount})
+                  Pending ({pendingCount})
                 </TabsTrigger>
                 <TabsTrigger value="confirmed">
-                  Confirmados ({payments.filter((p) => p.status === "confirmed").length})
+                  Confirmed ({payments.filter((p) => p.status === "confirmed").length})
                 </TabsTrigger>
                 <TabsTrigger value="rejected">
-                  Rejeitados ({payments.filter((p) => p.status === "rejected").length})
+                  Rejected ({payments.filter((p) => p.status === "rejected").length})
                 </TabsTrigger>
               </TabsList>
 
@@ -1272,20 +1272,20 @@ const Admin = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Data</TableHead>
+                          <TableHead>Date</TableHead>
                           <TableHead>User ID</TableHead>
-                          <TableHead>Valor Esperado</TableHead>
-                          <TableHead>Valor Confirmado</TableHead>
+                          <TableHead>Expected Amount</TableHead>
+                          <TableHead>Confirmed Amount</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>Hash</TableHead>
-                          <TableHead>Ações</TableHead>
+                          <TableHead>Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {filterPayments(tab).length === 0 ? (
                           <TableRow>
                             <TableCell colSpan={7} className="text-center text-muted-foreground">
-                              Nenhum pagamento encontrado
+                              No payments found
                             </TableCell>
                           </TableRow>
                         ) : (
@@ -1358,10 +1358,10 @@ const Admin = () => {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Ticket className="h-5 w-5 text-primary" />
-              <CardTitle>Gerenciar Vouchers</CardTitle>
+              <CardTitle>Manage Vouchers</CardTitle>
             </div>
             <CardDescription>
-              Criar, visualizar e invalidar vouchers para ativar assinaturas
+              Create, view and invalidate vouchers to activate subscriptions
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -1377,7 +1377,7 @@ const Admin = () => {
               </Card>
               <Card className="bg-card/50">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Disponíveis</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Available</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-success">{voucherStats.available}</div>
@@ -1385,7 +1385,7 @@ const Admin = () => {
               </Card>
               <Card className="bg-card/50">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Usados</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Used</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-muted-foreground">{voucherStats.used}</div>
@@ -1393,19 +1393,19 @@ const Admin = () => {
               </Card>
             </div>
 
-            {/* Formulário de Criação */}
+            {/* Creation Form */}
             <div className="grid gap-4 rounded-lg border p-4 bg-card/50">
-              <h3 className="font-semibold">Criar Novos Vouchers</h3>
+              <h3 className="font-semibold">Create New Vouchers</h3>
               <Tabs defaultValue="single" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="single">Único</TabsTrigger>
-                  <TabsTrigger value="multiple">Múltiplos</TabsTrigger>
+                  <TabsTrigger value="single">Single</TabsTrigger>
+                  <TabsTrigger value="multiple">Multiple</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="single" className="space-y-4 mt-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="voucherCode">Código do Voucher</Label>
+                      <Label htmlFor="voucherCode">Voucher Code</Label>
                       <Input
                         id="voucherCode"
                         placeholder="XXXX-XXXX-XXXX-XXXX"
@@ -1415,11 +1415,11 @@ const Admin = () => {
                         disabled={creatingVoucher}
                       />
                       <p className="text-xs text-muted-foreground">
-                        Use apenas letras e números (formato: XXXX-XXXX-XXXX-XXXX)
+                        Use only letters and numbers (format: XXXX-XXXX-XXXX-XXXX)
                       </p>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="voucherDays">Dias de Validade</Label>
+                      <Label htmlFor="voucherDays">Validity Days</Label>
                       <Input
                         id="voucherDays"
                         type="number"
@@ -1430,7 +1430,7 @@ const Admin = () => {
                         disabled={creatingVoucher}
                       />
                       <p className="text-xs text-muted-foreground">
-                        Entre 1 e 365 dias
+                        Between 1 and 365 days
                       </p>
                     </div>
                   </div>
@@ -1456,7 +1456,7 @@ const Admin = () => {
                 <TabsContent value="multiple" className="space-y-4 mt-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="voucherCount">Quantidade</Label>
+                      <Label htmlFor="voucherCount">Quantity</Label>
                       <Input
                         id="voucherCount"
                         type="number"
@@ -1467,11 +1467,11 @@ const Admin = () => {
                         disabled={creatingVoucher}
                       />
                       <p className="text-xs text-muted-foreground">
-                        Entre 1 e 50 vouchers
+                        Between 1 and 50 vouchers
                       </p>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="voucherDaysMultiple">Dias de Validade</Label>
+                      <Label htmlFor="voucherDaysMultiple">Validity Days</Label>
                       <Input
                         id="voucherDaysMultiple"
                         type="number"
@@ -1482,7 +1482,7 @@ const Admin = () => {
                         disabled={creatingVoucher}
                       />
                       <p className="text-xs text-muted-foreground">
-                        Entre 1 e 365 dias para todos
+                        Between 1 and 365 days for all
                       </p>
                     </div>
                   </div>
@@ -1494,12 +1494,12 @@ const Admin = () => {
                     {creatingVoucher ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Criando...
+                        Creating...
                       </>
                     ) : (
                       <>
                         <Ticket className="mr-2 h-4 w-4" />
-                        Gerar {voucherCount} Voucher{voucherCount > 1 ? "s" : ""}
+                        Generate {voucherCount} Voucher{voucherCount > 1 ? "s" : ""}
                       </>
                     )}
                   </Button>
@@ -1510,11 +1510,11 @@ const Admin = () => {
               </Tabs>
             </div>
 
-            {/* Filtros e Busca */}
+            {/* Filters and Search */}
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <Input
-                  placeholder="Buscar por código..."
+                  placeholder="Search by code..."
                   value={voucherSearch}
                   onChange={(e) => setVoucherSearch(e.target.value)}
                 />
@@ -1531,30 +1531,30 @@ const Admin = () => {
                 </Button>
                 <Tabs value={voucherFilter} onValueChange={(v) => setVoucherFilter(v as any)} className="w-auto">
                   <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="all">Todos</TabsTrigger>
-                    <TabsTrigger value="available">Disponíveis</TabsTrigger>
-                    <TabsTrigger value="used">Usados</TabsTrigger>
+                    <TabsTrigger value="all">All</TabsTrigger>
+                    <TabsTrigger value="available">Available</TabsTrigger>
+                    <TabsTrigger value="used">Used</TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
             </div>
 
-            {/* Lista de Vouchers */}
+            {/* Voucher List */}
             <div>
               <h3 className="font-semibold mb-4">
-                Vouchers ({filterVouchers().length} de {vouchers.length})
+                Vouchers ({filterVouchers().length} of {vouchers.length})
               </h3>
               <div className="rounded-md border">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Código</TableHead>
-                      <TableHead>Dias</TableHead>
+                      <TableHead>Code</TableHead>
+                      <TableHead>Days</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Usado Por</TableHead>
-                      <TableHead>Usado Em</TableHead>
-                      <TableHead>Criado Em</TableHead>
-                      <TableHead>Ações</TableHead>
+                      <TableHead>Used By</TableHead>
+                      <TableHead>Used On</TableHead>
+                      <TableHead>Created On</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1570,22 +1570,22 @@ const Admin = () => {
                           <TableCell className="font-mono font-bold">
                             {voucher.code}
                           </TableCell>
-                          <TableCell>{voucher.days} dias</TableCell>
+                          <TableCell>{voucher.days} days</TableCell>
                           <TableCell>
                             {voucher.is_used ? (
-                              <Badge variant="secondary">Usado</Badge>
+                              <Badge variant="secondary">Used</Badge>
                             ) : (
-                              <Badge className="bg-success">Disponível</Badge>
+                              <Badge className="bg-success">Available</Badge>
                             )}
                           </TableCell>
                           <TableCell className="font-mono text-xs">
                             {voucher.used_by ? voucher.used_by.slice(0, 8) + "..." : "-"}
                           </TableCell>
                           <TableCell className="text-xs">
-                            {voucher.used_at ? new Date(voucher.used_at).toLocaleString("pt-BR") : "-"}
+                            {voucher.used_at ? new Date(voucher.used_at).toLocaleString("en-US") : "-"}
                           </TableCell>
                           <TableCell className="text-xs">
-                            {new Date(voucher.created_at).toLocaleString("pt-BR")}
+                            {new Date(voucher.created_at).toLocaleString("en-US")}
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2">
@@ -1593,7 +1593,7 @@ const Admin = () => {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleCopyVoucher(voucher.code)}
-                                title="Copiar código"
+                                title="Copy code"
                               >
                                 <Copy className="h-4 w-4" />
                               </Button>
@@ -1603,7 +1603,7 @@ const Admin = () => {
                                   size="sm"
                                   onClick={() => handleInvalidateVoucher(voucher.id)}
                                   disabled={invalidatingVoucher === voucher.id}
-                                  title="Invalidar voucher"
+                                  title="Invalidate voucher"
                                   className="text-destructive hover:text-destructive"
                                 >
                                   {invalidatingVoucher === voucher.id ? (
@@ -1631,20 +1631,20 @@ const Admin = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-primary" />
-                <CardTitle>Métricas de Administração</CardTitle>
+                <CardTitle>Administration Metrics</CardTitle>
               </div>
               <div className="flex items-center gap-2">
-                {/* Filtro de Período Rápido */}
+                {/* Quick Period Filter */}
                 <Tabs value={dateRange} onValueChange={(v) => setDateRange(v as typeof dateRange)}>
                   <TabsList>
-                    <TabsTrigger value="week">Semana</TabsTrigger>
-                    <TabsTrigger value="month">Mês</TabsTrigger>
-                    <TabsTrigger value="3months">3 Meses</TabsTrigger>
+                    <TabsTrigger value="week">Week</TabsTrigger>
+                    <TabsTrigger value="month">Month</TabsTrigger>
+                    <TabsTrigger value="3months">3 Months</TabsTrigger>
                     <TabsTrigger value="custom">Custom</TabsTrigger>
                   </TabsList>
                 </Tabs>
                 
-                {/* Date Range Picker para Custom */}
+                {/* Date Range Picker for Custom */}
                 {dateRange === "custom" && (
                   <div className="flex items-center gap-2">
                     <Popover>
@@ -1798,8 +1798,8 @@ const Admin = () => {
             {/* Top Usuários Administrativos */}
             <Card className="bg-card/50">
               <CardHeader>
-                <CardTitle className="text-base">Top Administradores</CardTitle>
-                <CardDescription>Usuários mais ativos no sistema</CardDescription>
+                <CardTitle className="text-base">Top Administrators</CardTitle>
+                <CardDescription>Most active users in the system</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -1816,7 +1816,7 @@ const Admin = () => {
                       </div>
                       <div className="text-right">
                         <div className="text-lg font-bold">{user.count}</div>
-                        <p className="text-xs text-muted-foreground">ações</p>
+                        <p className="text-xs text-muted-foreground">actions</p>
                       </div>
                     </div>
                   ))}
@@ -1837,15 +1837,15 @@ const Admin = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Settings className="h-5 w-5 text-primary" />
-                <CardTitle>Configurações de Alertas</CardTitle>
+                <CardTitle>Alert Settings</CardTitle>
               </div>
               <Button onClick={triggerAlertCheck} variant="outline" size="sm">
                 <Bell className="h-4 w-4 mr-2" />
-                Verificar Agora
+                Check Now
               </Button>
             </div>
             <CardDescription>
-              Configure limites para receber alertas automáticos
+              Configure thresholds to receive automatic alerts
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -1901,7 +1901,7 @@ const Admin = () => {
               <div>
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5 text-orange-500" />
-                  <CardTitle>Alertas Ativos</CardTitle>
+                  <CardTitle>Active Alerts</CardTitle>
                   {alerts.filter(a => !a.is_resolved).length > 0 && (
                     <Badge variant="destructive" className="ml-2">
                       {alerts.filter(a => !a.is_resolved).length}
@@ -1909,13 +1909,13 @@ const Admin = () => {
                   )}
                 </div>
                 <CardDescription>
-                  Alertas disparados que requerem atenção • Atualizações em tempo real
+                  Triggered alerts requiring attention • Real-time updates
                 </CardDescription>
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                  <span>Conectado</span>
+                  <span>Connected</span>
                 </div>
               </div>
             </div>
@@ -1928,7 +1928,7 @@ const Admin = () => {
             ) : alerts.filter(a => !a.is_resolved).length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <Bell className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>Nenhum alerta ativo no momento</p>
+                <p>No active alerts at the moment</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -1944,7 +1944,7 @@ const Admin = () => {
                           {alert.details?.message}
                         </div>
                         <div className="text-xs opacity-70 mt-1">
-                          {new Date(alert.triggered_at).toLocaleString('pt-BR')}
+                          {new Date(alert.triggered_at).toLocaleString('en-US')}
                         </div>
                       </div>
                       <Button
@@ -1968,10 +1968,10 @@ const Admin = () => {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Activity className="h-5 w-5 text-green-500" />
-              <CardTitle>Histórico de Alertas Resolvidos</CardTitle>
+              <CardTitle>Resolved Alerts History</CardTitle>
             </div>
             <CardDescription>
-              Análise completa de alertas resolvidos com métricas de desempenho
+              Complete analysis of resolved alerts with performance metrics
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -1979,7 +1979,7 @@ const Admin = () => {
             <div className="grid gap-4 md:grid-cols-4">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription>Total Resolvido</CardDescription>
+                  <CardDescription>Total Resolved</CardDescription>
                   <CardTitle className="text-2xl">
                     {getResolutionMetrics().totalResolved}
                   </CardTitle>
@@ -2079,19 +2079,19 @@ const Admin = () => {
             ) : getResolvedAlerts().length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <Check className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>Nenhum alerta resolvido encontrado para os filtros selecionados</p>
+                <p>No resolved alerts found for selected filters</p>
               </div>
             ) : (
               <div className="rounded-md border">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead>Mensagem</TableHead>
-                      <TableHead>Disparado</TableHead>
-                      <TableHead>Resolvido</TableHead>
-                      <TableHead>Tempo</TableHead>
-                      <TableHead>Por</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Message</TableHead>
+                      <TableHead>Triggered</TableHead>
+                      <TableHead>Resolved</TableHead>
+                      <TableHead>Time</TableHead>
+                      <TableHead>By</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

@@ -6,11 +6,13 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { BalanceCards } from "@/components/dashboard/BalanceCards";
 import { PnLCards } from "@/components/dashboard/PnLCards";
 import { AlertsConfig } from "@/components/dashboard/AlertsConfig";
+import { PnLCalendar } from "@/components/dashboard/PnLCalendar";
 import { Loader2, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSubscriptionRealtime } from "@/hooks/useSubscriptionRealtime";
 import { useAlertsRealtime } from "@/hooks/useAlertsRealtime";
+import { useDailyPnLSync } from "@/hooks/useDailyPnLSync";
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -24,6 +26,9 @@ const Dashboard = () => {
   
   // Enable realtime alerts notifications
   useAlertsRealtime(user?.id, isAdmin);
+
+  // Sync daily PnL data
+  useDailyPnLSync(user?.id);
 
   useEffect(() => {
     checkUser();
@@ -50,7 +55,7 @@ const Dashboard = () => {
 
       setUser(user);
 
-      // Verificar se é admin
+      // Check if is admin
       const { data: roles } = await supabase
         .from('user_roles')
         .select('role')
@@ -60,7 +65,7 @@ const Dashboard = () => {
 
       setIsAdmin(!!roles);
 
-      // Verificar assinatura apenas na primeira carga
+      // Check subscription only on first load
       if (loading) {
         const { data: subscription } = await supabase
           .from('subscriptions')
@@ -73,7 +78,7 @@ const Dashboard = () => {
           return;
         }
 
-        // Verificar se existe conta Binance configurada
+        // Check if Binance account is configured
         const { data: accounts } = await supabase
           .from('binance_accounts')
           .select('id, is_active')
@@ -100,7 +105,7 @@ const Dashboard = () => {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      toast.success("Logout realizado com sucesso");
+      toast.success("Logout successful");
       navigate("/login");
     } catch (error: any) {
       toast.error("Error logging out");
@@ -125,6 +130,7 @@ const Dashboard = () => {
             <BalanceCards />
             <PnLCards />
             <AlertsConfig />
+            <PnLCalendar />
           </>
         ) : (
           <div className="flex items-center justify-center py-12">

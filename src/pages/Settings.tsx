@@ -277,9 +277,9 @@ const Settings = () => {
                 Add New Account
               </h4>
               <div className="space-y-2">
-                <Label>Nome da Conta</Label>
+                <Label>Account Name</Label>
                 <Input
-                  placeholder="Ex: Conta Principal"
+                  placeholder="Ex: Main Account"
                   value={newAccount.name}
                   onChange={(e) => setNewAccount({ ...newAccount, name: e.target.value })}
                 />
@@ -287,7 +287,7 @@ const Settings = () => {
               <div className="space-y-2">
                 <Label>API Key</Label>
                 <Input
-                  placeholder="Sua API Key da Binance"
+                  placeholder="Your Binance API Key"
                   value={newAccount.apiKey}
                   onChange={(e) => setNewAccount({ ...newAccount, apiKey: e.target.value })}
                 />
@@ -296,7 +296,7 @@ const Settings = () => {
                 <Label>API Secret</Label>
                 <Input
                   type="password"
-                  placeholder="Seu API Secret da Binance"
+                  placeholder="Your Binance API Secret"
                   value={newAccount.apiSecret}
                   onChange={(e) => setNewAccount({ ...newAccount, apiSecret: e.target.value })}
                 />
@@ -305,10 +305,10 @@ const Settings = () => {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Adicionando...
+                    Adding...
                   </>
                 ) : (
-                  "Adicionar Conta"
+                  "Add Account"
                 )}
               </Button>
             </div>
