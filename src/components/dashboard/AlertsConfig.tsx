@@ -17,7 +17,7 @@ import {
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, AlertTriangle, Bell, BellOff, TestTube } from "lucide-react";
+import { Loader2, AlertTriangle, Bell, BellOff, TestTube, Volume2 } from "lucide-react";
 import { z } from "zod";
 
 const alertPercentSchema = z.object({
@@ -226,6 +226,53 @@ export const AlertsConfig = () => {
     }
   };
 
+  const playPoliceSiren = () => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const duration = 3;
+    const startTime = audioContext.currentTime;
+    
+    // Criar osciladores para a sirene
+    const oscillator1 = audioContext.createOscillator();
+    const oscillator2 = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator1.connect(gainNode);
+    oscillator2.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    // Frequências iniciais
+    oscillator1.frequency.setValueAtTime(800, startTime);
+    oscillator2.frequency.setValueAtTime(1200, startTime);
+    
+    // Volume alto
+    gainNode.gain.setValueAtTime(0.7, startTime);
+    
+    // Criar efeito de sirene alternando frequências
+    for (let i = 0; i < duration * 2; i++) {
+      const time = startTime + (i * 0.5);
+      if (i % 2 === 0) {
+        oscillator1.frequency.linearRampToValueAtTime(800, time);
+        oscillator2.frequency.linearRampToValueAtTime(1200, time);
+      } else {
+        oscillator1.frequency.linearRampToValueAtTime(1000, time);
+        oscillator2.frequency.linearRampToValueAtTime(900, time);
+      }
+    }
+    
+    // Fade out no final
+    gainNode.gain.setValueAtTime(0.7, startTime + duration - 0.5);
+    gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
+    
+    oscillator1.start(startTime);
+    oscillator2.start(startTime);
+    oscillator1.stop(startTime + duration);
+    oscillator2.stop(startTime + duration);
+    
+    toast.success("🚨 Som de alerta tocando!", {
+      duration: 3000,
+    });
+  };
+
   return (
     <Card className={`p-6 border-2 bg-card transition-all duration-300 ${loading ? 'border-primary/50 opacity-80' : 'border-primary'}`}>
       <div className="flex items-center gap-2 mb-4">
@@ -368,11 +415,21 @@ export const AlertsConfig = () => {
           </p>
         </Card>
 
-        <div className="flex gap-3">
+        <div className="grid grid-cols-3 gap-3">
+          <Button 
+            onClick={playPoliceSiren} 
+            variant="outline"
+            className="border-destructive/50 hover:bg-destructive/10"
+            disabled={loading}
+          >
+            <Volume2 className="mr-2 h-4 w-4" />
+            🚨 Som
+          </Button>
+
           <Button 
             onClick={testAlerts} 
             variant="outline"
-            className="flex-1 border-primary/50 hover:bg-primary/10"
+            className="border-primary/50 hover:bg-primary/10"
             disabled={testingAlerts || loading}
           >
             {testingAlerts ? (
@@ -383,14 +440,14 @@ export const AlertsConfig = () => {
             ) : (
               <>
                 <TestTube className="mr-2 h-4 w-4" />
-                Testar Alertas
+                Testar
               </>
             )}
           </Button>
 
           <Button 
             onClick={handleSave} 
-            className="flex-1 bg-primary hover:bg-primary/90 relative overflow-hidden"
+            className="bg-primary hover:bg-primary/90 relative overflow-hidden"
             disabled={loading || !!lossPercentError || !!gainPercentError}
           >
             {loading && (
