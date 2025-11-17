@@ -131,3 +131,5 @@ export const DashboardHeader = ({ onLogout, isAdmin = false, userId }: Dashboard
     </header>
   );
 };
+
+export default DashboardHeader;
