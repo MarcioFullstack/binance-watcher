@@ -105,7 +105,16 @@ const Signup = () => {
         setStep(2);
       }
     } catch (error: any) {
-      toast.error(error.message || "Erro ao criar conta");
+      if (error.message?.includes("already registered") || error.code === "user_already_exists") {
+        toast.error("Este email já está cadastrado. Faça login para continuar.", {
+          action: {
+            label: "Fazer Login",
+            onClick: () => navigate("/login")
+          }
+        });
+      } else {
+        toast.error(error.message || "Erro ao criar conta");
+      }
     } finally {
       setLoading(false);
       setLoadingMessage("");
@@ -176,7 +185,13 @@ const Signup = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message?.includes("already registered")) {
+          toast.info("Redirecionando para login com Google...");
+        } else {
+          throw error;
+        }
+      }
     } catch (error: any) {
       toast.error(error.message || "Erro ao fazer cadastro com Google");
     }
