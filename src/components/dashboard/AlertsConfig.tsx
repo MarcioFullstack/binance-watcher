@@ -14,11 +14,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, AlertTriangle, Bell, BellOff, TestTube, Volume2 } from "lucide-react";
+import { Loader2, AlertTriangle, Bell, BellOff, TestTube, Volume2, Coins } from "lucide-react";
 import { z } from "zod";
+import { useAlertSounds } from "@/hooks/useAlertSounds";
 
 const alertPercentSchema = z.object({
   lossPercent: z.string()
@@ -56,6 +57,10 @@ export const AlertsConfig = () => {
   const [lossPushNotifications, setLossPushNotifications] = useState(false);
   const [gainPushNotifications, setGainPushNotifications] = useState(false);
   const [testingAlerts, setTestingAlerts] = useState(false);
+  const [userId, setUserId] = useState<string | undefined>(undefined);
+
+  // Ativar sons automáticos quando alertas forem disparados
+  useAlertSounds(userId);
 
   useEffect(() => {
     loadSettings();
@@ -65,6 +70,8 @@ export const AlertsConfig = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      setUserId(user.id);
 
       const { data, error } = await supabase
         .from("risk_settings")
@@ -268,7 +275,66 @@ export const AlertsConfig = () => {
     oscillator1.stop(startTime + duration);
     oscillator2.stop(startTime + duration);
     
-    toast.success("🚨 Som de alerta tocando!", {
+    toast.success("🚨 Som de alerta de perda!", {
+      duration: 3000,
+    });
+  };
+
+  const playCoinsSound = () => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const startTime = audioContext.currentTime;
+    
+    // Criar múltiplos tons para simular moedas caindo
+    const frequencies = [800, 1000, 1200, 900, 1100, 950];
+    
+    frequencies.forEach((freq, index) => {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(freq, startTime);
+      
+      // Envelope de volume para cada "moeda"
+      const coinStart = startTime + (index * 0.15);
+      gainNode.gain.setValueAtTime(0, coinStart);
+      gainNode.gain.linearRampToValueAtTime(0.3, coinStart + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, coinStart + 0.3);
+      
+      oscillator.start(coinStart);
+      oscillator.stop(coinStart + 0.3);
+    });
+    
+    // Som adicional de "tinir" usando ruído branco
+    const bufferSize = audioContext.sampleRate * 0.5;
+    const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+    const output = buffer.getChannelData(0);
+    
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioContext.sampleRate * 0.1));
+    }
+    
+    const noise = audioContext.createBufferSource();
+    const noiseGain = audioContext.createGain();
+    const filter = audioContext.createBiquadFilter();
+    
+    noise.buffer = buffer;
+    filter.type = 'highpass';
+    filter.frequency.setValueAtTime(2000, startTime);
+    
+    noise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(audioContext.destination);
+    
+    noiseGain.gain.setValueAtTime(0.1, startTime);
+    noiseGain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.5);
+    
+    noise.start(startTime);
+    noise.stop(startTime + 0.5);
+    
+    toast.success("💰 Som de moedas de ganho!", {
       duration: 3000,
     });
   };
@@ -415,15 +481,27 @@ export const AlertsConfig = () => {
           </p>
         </Card>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-4 gap-2">
           <Button 
             onClick={playPoliceSiren} 
             variant="outline"
             className="border-destructive/50 hover:bg-destructive/10"
             disabled={loading}
+            size="sm"
           >
-            <Volume2 className="mr-2 h-4 w-4" />
-            🚨 Som
+            <Volume2 className="mr-1 h-3 w-3" />
+            🚨
+          </Button>
+
+          <Button 
+            onClick={playCoinsSound} 
+            variant="outline"
+            className="border-green-500/50 hover:bg-green-500/10"
+            disabled={loading}
+            size="sm"
+          >
+            <Coins className="mr-1 h-3 w-3" />
+            💰
           </Button>
 
           <Button 
@@ -431,17 +509,12 @@ export const AlertsConfig = () => {
             variant="outline"
             className="border-primary/50 hover:bg-primary/10"
             disabled={testingAlerts || loading}
+            size="sm"
           >
             {testingAlerts ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Testando...
-              </>
+              <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
-              <>
-                <TestTube className="mr-2 h-4 w-4" />
-                Testar
-              </>
+              <TestTube className="h-3 w-3" />
             )}
           </Button>
 
@@ -449,18 +522,16 @@ export const AlertsConfig = () => {
             onClick={handleSave} 
             className="bg-primary hover:bg-primary/90 relative overflow-hidden"
             disabled={loading || !!lossPercentError || !!gainPercentError}
+            size="sm"
           >
             {loading && (
               <div className="absolute inset-0 bg-primary/20 animate-pulse" />
             )}
-            <span className="relative z-10 flex items-center justify-center">
+            <span className="relative z-10 flex items-center justify-center text-xs">
               {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Salvando...
-                </>
+                <Loader2 className="h-3 w-3 animate-spin" />
               ) : (
-                <>💾 Salvar</>
+                "💾"
               )}
             </span>
           </Button>
