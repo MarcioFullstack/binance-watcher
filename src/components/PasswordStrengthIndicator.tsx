@@ -34,26 +34,29 @@ const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicatorProps)
     { label: "Pelo menos um caractere especial (!@#$%)", met: /[^a-zA-Z0-9]/.test(pwd) },
   ];
 
-  if (!password) return null;
-
   const { strength, label, color, bgColor } = calculateStrength(password);
   const criteria = getCriteria(password);
   const metCriteria = criteria.filter(c => c.met).length;
+  
+  // Se a senha estiver vazia, mostra estado inicial
+  const isEmpty = !password || password.length === 0;
 
   return (
     <div className="space-y-3 mt-2 p-3 rounded-lg border bg-card">
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <ShieldCheck className={`w-4 h-4 ${color}`} />
+            <ShieldCheck className={`w-4 h-4 ${isEmpty ? 'text-muted-foreground' : color}`} />
             <span className="text-sm font-medium">Força da senha:</span>
           </div>
-          <span className={`font-semibold text-sm ${color}`}>{label}</span>
+          <span className={`font-semibold text-sm ${isEmpty ? 'text-muted-foreground' : color}`}>
+            {isEmpty ? 'Digite uma senha' : label}
+          </span>
         </div>
         <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">
           <div 
-            className={`h-full ${bgColor} transition-all duration-300 ease-out`}
-            style={{ width: `${strength}%` }}
+            className={`h-full ${isEmpty ? 'bg-muted-foreground/20' : bgColor} transition-all duration-300 ease-out`}
+            style={{ width: isEmpty ? '0%' : `${strength}%` }}
           />
         </div>
         <p className="text-xs text-muted-foreground text-right">
