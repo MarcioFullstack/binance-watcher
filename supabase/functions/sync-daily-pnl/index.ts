@@ -29,11 +29,14 @@ serve(async (req) => {
     } = await supabaseClient.auth.getUser();
 
     if (userError || !user) {
+      console.error("Authentication error:", userError);
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    console.log(`Syncing PnL for user: ${user.id}`);
 
     // Get active Binance account
     const { data: binanceAccount, error: accountError } = await supabaseClient
@@ -44,6 +47,7 @@ serve(async (req) => {
       .maybeSingle();
 
     if (accountError || !binanceAccount) {
+      console.error("Binance account error:", accountError);
       return new Response(
         JSON.stringify({ error: "No active Binance account found" }),
         {
@@ -53,14 +57,22 @@ serve(async (req) => {
       );
     }
 
+    console.log(`Using Binance account: ${binanceAccount.account_name}`);
+
     const { date, market_type = "USDT" } = await req.json();
+
+    console.log(`Syncing data for date: ${date}, market: ${market_type}`);
 
     const startTime = new Date(date).setUTCHours(0, 0, 0, 0);
     const endTime = new Date(date).setUTCHours(23, 59, 59, 999);
 
-    // Prepare query parameters for Binance API
+    console.log(`Time range: ${new Date(startTime).toISOString()} to ${new Date(endTime).toISOString()}`);
+
+    // Prepare query parameters for Binance Futures API
     const timestamp = Date.now();
     const queryString = `startTime=${startTime}&endTime=${endTime}&incomeType=REALIZED_PNL&timestamp=${timestamp}&recvWindow=5000`;
+    
+    console.log("Calling Binance Futures API: /fapi/v1/income");
 
     // Create signature
     const encoder = new TextEncoder();
@@ -81,7 +93,7 @@ serve(async (req) => {
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
 
-    // Fetch income history from Binance
+    // Fetch income history from Binance Futures API
     const incomeResponse = await fetch(
       `https://fapi.binance.com/fapi/v1/income?${queryString}&signature=${signatureHex}`,
       {
@@ -93,22 +105,28 @@ serve(async (req) => {
 
     if (!incomeResponse.ok) {
       const errorText = await incomeResponse.text();
-      console.error("Binance income API error:", errorText);
-      throw new Error(`Failed to fetch income data: ${errorText}`);
+      console.error("Binance Futures API error:", errorText);
+      throw new Error(`Failed to fetch income data from Binance Futures: ${errorText}`);
     }
 
     const incomeData = await incomeResponse.json();
+    console.log(`Received ${Array.isArray(incomeData) ? incomeData.length : 0} income records from Binance Futures`);
 
     // Calculate total realized PnL for the day
     let pnlUsd = 0;
     if (Array.isArray(incomeData)) {
       pnlUsd = incomeData.reduce((sum: number, item: any) => {
-        return sum + parseFloat(item.income || "0");
+        const income = parseFloat(item.income || "0");
+        console.log(`  - ${item.symbol || 'N/A'}: ${income} ${item.asset || 'USDT'} (${item.incomeType})`);
+        return sum + income;
       }, 0);
     }
+    
+    console.log(`Total realized PnL for ${date}: ${pnlUsd} USDT`);
 
     // Calculate percentage based on account balance
-    // Fetch current balance to calculate percentage
+    // Fetch current Futures balance to calculate percentage
+    console.log("Fetching Futures account balance...");
     const balanceQueryString = `timestamp=${timestamp}&recvWindow=5000`;
     const balanceKey = await crypto.subtle.importKey(
       "raw",
@@ -138,15 +156,24 @@ serve(async (req) => {
     let totalBalance = 1000; // Default fallback
     if (balanceResponse.ok) {
       const balances = await balanceResponse.json();
+      console.log(`Received ${balances.length} balance entries from Binance Futures`);
       const usdtBalance = balances.find((b: any) => b.asset === "USDT");
       if (usdtBalance) {
         totalBalance = parseFloat(usdtBalance.balance || "1000");
+        console.log(`Current USDT Futures balance: ${totalBalance}`);
+      } else {
+        console.warn("USDT balance not found in Futures account");
       }
+    } else {
+      const errorText = await balanceResponse.text();
+      console.error("Failed to fetch Futures balance:", errorText);
     }
 
     const pnlPercentage = totalBalance > 0 ? (pnlUsd / totalBalance) * 100 : 0;
+    console.log(`PnL percentage: ${pnlPercentage.toFixed(2)}%`);
 
     // Upsert the daily PnL record
+    console.log("Saving to database...");
     const { data: pnlRecord, error: pnlError } = await supabaseClient
       .from("daily_pnl")
       .upsert(
@@ -164,21 +191,38 @@ serve(async (req) => {
       .select()
       .single();
 
-    if (pnlError) throw pnlError;
+    if (pnlError) {
+      console.error("Database error:", pnlError);
+      throw pnlError;
+    }
+
+    console.log("✓ Successfully synced and saved PnL data");
 
     return new Response(
       JSON.stringify({
         success: true,
         data: pnlRecord,
+        debug: {
+          date,
+          market_type,
+          records_found: Array.isArray(incomeData) ? incomeData.length : 0,
+          total_pnl: pnlUsd,
+          balance: totalBalance,
+          percentage: pnlPercentage,
+        }
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   } catch (error: any) {
-    console.error("Error syncing daily PnL:", error);
+    console.error("❌ Error syncing daily PnL:", error);
+    console.error("Error stack:", error.stack);
     return new Response(
-      JSON.stringify({ error: error?.message || "Unknown error" }),
+      JSON.stringify({ 
+        error: error?.message || "Unknown error",
+        details: error.stack
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
