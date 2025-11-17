@@ -66,22 +66,29 @@ export const AlertsConfig = () => {
   };
 
   return (
-    <Card className="p-6 border-2 border-primary bg-card">
+    <Card className={`p-6 border-2 bg-card transition-all duration-300 ${loading ? 'border-primary/50 opacity-80' : 'border-primary'}`}>
       <div className="flex items-center gap-2 mb-4">
         <span className="text-2xl">⚠️</span>
-        <div>
+        <div className="flex-1">
           <h3 className="text-lg font-bold text-primary">Configurar Alertas</h3>
           <p className="text-xs text-muted-foreground">Defina limites de perda e ganho</p>
         </div>
+        {loading && (
+          <div className="flex items-center gap-2 text-primary animate-pulse">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-xs font-medium">Salvando...</span>
+          </div>
+        )}
       </div>
 
       <div className="space-y-4">
-        <Card className="p-4 border-destructive bg-destructive/10">
+        <Card className={`p-4 border-destructive bg-destructive/10 transition-opacity duration-300 ${loading ? 'opacity-50' : 'opacity-100'}`}>
           <div className="flex items-center gap-2 mb-3">
             <Checkbox 
               id="loss-alert" 
               checked={lossEnabled}
               onCheckedChange={(checked) => setLossEnabled(checked as boolean)}
+              disabled={loading}
             />
             <Label htmlFor="loss-alert" className="text-destructive font-semibold">
               Alerta de Perda
@@ -96,19 +103,20 @@ export const AlertsConfig = () => {
             value={lossPercent}
             onChange={(e) => setLossPercent(e.target.value)}
             className="mt-2 bg-background border-destructive"
-            disabled={!lossEnabled}
+            disabled={!lossEnabled || loading}
           />
           <p className="text-xs text-muted-foreground mt-2">
             ⚠️ Será alertado quando sua perda atingir este percentual
           </p>
         </Card>
 
-        <Card className="p-4 border-success bg-success/10">
+        <Card className={`p-4 border-success bg-success/10 transition-opacity duration-300 ${loading ? 'opacity-50' : 'opacity-100'}`}>
           <div className="flex items-center gap-2 mb-3">
             <Checkbox 
               id="gain-alert"
               checked={gainEnabled}
               onCheckedChange={(checked) => setGainEnabled(checked as boolean)}
+              disabled={loading}
             />
             <Label htmlFor="gain-alert" className="text-success font-semibold">
               Alerta de Ganho
@@ -123,7 +131,7 @@ export const AlertsConfig = () => {
             value={gainPercent}
             onChange={(e) => setGainPercent(e.target.value)}
             className="mt-2 bg-background border-success"
-            disabled={!gainEnabled}
+            disabled={!gainEnabled || loading}
           />
           <p className="text-xs text-muted-foreground mt-2">
             🎯 Será alertado quando seu ganho atingir este percentual
@@ -132,17 +140,22 @@ export const AlertsConfig = () => {
 
         <Button 
           onClick={handleSave} 
-          className="w-full bg-primary hover:bg-primary/90"
+          className="w-full bg-primary hover:bg-primary/90 relative overflow-hidden"
           disabled={loading}
         >
-          {loading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Salvando...
-            </>
-          ) : (
-            <>💾 Salvar Configurações de Alertas</>
+          {loading && (
+            <div className="absolute inset-0 bg-primary/20 animate-pulse" />
           )}
+          <span className="relative z-10 flex items-center justify-center">
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Salvando configurações...
+              </>
+            ) : (
+              <>💾 Salvar Configurações de Alertas</>
+            )}
+          </span>
         </Button>
       </div>
     </Card>
