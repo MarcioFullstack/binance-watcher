@@ -21,17 +21,17 @@ const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicatorProps)
     if (/[0-9]/.test(pwd)) strength += 15;
     if (/[^a-zA-Z0-9]/.test(pwd)) strength += 10;
 
-    if (strength < 40) return { strength, label: "Fraca", color: "text-destructive", bgColor: "bg-destructive" };
-    if (strength < 70) return { strength, label: "Média", color: "text-yellow-500", bgColor: "bg-yellow-500" };
-    return { strength, label: "Forte", color: "text-green-500", bgColor: "bg-green-500" };
+    if (strength < 40) return { strength, label: "Weak", color: "text-destructive", bgColor: "bg-destructive" };
+    if (strength < 70) return { strength, label: "Medium", color: "text-yellow-500", bgColor: "bg-yellow-500" };
+    return { strength, label: "Strong", color: "text-green-500", bgColor: "bg-green-500" };
   };
 
   const getCriteria = (pwd: string): PasswordCriteria[] => [
-    { label: "Mínimo de 8 caracteres", met: pwd.length >= 8 },
-    { label: "Pelo menos uma letra maiúscula (A-Z)", met: /[A-Z]/.test(pwd) },
-    { label: "Pelo menos uma letra minúscula (a-z)", met: /[a-z]/.test(pwd) },
-    { label: "Pelo menos um número (0-9)", met: /[0-9]/.test(pwd) },
-    { label: "Pelo menos um caractere especial (!@#$%)", met: /[^a-zA-Z0-9]/.test(pwd) },
+    { label: "Minimum 8 characters", met: pwd.length >= 8 },
+    { label: "At least one uppercase letter (A-Z)", met: /[A-Z]/.test(pwd) },
+    { label: "At least one lowercase letter (a-z)", met: /[a-z]/.test(pwd) },
+    { label: "At least one number (0-9)", met: /[0-9]/.test(pwd) },
+    { label: "At least one special character (!@#$%)", met: /[^a-zA-Z0-9]/.test(pwd) },
   ];
 
   const { strength, label, color, bgColor } = calculateStrength(password);
@@ -47,10 +47,10 @@ const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicatorProps)
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ShieldCheck className={`w-4 h-4 ${isEmpty ? 'text-muted-foreground' : color}`} />
-            <span className="text-sm font-medium">Força da senha:</span>
+            <span className="text-sm font-medium">Password strength:</span>
           </div>
           <span className={`font-semibold text-sm ${isEmpty ? 'text-muted-foreground' : color}`}>
-            {isEmpty ? 'Digite uma senha' : label}
+            {isEmpty ? 'Enter a password' : label}
           </span>
         </div>
         <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted animate-scale-in">
@@ -60,12 +60,12 @@ const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicatorProps)
           />
         </div>
         <p className="text-xs text-muted-foreground text-right">
-          {metCriteria} de {criteria.length} requisitos cumpridos
+          {metCriteria} of {criteria.length} requirements met
         </p>
       </div>
       
       <div className="space-y-1.5 pt-2 border-t animate-fade-in" style={{ animationDelay: '100ms' }}>
-        <p className="text-xs font-medium text-muted-foreground mb-2">Requisitos:</p>
+        <p className="text-xs font-medium text-muted-foreground mb-2">Requirements:</p>
         {criteria.map((criterion, index) => (
           <div 
             key={index} 

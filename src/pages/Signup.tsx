@@ -114,21 +114,21 @@ const Signup = () => {
       if (data.user) {
         setUserId(data.user.id);
         
-        setLoadingMessage("Configurando seu perfil...");
+        setLoadingMessage("Setting up your profile...");
         const { error: profileError } = await supabase
           .from("profiles")
           .insert([{ id: data.user.id, email }]);
 
         if (profileError) console.error("Error creating profile:", profileError);
 
-        setLoadingMessage("Configurando alertas de risco...");
+        setLoadingMessage("Setting up risk alerts...");
         const { error: riskError } = await supabase
           .from("risk_settings")
           .insert([{ user_id: data.user.id }]);
 
         if (riskError) console.error("Error creating risk settings:", riskError);
 
-        setLoadingMessage("Ativando assinatura...");
+        setLoadingMessage("Activating subscription...");
         const { error: subError } = await supabase
           .from("subscriptions")
           .insert([{ user_id: data.user.id, status: "inactive" }]);
@@ -142,19 +142,19 @@ const Signup = () => {
         const otpauth = authenticator.keyuri(email, "NOTTIFY", secret);
         setQrCodeUrl(otpauth);
 
-        toast.success("Conta criada! Agora configure a autenticação de dois fatores.");
+        toast.success("Account created! Now set up two-factor authentication.");
         setStep(2);
       }
     } catch (error: any) {
       if (error.message?.includes("already registered") || error.code === "user_already_exists") {
-        toast.error("Este email já está cadastrado. Faça login para continuar.", {
+        toast.error("This email is already registered. Login to continue.", {
           action: {
-            label: "Fazer Login",
+            label: "Login",
             onClick: () => navigate("/login")
           }
         });
       } else {
-        toast.error(error.message || "Erro ao criar conta");
+        toast.error(error.message || "Error creating account");
       }
     } finally {
       setLoading(false);
@@ -166,12 +166,12 @@ const Signup = () => {
     e.preventDefault();
 
     if (totpCode.length !== 6) {
-      toast.error("O código deve ter 6 dígitos");
+      toast.error("Code must be 6 digits");
       return;
     }
 
     setLoading(true);
-    setLoadingMessage("Verificando código...");
+    setLoadingMessage("Verifying code...");
 
     try {
       const isValid = authenticator.verify({
@@ -180,7 +180,7 @@ const Signup = () => {
       });
 
       if (!isValid) {
-        toast.error("Código inválido. Tente novamente.");
+        toast.error("Invalid code. Try again.");
         setLoading(false);
         setLoadingMessage("");
         return;
@@ -197,20 +197,20 @@ const Signup = () => {
 
       if (twoFAError) {
         console.error("Error saving 2FA:", twoFAError);
-        toast.error("Erro ao salvar configurações de 2FA");
+        toast.error("Error saving 2FA settings");
         setLoading(false);
         setLoadingMessage("");
         return;
       }
 
-      toast.success("Autenticação de dois fatores configurada com sucesso!");
-      setLoadingMessage("Redirecionando para o dashboard...");
+      toast.success("Two-factor authentication configured successfully!");
+      setLoadingMessage("Redirecting to dashboard...");
       
       setTimeout(() => {
         navigate("/dashboard");
       }, 500);
     } catch (error: any) {
-      toast.error(error.message || "Erro ao verificar código");
+      toast.error(error.message || "Error verifying code");
     } finally {
       setLoading(false);
       setLoadingMessage("");
@@ -228,13 +228,13 @@ const Signup = () => {
 
       if (error) {
         if (error.message?.includes("already registered")) {
-          toast.info("Redirecionando para login com Google...");
+          toast.info("Redirecting to Google login...");
         } else {
           throw error;
         }
       }
     } catch (error: any) {
-      toast.error(error.message || "Erro ao fazer cadastro com Google");
+      toast.error(error.message || "Error signing up with Google");
     }
   };
 

@@ -85,12 +85,12 @@ const ResetPassword = () => {
             <img src={nottifyLogo} alt="NOTTIFY" className="w-12 h-12" />
             <CardTitle className="text-2xl">NOTTIFY</CardTitle>
           </div>
-          <CardDescription>Defina sua nova senha</CardDescription>
+          <CardDescription>Set your new password</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleResetPassword} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="password">Nova Senha</Label>
+              <Label htmlFor="password">New Password</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -115,7 +115,7 @@ const ResetPassword = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
+              <Label htmlFor="confirmPassword">Confirm New Password</Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"

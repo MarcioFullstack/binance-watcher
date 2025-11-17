@@ -119,7 +119,7 @@ const Login = () => {
         setTotpSecret(twoFAData.totp_secret);
         await supabase.auth.signOut();
         setStep(2);
-        toast.info("Digite o código de autenticação");
+        toast.info("Enter the authentication code");
       } else {
         // No 2FA - proceed to dashboard
         toast.success("Login realizado com sucesso!");
@@ -176,7 +176,7 @@ const Login = () => {
       }
 
       if (!isValid) {
-        toast.error("Código inválido. Tente novamente.");
+        toast.error("Invalid code. Try again.");
         setLoading(false);
         return;
       }
@@ -189,10 +189,10 @@ const Login = () => {
 
       if (loginError) throw loginError;
 
-      toast.success("Login realizado com sucesso!");
+      toast.success("Login successful!");
       navigate("/dashboard");
     } catch (error: any) {
-      toast.error(error.message || "Erro ao verificar código");
+      toast.error(error.message || "Error verifying code");
     } finally {
       setLoading(false);
     }
@@ -209,7 +209,7 @@ const Login = () => {
 
       if (error) throw error;
     } catch (error: any) {
-      toast.error(error.message || "Erro ao fazer login com Google");
+      toast.error(error.message || "Error logging in with Google");
     }
   };
 
@@ -217,12 +217,12 @@ const Login = () => {
     e.preventDefault();
     
     if (!resetEmail) {
-      toast.error("Por favor, informe seu email");
+      toast.error("Please enter your email");
       return;
     }
 
     if (!validateResetEmail(resetEmail)) {
-      toast.error("Por favor, insira um email válido");
+      toast.error("Please enter a valid email");
       return;
     }
 
@@ -239,7 +239,7 @@ const Login = () => {
       setResetDialogOpen(false);
       setResetEmail("");
     } catch (error: any) {
-      toast.error(error.message || "Erro ao enviar email de recuperação");
+      toast.error(error.message || "Error sending recovery email");
     } finally {
       setResetLoading(false);
     }
@@ -267,7 +267,7 @@ const Login = () => {
                 <Shield className="w-12 h-12 text-primary" />
                 <CardTitle className="text-2xl">Verificação 2FA</CardTitle>
               </div>
-              <CardDescription>Digite o código de autenticação</CardDescription>
+              <CardDescription>Enter the authentication code</CardDescription>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="totp" className="w-full">
@@ -437,7 +437,7 @@ const Login = () => {
                 <DialogHeader>
                   <DialogTitle>Recuperar Senha</DialogTitle>
                   <DialogDescription>
-                    Digite seu email para receber um link de recuperação de senha.
+                    Enter your email to receive a password recovery link.
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handlePasswordReset} className="space-y-4 mt-4">

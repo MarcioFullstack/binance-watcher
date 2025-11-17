@@ -67,22 +67,22 @@ const Settings = () => {
 
   const handleAddAccount = async () => {
     if (!newAccount.name || !newAccount.apiKey || !newAccount.apiSecret) {
-      toast.error("Preencha todos os campos");
+      toast.error("Fill in all fields");
       return;
     }
 
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Não autenticado");
+      if (!user) throw new Error("Not authenticated");
 
-      // Desativar todas as outras contas
+      // Deactivate all other accounts
       await supabase
         .from("binance_accounts")
         .update({ is_active: false })
         .eq("user_id", user.id);
 
-      // Adicionar nova conta como ativa
+      // Add new account as active
       const { error } = await supabase.from("binance_accounts").insert([
         {
           user_id: user.id,
@@ -95,11 +95,11 @@ const Settings = () => {
 
       if (error) throw error;
 
-      toast.success("Conta adicionada com sucesso!");
+      toast.success("Account added successfully!");
       setNewAccount({ name: "", apiKey: "", apiSecret: "" });
       loadAccounts();
     } catch (error: any) {
-      toast.error("Erro ao adicionar conta");
+      toast.error("Error adding account");
     } finally {
       setLoading(false);
     }
@@ -111,10 +111,10 @@ const Settings = () => {
 
       if (error) throw error;
 
-      toast.success("Conta removida com sucesso!");
+      toast.success("Account removed successfully!");
       loadAccounts();
     } catch (error: any) {
-      toast.error("Erro ao remover conta");
+      toast.error("Error removing account");
     }
   };
 
@@ -123,13 +123,13 @@ const Settings = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Desativar todas
+      // Deactivate all
       await supabase
         .from("binance_accounts")
         .update({ is_active: false })
         .eq("user_id", user.id);
 
-      // Ativar selecionada
+      // Activate selected
       const { error } = await supabase
         .from("binance_accounts")
         .update({ is_active: true })
@@ -137,10 +137,10 @@ const Settings = () => {
 
       if (error) throw error;
 
-      toast.success("Conta ativada!");
+      toast.success("Account activated!");
       loadAccounts();
     } catch (error: any) {
-      toast.error("Erro ao ativar conta");
+      toast.error("Error activating account");
     }
   };
 
@@ -148,14 +148,14 @@ const Settings = () => {
     const trimmedCode = voucherCode.trim().toUpperCase();
     
     if (!trimmedCode) {
-      toast.error("Digite o código do voucher");
+      toast.error("Enter the voucher code");
       return;
     }
 
-    // Validação do formato: XXXX-XXXX-XXXX-XXXX
+    // Validation of format: XXXX-XXXX-XXXX-XXXX
     const voucherRegex = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
     if (!voucherRegex.test(trimmedCode)) {
-      toast.error("Formato inválido. Use: XXXX-XXXX-XXXX-XXXX");
+      toast.error("Invalid format. Use: XXXX-XXXX-XXXX-XXXX");
       return;
     }
 
@@ -166,7 +166,7 @@ const Settings = () => {
       setVoucherCode("");
       loadSubscription();
     } catch (error: any) {
-      toast.error(error.message || "Erro ao ativar voucher");
+      toast.error(error.message || "Error activating voucher");
     } finally {
       setLoading(false);
     }
@@ -179,37 +179,37 @@ const Settings = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-3xl font-bold">Configurações</h1>
+          <h1 className="text-3xl font-bold">Settings</h1>
         </div>
 
         {/* Subscription Status */}
         <Card>
           <CardHeader>
-            <CardTitle>Status da Assinatura</CardTitle>
-            <CardDescription>Ative seu voucher para começar a usar</CardDescription>
+            <CardTitle>Subscription Status</CardTitle>
+            <CardDescription>Activate your voucher to get started</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {subscription && subscription.status === 'active' ? (
               <div className="flex items-center justify-between">
                 <div>
-                  <Badge variant="default" className="mb-2">Ativa</Badge>
+                  <Badge variant="default" className="mb-2">Active</Badge>
                   <p className="text-sm text-muted-foreground">
-                    Expira em: {new Date(subscription.expires_at).toLocaleDateString('pt-BR')}
+                    Expires on: {new Date(subscription.expires_at).toLocaleDateString('en-US')}
                   </p>
                 </div>
               </div>
             ) : (
               <div className="space-y-3">
-                <Badge variant="secondary">Inativa</Badge>
+                <Badge variant="secondary">Inactive</Badge>
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Digite o código do voucher"
+                    placeholder="Enter voucher code"
                     value={voucherCode}
                     onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
                     maxLength={19}
                   />
                   <Button onClick={handleActivateVoucher} disabled={loading}>
-                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Ativar"}
+                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Activate"}
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -224,7 +224,7 @@ const Settings = () => {
         <Card>
           <CardHeader>
             <CardTitle>{t('settings.language')}</CardTitle>
-            <CardDescription>Selecione o idioma da interface</CardDescription>
+            <CardDescription>Select interface language</CardDescription>
           </CardHeader>
           <CardContent>
             <LanguageSelector />
@@ -234,8 +234,8 @@ const Settings = () => {
         {/* Binance Accounts */}
         <Card>
           <CardHeader>
-            <CardTitle>Contas Binance</CardTitle>
-            <CardDescription>Gerencie suas chaves de API da Binance Futures</CardDescription>
+            <CardTitle>Binance Accounts</CardTitle>
+            <CardDescription>Manage your Binance Futures API keys</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
@@ -249,14 +249,14 @@ const Settings = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     {account.is_active ? (
-                      <Badge variant="default">Ativa</Badge>
+                      <Badge variant="default">Active</Badge>
                     ) : (
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => handleSetActive(account.id)}
                       >
-                        Ativar
+                        Activate
                       </Button>
                     )}
                     <Button
@@ -274,7 +274,7 @@ const Settings = () => {
             <div className="space-y-3 pt-4 border-t">
               <h4 className="font-semibold flex items-center gap-2">
                 <Plus className="h-4 w-4" />
-                Adicionar Nova Conta
+                Add New Account
               </h4>
               <div className="space-y-2">
                 <Label>Nome da Conta</Label>

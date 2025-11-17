@@ -59,7 +59,7 @@ export const AlertsConfig = () => {
   const [testingAlerts, setTestingAlerts] = useState(false);
   const [userId, setUserId] = useState<string | undefined>(undefined);
 
-  // Ativar sons automáticos quando alertas forem disparados
+  // Activate automatic sounds when alerts are triggered
   useAlertSounds(userId);
 
   useEffect(() => {
@@ -95,11 +95,11 @@ export const AlertsConfig = () => {
 
   const handleLossEnabledChange = (checked: boolean) => {
     if (!checked && lossEnabled) {
-      // Tentar desabilitar alerta crítico - mostrar confirmação
+      // Try to disable critical alert - show confirmation
       setPendingLossEnabled(false);
       setShowDisableDialog(true);
     } else {
-      // Habilitar alerta - não precisa confirmação
+      // Enable alert - no confirmation needed
       setLossEnabled(checked);
       setPendingLossEnabled(checked);
     }
@@ -543,25 +543,25 @@ export const AlertsConfig = () => {
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
               <AlertTriangle className="w-5 h-5" />
-              Desabilitar Alerta de Perda?
+              Disable Loss Alert?
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-3">
               <p className="font-semibold">
-                ⚠️ ATENÇÃO: Você está prestes a desabilitar um alerta crítico de proteção!
+                ⚠️ WARNING: You are about to disable a critical protection alert!
               </p>
               <p>
-                Ao desabilitar o alerta de perda, você não receberá notificações quando suas perdas atingirem o limite configurado. Isso pode resultar em:
+                By disabling the loss alert, you will not receive notifications when your losses reach the configured limit. This may result in:
               </p>
               <ul className="list-disc list-inside space-y-1 text-sm">
-                <li>Perda de capital significativa sem aviso prévio</li>
-                <li>Dificuldade em controlar o risco das operações</li>
-                <li>Possibilidade de liquidação de posições</li>
+                <li>Significant capital loss without prior warning</li>
+                <li>Difficulty in controlling operation risks</li>
+                <li>Possibility of position liquidation</li>
               </ul>
               <p className="font-semibold text-blue-600">
-                📧 Os administradores do sistema serão notificados por email sobre esta ação.
+                📧 System administrators will be notified by email about this action.
               </p>
               <p className="font-semibold text-destructive">
-                Tem certeza que deseja continuar?
+                Are you sure you want to continue?
               </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -573,7 +573,7 @@ export const AlertsConfig = () => {
               onClick={confirmDisableLossAlert}
               className="bg-destructive hover:bg-destructive/90"
             >
-              Sim, Desabilitar Alerta
+              Yes, Disable Alert
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -131,7 +131,7 @@ const NotificationHistory = () => {
     if (error) {
       console.error("Error fetching notifications:", error);
       toast({
-        title: "Erro ao carregar notificações",
+        title: "Error loading notifications",
         description: "Não foi possível carregar o histórico de notificações.",
         variant: "destructive",
       });
@@ -162,8 +162,8 @@ const NotificationHistory = () => {
 
     if (error) {
       toast({
-        title: "Erro ao excluir",
-        description: "Não foi possível excluir a notificação.",
+        title: "Error deleting",
+        description: "Could not delete notification.",
         variant: "destructive",
       });
     } else {
@@ -203,8 +203,8 @@ const NotificationHistory = () => {
 
     if (error) {
       toast({
-        title: "Erro ao limpar histórico",
-        description: "Não foi possível limpar o histórico de notificações.",
+        title: "Error clearing history",
+        description: "Could not clear notification history.",
         variant: "destructive",
       });
     } else {
@@ -412,8 +412,8 @@ const NotificationHistory = () => {
                 <Bell className="h-12 w-12 text-muted-foreground mb-4" />
                 <p className="text-lg text-muted-foreground">
                   {hasActiveFilters 
-                    ? "Nenhuma notificação encontrada com os filtros aplicados"
-                    : "Nenhuma notificação no histórico"
+                    ? "No notifications found with the filters applied"
+                    : "No notifications in history"
                   }
                 </p>
                 {hasActiveFilters && (
@@ -438,7 +438,7 @@ const NotificationHistory = () => {
                           <CardTitle className="text-lg">{notification.title}</CardTitle>
                           {getTypeBadge(notification.type)}
                           {!notification.is_read && (
-                            <Badge variant="secondary" className="text-xs">Nova</Badge>
+                            <Badge variant="secondary" className="text-xs">New</Badge>
                           )}
                         </div>
                         <CardDescription>{notification.description}</CardDescription>
