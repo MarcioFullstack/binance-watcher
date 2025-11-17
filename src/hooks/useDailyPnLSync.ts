@@ -1,30 +1,58 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { startOfMonth, subDays, eachDayOfInterval, format } from "date-fns";
+import { toast } from "sonner";
 
 export const useDailyPnLSync = (userId?: string) => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState({ current: 0, total: 0 });
+  const [hasAccount, setHasAccount] = useState(false);
+
+  const checkBinanceAccount = useCallback(async () => {
+    if (!userId) return;
+    
+    try {
+      const { data: accounts } = await supabase
+        .from('binance_accounts')
+        .select('id, is_active')
+        .eq('user_id', userId)
+        .eq('is_active', true);
+
+      setHasAccount(accounts && accounts.length > 0);
+    } catch (error) {
+      console.error('Error checking Binance account:', error);
+    }
+  }, [userId]);
 
   useEffect(() => {
     if (!userId) return;
+    
+    checkBinanceAccount();
+  }, [userId, checkBinanceAccount]);
 
-    const syncPnLData = async () => {
-      try {
-        setIsSyncing(true);
-        const today = new Date();
-        const start = startOfMonth(subDays(today, 30));
-        const days = eachDayOfInterval({ start, end: today });
-        
-        // Sync historical data for both market types
-        const marketTypes = ['USDT', 'COIN'];
-        const totalOperations = days.length * marketTypes.length;
-        let completedOperations = 0;
-        
-        setSyncProgress({ current: 0, total: totalOperations });
-        
-        for (const marketType of marketTypes) {
-          for (const day of days) {
+  const syncPnLData = useCallback(async () => {
+    if (!hasAccount) {
+      console.log('No active Binance account, skipping sync');
+      return;
+    }
+
+    try {
+      setIsSyncing(true);
+      toast.info("Starting PnL sync from Binance...");
+      
+      const today = new Date();
+      const start = startOfMonth(subDays(today, 30));
+      const days = eachDayOfInterval({ start, end: today });
+      
+      // Sync historical data for both market types
+      const marketTypes = ['USDT', 'COIN'];
+      const totalOperations = days.length * marketTypes.length;
+      let completedOperations = 0;
+      
+      setSyncProgress({ current: 0, total: totalOperations });
+      
+      for (const marketType of marketTypes) {
+        for (const day of days) {
             const dateStr = format(day, 'yyyy-MM-dd');
             
             // Skip future dates
@@ -54,21 +82,56 @@ export const useDailyPnLSync = (userId?: string) => {
         }
         
         console.log('Successfully initiated PnL sync for historical data');
+        toast.success("PnL data synced successfully!");
       } catch (error) {
         console.error('Error in useDailyPnLSync:', error);
+        toast.error("Error syncing PnL data");
       } finally {
         setIsSyncing(false);
       }
-    };
+    }, [hasAccount]);
 
-    // Run sync immediately
-    syncPnLData();
+  useEffect(() => {
+    if (!userId) return;
+
+    // Listen for changes in Binance accounts
+    const accountsChannel = supabase
+      .channel('binance-accounts-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'binance_accounts',
+          filter: `user_id=eq.${userId}`
+        },
+        async (payload) => {
+          console.log('Binance account changed:', payload);
+          await checkBinanceAccount();
+          
+          // If account was activated, start sync immediately
+          if (payload.eventType === 'INSERT' || 
+              (payload.eventType === 'UPDATE' && payload.new.is_active)) {
+            toast.info("New Binance account detected, starting automatic sync...");
+            setTimeout(() => syncPnLData(), 1000);
+          }
+        }
+      )
+      .subscribe();
+
+    // Run sync immediately if has account
+    if (hasAccount) {
+      syncPnLData();
+    }
 
     // Set up periodic sync every 6 hours
     const interval = setInterval(syncPnLData, 6 * 60 * 60 * 1000);
 
-    return () => clearInterval(interval);
-  }, [userId]);
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(accountsChannel);
+    };
+  }, [userId, hasAccount, syncPnLData, checkBinanceAccount]);
 
   return { isSyncing, syncProgress };
 };
