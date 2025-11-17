@@ -13,15 +13,20 @@ import nottifyLogo from "@/assets/nottify-logo.png";
 import { useTranslation } from "react-i18next";
 import { authenticator } from "otplib";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { z } from "zod";
+
+const emailSchema = z.string().email("Email inválido");
 
 const Login = () => {
   const { t } = useTranslation();
   const [step, setStep] = useState(1); // 1: email/senha, 2: 2FA
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
+  const [resetEmailError, setResetEmailError] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [userId, setUserId] = useState("");
@@ -30,8 +35,61 @@ const Login = () => {
   const [backupCode, setBackupCode] = useState("");
   const navigate = useNavigate();
 
+  const validateEmail = (value: string) => {
+    try {
+      emailSchema.parse(value);
+      setEmailError("");
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setEmailError(error.errors[0].message);
+      }
+      return false;
+    }
+  };
+
+  const validateResetEmail = (value: string) => {
+    try {
+      emailSchema.parse(value);
+      setResetEmailError("");
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setResetEmailError(error.errors[0].message);
+      }
+      return false;
+    }
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+    if (value) {
+      validateEmail(value);
+    } else {
+      setEmailError("");
+    }
+  };
+
+  const handleResetEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setResetEmail(value);
+    if (value) {
+      validateResetEmail(value);
+    } else {
+      setResetEmailError("");
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate email
+    if (!validateEmail(email)) {
+      toast.error("Por favor, insira um email válido");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -160,6 +218,11 @@ const Login = () => {
     
     if (!resetEmail) {
       toast.error("Por favor, informe seu email");
+      return;
+    }
+
+    if (!validateResetEmail(resetEmail)) {
+      toast.error("Por favor, insira um email válido");
       return;
     }
 
@@ -318,10 +381,14 @@ const Login = () => {
                 type="email"
                 placeholder="seu@email.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
                 required
                 disabled={loading}
+                className={emailError ? "border-destructive" : ""}
               />
+              {emailError && (
+                <p className="text-sm text-destructive">{emailError}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
@@ -381,10 +448,14 @@ const Login = () => {
                       type="email"
                       placeholder="seu@email.com"
                       value={resetEmail}
-                      onChange={(e) => setResetEmail(e.target.value)}
+                      onChange={handleResetEmailChange}
                       required
                       disabled={resetLoading}
+                      className={resetEmailError ? "border-destructive" : ""}
                     />
+                    {resetEmailError && (
+                      <p className="text-sm text-destructive">{resetEmailError}</p>
+                    )}
                   </div>
                   <Button type="submit" className="w-full" disabled={resetLoading}>
                     {resetLoading ? (

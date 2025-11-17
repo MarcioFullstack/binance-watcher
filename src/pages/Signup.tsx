@@ -21,9 +21,12 @@ const passwordSchema = z.string()
   .regex(/[0-9]/, "A senha deve conter pelo menos um número")
   .regex(/[^a-zA-Z0-9]/, "A senha deve conter pelo menos um caractere especial");
 
+const emailSchema = z.string().email("Email inválido");
+
 const Signup = () => {
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [totpCode, setTotpCode] = useState("");
@@ -37,8 +40,37 @@ const Signup = () => {
   const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
 
+  const validateEmail = (value: string) => {
+    try {
+      emailSchema.parse(value);
+      setEmailError("");
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setEmailError(error.errors[0].message);
+      }
+      return false;
+    }
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+    if (value) {
+      validateEmail(value);
+    } else {
+      setEmailError("");
+    }
+  };
+
   const handleInitialSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate email
+    if (!validateEmail(email)) {
+      toast.error("Por favor, insira um email válido");
+      return;
+    }
 
     if (password !== confirmPassword) {
       toast.error("As senhas não coincidem");
@@ -319,10 +351,14 @@ const Signup = () => {
                 type="email"
                 placeholder="seu@email.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
                 required
                 disabled={loading}
+                className={emailError ? "border-destructive" : ""}
               />
+              {emailError && (
+                <p className="text-sm text-destructive">{emailError}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
