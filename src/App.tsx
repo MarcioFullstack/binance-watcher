@@ -27,8 +27,8 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <InstallPrompt />
         <BrowserRouter>
+          <InstallPrompt />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
