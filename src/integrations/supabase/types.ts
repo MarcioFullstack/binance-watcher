@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      alert_config_history: {
+        Row: {
+          alert_type: string
+          changed_at: string
+          changed_by: string
+          field_changed: string
+          id: string
+          new_value: string
+          old_value: string | null
+          user_id: string
+        }
+        Insert: {
+          alert_type: string
+          changed_at?: string
+          changed_by: string
+          field_changed: string
+          id?: string
+          new_value: string
+          old_value?: string | null
+          user_id: string
+        }
+        Update: {
+          alert_type?: string
+          changed_at?: string
+          changed_by?: string
+          field_changed?: string
+          id?: string
+          new_value?: string
+          old_value?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       alert_configs: {
         Row: {
           alert_type: Database["public"]["Enums"]["alert_type"]

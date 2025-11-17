@@ -80,22 +80,19 @@ export const AlertsConfig = () => {
   const handleSave = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Usuário não autenticado");
-
-      const { error } = await supabase
-        .from("risk_settings")
-        .update({
-          risk_percent: parseFloat(lossPercent),
+      const { data, error } = await supabase.functions.invoke('save-alert-config', {
+        body: {
+          risk_percent: lossPercent,
           risk_active: lossEnabled,
-        })
-        .eq("user_id", user.id);
+        },
+      });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       toast.success("Configurações salvas com sucesso!");
     } catch (error: any) {
-      toast.error("Erro ao salvar configurações");
+      toast.error(error.message || "Erro ao salvar configurações");
       console.error(error);
     } finally {
       setLoading(false);

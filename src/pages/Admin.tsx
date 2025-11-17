@@ -90,6 +90,17 @@ interface Alert {
   resolved_by: string | null;
 }
 
+interface AlertConfigHistory {
+  id: string;
+  user_id: string;
+  alert_type: string;
+  field_changed: string;
+  old_value: string | null;
+  new_value: string;
+  changed_at: string;
+  changed_by: string;
+}
+
 const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -119,6 +130,9 @@ const Admin = () => {
   const [resolvedAlertsFilter, setResolvedAlertsFilter] = useState<string>("all");
   const [resolvedDateRange, setResolvedDateRange] = useState<"week" | "month" | "3months" | "all">("month");
   const [resolvedByUserId, setResolvedByUserId] = useState<string>("all");
+  const [configHistory, setConfigHistory] = useState<AlertConfigHistory[]>([]);
+  const [configHistoryLoading, setConfigHistoryLoading] = useState(false);
+  const [historyDateRange, setHistoryDateRange] = useState<"week" | "month" | "3months" | "all">("week");
   const navigate = useNavigate();
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
@@ -127,6 +141,7 @@ const Admin = () => {
     checkAdminAccess();
     loadAlerts();
     loadAlertConfigs();
+    loadConfigHistory();
   }, []);
 
   // Real-time subscription for alerts
@@ -580,6 +595,41 @@ const Admin = () => {
       setAlertsLoading(false);
     }
   };
+
+  const loadConfigHistory = async () => {
+    setConfigHistoryLoading(true);
+    try {
+      let query = supabase
+        .from('alert_config_history')
+        .select('*')
+        .order('changed_at', { ascending: false })
+        .limit(100);
+
+      // Aplicar filtro de data
+      if (historyDateRange !== 'all') {
+        const days = historyDateRange === 'week' ? 7 : historyDateRange === 'month' ? 30 : 90;
+        const startDate = subDays(new Date(), days);
+        query = query.gte('changed_at', startDate.toISOString());
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      setConfigHistory(data || []);
+    } catch (error: any) {
+      console.error('Error loading config history:', error);
+      toast.error('Erro ao carregar histórico de configurações');
+    } finally {
+      setConfigHistoryLoading(false);
+    }
+  };
+
+  // Recarregar histórico quando o filtro de data mudar
+  useEffect(() => {
+    if (isAdmin) {
+      loadConfigHistory();
+    }
+  }, [historyDateRange, isAdmin]);
 
   const updateAlertConfig = async (id: string, updates: Partial<AlertConfig>) => {
     setUpdatingConfig(id);
@@ -2004,6 +2054,109 @@ const Admin = () => {
                         </TableRow>
                       );
                     })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Alert Configuration History Card */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Settings className="h-5 w-5 text-blue-500" />
+              <CardTitle>Histórico de Configurações de Alerta</CardTitle>
+            </div>
+            <CardDescription>
+              Registro completo de todas as alterações nas configurações de alertas dos usuários
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Filtros */}
+            <div className="flex gap-2">
+              <Tabs value={historyDateRange} onValueChange={(v) => setHistoryDateRange(v as any)} className="w-full">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="week">Última Semana</TabsTrigger>
+                  <TabsTrigger value="month">Último Mês</TabsTrigger>
+                  <TabsTrigger value="3months">Últimos 3 Meses</TabsTrigger>
+                  <TabsTrigger value="all">Todos</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+
+            {/* Tabela de Histórico */}
+            {configHistoryLoading ? (
+              <div className="flex justify-center items-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : configHistory.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Settings className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                <p>Nenhuma alteração registrada no período selecionado</p>
+              </div>
+            ) : (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Usuário</TableHead>
+                      <TableHead>Tipo de Alerta</TableHead>
+                      <TableHead>Campo Alterado</TableHead>
+                      <TableHead>Valor Anterior</TableHead>
+                      <TableHead>Novo Valor</TableHead>
+                      <TableHead>Alterado Por</TableHead>
+                      <TableHead>Data/Hora</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {configHistory.map((history) => (
+                      <TableRow key={history.id}>
+                        <TableCell className="font-mono text-xs">
+                          {history.user_id.slice(0, 8)}...
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={
+                            history.alert_type === 'loss_alert' ? 'border-destructive text-destructive' : 'border-green-500 text-green-500'
+                          }>
+                            {history.alert_type === 'loss_alert' ? '⚠️ Perda' : '🎯 Ganho'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-medium">
+                            {history.field_changed === 'enabled' ? 'Status' : 'Limite (%)'}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {history.old_value ? (
+                            history.field_changed === 'enabled' ? (
+                              <Badge variant={history.old_value === 'true' ? 'default' : 'secondary'}>
+                                {history.old_value === 'true' ? 'Ativo' : 'Inativo'}
+                              </Badge>
+                            ) : (
+                              <span className="font-mono">{history.old_value}%</span>
+                            )
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {history.field_changed === 'enabled' ? (
+                            <Badge variant={history.new_value === 'true' ? 'default' : 'secondary'}>
+                              {history.new_value === 'true' ? 'Ativo' : 'Inativo'}
+                            </Badge>
+                          ) : (
+                            <span className="font-mono font-semibold">{history.new_value}%</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">
+                          {history.changed_by.slice(0, 8)}...
+                        </TableCell>
+                        <TableCell className="text-xs whitespace-nowrap">
+                          {new Date(history.changed_at).toLocaleString("pt-BR")}
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               </div>
