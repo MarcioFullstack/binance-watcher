@@ -20,8 +20,15 @@ const Payment = () => {
   const [voucherCode, setVoucherCode] = useState("");
   const [copied, setCopied] = useState(false);
   const [pendingPayment, setPendingPayment] = useState<any>(null);
+  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
   const navigate = useNavigate();
   const walletAddress = "0xf9ef22c89bd224f911eaf61c43a39460540eac4f";
+
+  const plans = {
+    monthly: { price: 10, duration: '1 mês', savings: '' },
+    quarterly: { price: 25, duration: '3 meses', savings: 'Economize $5' },
+    yearly: { price: 90, duration: '12 meses', savings: 'Economize $30' }
+  };
 
   useEffect(() => {
     checkPaymentStatus();
@@ -76,9 +83,10 @@ const Payment = () => {
         .insert({
           user_id: user.id,
           wallet_address: walletAddress,
-          expected_amount: 10.00,
+          expected_amount: plans[selectedPlan].price,
           currency: "USD",
           status: "pending",
+          plan_type: selectedPlan,
         });
 
       if (error) throw error;
@@ -158,18 +166,56 @@ const Payment = () => {
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
                 ) : (
-                  <div className="text-center space-y-4">
-                    <div className="p-6 bg-primary/5 rounded-lg">
-                      <p className="text-4xl font-bold text-primary mb-2">$10.00</p>
-                      <p className="text-sm text-muted-foreground">{t("payment.oneTimePayment")}</p>
+                  <div className="space-y-4">
+                    {/* Plan Selection */}
+                    <div className="space-y-2">
+                      <Label>{t("payment.selectPlan") || "Selecione seu plano"}</Label>
+                      <div className="grid grid-cols-1 gap-3">
+                        {Object.entries(plans).map(([key, plan]) => (
+                          <button
+                            key={key}
+                            onClick={() => setSelectedPlan(key as 'monthly' | 'quarterly' | 'yearly')}
+                            className={`p-4 rounded-lg border-2 transition-all text-left ${
+                              selectedPlan === key
+                                ? 'border-primary bg-primary/5'
+                                : 'border-border hover:border-primary/50'
+                            }`}
+                            disabled={!!pendingPayment}
+                          >
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <p className="font-semibold text-foreground">${plan.price}</p>
+                                <p className="text-sm text-muted-foreground">{plan.duration}</p>
+                              </div>
+                              {plan.savings && (
+                                <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded">
+                                  {plan.savings}
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
                     </div>
+
+                    <div className="p-6 bg-primary/5 rounded-lg text-center">
+                      <p className="text-4xl font-bold text-primary mb-2">
+                        ${plans[selectedPlan].price}
+                      </p>
+                      <p className="text-sm text-muted-foreground">{plans[selectedPlan].duration}</p>
+                    </div>
+
 
                     {pendingPayment ? (
                       <Alert className="bg-blue-500/10 border-blue-500/20">
                         <AlertDescription className="text-blue-600 dark:text-blue-400">
                           ⏳ {t("payment.pendingPayment")}
                           <br />
-                          <span className="text-xs">{t("payment.createdAt")} {new Date(pendingPayment.created_at).toLocaleString()}</span>
+                          <span className="text-xs">
+                            {t("payment.createdAt")} {new Date(pendingPayment.created_at).toLocaleString()}
+                            <br />
+                            Plano: {pendingPayment.plan_type === 'yearly' ? 'Anual' : pendingPayment.plan_type === 'quarterly' ? 'Trimestral' : 'Mensal'}
+                          </span>
                         </AlertDescription>
                       </Alert>
                     ) : null}

@@ -279,6 +279,7 @@ export type Database = {
           currency: string
           expected_amount: number
           id: string
+          plan_type: string | null
           status: string
           transaction_hash: string | null
           updated_at: string
@@ -292,6 +293,7 @@ export type Database = {
           currency?: string
           expected_amount?: number
           id?: string
+          plan_type?: string | null
           status?: string
           transaction_hash?: string | null
           updated_at?: string
@@ -305,6 +307,7 @@ export type Database = {
           currency?: string
           expected_amount?: number
           id?: string
+          plan_type?: string | null
           status?: string
           transaction_hash?: string | null
           updated_at?: string
@@ -420,25 +423,37 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          auto_renew: boolean | null
           created_at: string | null
           expires_at: string | null
           id: string
+          last_payment_amount: number | null
+          next_billing_date: string | null
+          plan_type: string | null
           status: string | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          auto_renew?: boolean | null
           created_at?: string | null
           expires_at?: string | null
           id?: string
+          last_payment_amount?: number | null
+          next_billing_date?: string | null
+          plan_type?: string | null
           status?: string | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          auto_renew?: boolean | null
           created_at?: string | null
           expires_at?: string | null
           id?: string
+          last_payment_amount?: number | null
+          next_billing_date?: string | null
+          plan_type?: string | null
           status?: string | null
           updated_at?: string | null
           user_id?: string
@@ -528,6 +543,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_auto_renew_subscriptions: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

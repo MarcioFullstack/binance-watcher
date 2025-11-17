@@ -116,9 +116,26 @@ serve(async (req) => {
     // Pagamento confirmado! Ativar assinatura
     console.log('Payment confirmed, activating subscription...');
 
-    // Calcular data de expiração (30 dias)
+    // Calcular data de expiração baseada no tipo de plano
+    const planType = payment.plan_type || 'monthly';
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 30);
+    
+    switch (planType) {
+      case 'yearly':
+        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+        break;
+      case 'quarterly':
+        expiresAt.setMonth(expiresAt.getMonth() + 3);
+        break;
+      case 'monthly':
+      default:
+        expiresAt.setMonth(expiresAt.getMonth() + 1);
+        break;
+    }
+    
+    const nextBillingDate = new Date(expiresAt);
+    
+    console.log(`Plan type: ${planType}, expires at: ${expiresAt.toISOString()}`);
 
     // Verificar se já existe assinatura
     const { data: existingSub } = await supabaseClient
@@ -136,6 +153,9 @@ serve(async (req) => {
         .update({
           status: 'active',
           expires_at: expiresAt.toISOString(),
+          plan_type: planType,
+          next_billing_date: nextBillingDate.toISOString(),
+          last_payment_amount: receivedAmount,
           updated_at: new Date().toISOString(),
         })
         .eq('user_id', payment.user_id);
@@ -148,6 +168,10 @@ serve(async (req) => {
           user_id: payment.user_id,
           status: 'active',
           expires_at: expiresAt.toISOString(),
+          plan_type: planType,
+          auto_renew: false,
+          next_billing_date: nextBillingDate.toISOString(),
+          last_payment_amount: receivedAmount,
         });
       subError = error;
     }
