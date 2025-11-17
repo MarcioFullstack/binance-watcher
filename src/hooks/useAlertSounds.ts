@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+export type SirenType = 'police' | 'ambulance' | 'fire' | 'air_raid' | 'car_alarm' | 'buzzer';
+
 export const useAlertSounds = (userId: string | undefined) => {
   const lastNotificationId = useRef<string | null>(null);
 
@@ -99,6 +101,157 @@ export const useAlertSounds = (userId: string | undefined) => {
     oscillator2.stop(startTime + duration);
   };
 
+  const playAmbulanceSiren = () => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const duration = 2;
+    const startTime = audioContext.currentTime;
+    
+    const oscillator1 = audioContext.createOscillator();
+    const oscillator2 = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator1.connect(gainNode);
+    oscillator2.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator1.type = 'sine';
+    oscillator2.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0.4, startTime);
+    
+    // Ambulance: fast alternating high-pitched tones
+    for (let i = 0; i < 8; i++) {
+      const time = startTime + i * 0.25;
+      const freq = i % 2 === 0 ? 800 : 950;
+      oscillator1.frequency.setValueAtTime(freq, time);
+      oscillator2.frequency.setValueAtTime(freq + 5, time);
+    }
+    
+    oscillator1.start(startTime);
+    oscillator2.start(startTime);
+    oscillator1.stop(startTime + duration);
+    oscillator2.stop(startTime + duration);
+  };
+
+  const playFireSiren = () => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const duration = 3;
+    const startTime = audioContext.currentTime;
+    
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.type = 'sawtooth';
+    
+    gainNode.gain.setValueAtTime(0.4, startTime);
+    
+    // Fire truck: slow rising and falling tone
+    oscillator.frequency.setValueAtTime(400, startTime);
+    oscillator.frequency.linearRampToValueAtTime(800, startTime + 1);
+    oscillator.frequency.linearRampToValueAtTime(400, startTime + 2);
+    oscillator.frequency.linearRampToValueAtTime(800, startTime + 3);
+    
+    oscillator.start(startTime);
+    oscillator.stop(startTime + duration);
+  };
+
+  const playAirRaidSiren = () => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const duration = 5;
+    const startTime = audioContext.currentTime;
+    
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.type = 'sine';
+    
+    // Air raid: very slow, ominous rise and fall
+    oscillator.frequency.setValueAtTime(200, startTime);
+    oscillator.frequency.linearRampToValueAtTime(800, startTime + 2.5);
+    oscillator.frequency.linearRampToValueAtTime(200, startTime + 5);
+    
+    gainNode.gain.setValueAtTime(0.5, startTime);
+    gainNode.gain.linearRampToValueAtTime(0.5, startTime + 5);
+    
+    oscillator.start(startTime);
+    oscillator.stop(startTime + duration);
+  };
+
+  const playCarAlarm = () => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const duration = 2.4;
+    const startTime = audioContext.currentTime;
+    
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.type = 'square';
+    
+    // Car alarm: rapid beeping pattern
+    for (let i = 0; i < 6; i++) {
+      const time = startTime + i * 0.4;
+      gainNode.gain.setValueAtTime(0.4, time);
+      gainNode.gain.setValueAtTime(0, time + 0.15);
+      oscillator.frequency.setValueAtTime(1000, time);
+    }
+    
+    oscillator.start(startTime);
+    oscillator.stop(startTime + duration);
+  };
+
+  const playBuzzer = () => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const duration = 0.5;
+    const startTime = audioContext.currentTime;
+    
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.type = 'square';
+    oscillator.frequency.setValueAtTime(440, startTime);
+    
+    gainNode.gain.setValueAtTime(0.4, startTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+    
+    oscillator.start(startTime);
+    oscillator.stop(startTime + duration);
+  };
+
+  const playSiren = (type: SirenType) => {
+    switch (type) {
+      case 'police':
+        playPoliceSiren();
+        break;
+      case 'ambulance':
+        playAmbulanceSiren();
+        break;
+      case 'fire':
+        playFireSiren();
+        break;
+      case 'air_raid':
+        playAirRaidSiren();
+        break;
+      case 'car_alarm':
+        playCarAlarm();
+        break;
+      case 'buzzer':
+        playBuzzer();
+        break;
+    }
+  };
+
   useEffect(() => {
     if (!userId) return;
 
@@ -153,5 +306,14 @@ export const useAlertSounds = (userId: string | undefined) => {
     };
   }, [userId]);
 
-  return { playCoinsSound, playPoliceSiren };
+  return {
+    playCoinsSound,
+    playPoliceSiren,
+    playAmbulanceSiren,
+    playFireSiren,
+    playAirRaidSiren,
+    playCarAlarm,
+    playBuzzer,
+    playSiren,
+  };
 };

@@ -384,6 +384,7 @@ export type Database = {
           loss_push_notifications: boolean | null
           risk_active: boolean | null
           risk_percent: number | null
+          siren_type: string
           updated_at: string | null
           user_id: string
         }
@@ -397,6 +398,7 @@ export type Database = {
           loss_push_notifications?: boolean | null
           risk_active?: boolean | null
           risk_percent?: number | null
+          siren_type?: string
           updated_at?: string | null
           user_id: string
         }
@@ -410,6 +412,7 @@ export type Database = {
           loss_push_notifications?: boolean | null
           risk_active?: boolean | null
           risk_percent?: number | null
+          siren_type?: string
           updated_at?: string | null
           user_id?: string
         }

@@ -5,6 +5,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -19,7 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, AlertTriangle, Bell, BellOff, TestTube, Volume2, Coins } from "lucide-react";
 import { z } from "zod";
-import { useAlertSounds } from "@/hooks/useAlertSounds";
+import { useAlertSounds, type SirenType } from "@/hooks/useAlertSounds";
 
 const alertPercentSchema = z.object({
   lossPercent: z.string()
@@ -58,9 +65,10 @@ export const AlertsConfig = () => {
   const [gainPushNotifications, setGainPushNotifications] = useState(false);
   const [testingAlerts, setTestingAlerts] = useState(false);
   const [userId, setUserId] = useState<string | undefined>(undefined);
+  const [sirenType, setSirenType] = useState<SirenType>('police');
 
   // Activate automatic sounds when alerts are triggered
-  useAlertSounds(userId);
+  const alertSounds = useAlertSounds(userId);
 
   useEffect(() => {
     loadSettings();
@@ -87,6 +95,7 @@ export const AlertsConfig = () => {
         setPendingLossEnabled(data.risk_active || true);
         setLossPushNotifications(data.loss_push_notifications || false);
         setGainPushNotifications(data.gain_push_notifications || false);
+        setSirenType((data.siren_type as SirenType) || 'police');
       }
     } catch (error) {
       console.error("Error loading settings:", error);
@@ -233,110 +242,30 @@ export const AlertsConfig = () => {
     }
   };
 
-  const playPoliceSiren = () => {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const duration = 3;
-    const startTime = audioContext.currentTime;
-    
-    // Criar osciladores para a sirene
-    const oscillator1 = audioContext.createOscillator();
-    const oscillator2 = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator1.connect(gainNode);
-    oscillator2.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    // Frequências iniciais
-    oscillator1.frequency.setValueAtTime(800, startTime);
-    oscillator2.frequency.setValueAtTime(1200, startTime);
-    
-    // Volume alto
-    gainNode.gain.setValueAtTime(0.7, startTime);
-    
-    // Criar efeito de sirene alternando frequências
-    for (let i = 0; i < duration * 2; i++) {
-      const time = startTime + (i * 0.5);
-      if (i % 2 === 0) {
-        oscillator1.frequency.linearRampToValueAtTime(800, time);
-        oscillator2.frequency.linearRampToValueAtTime(1200, time);
-      } else {
-        oscillator1.frequency.linearRampToValueAtTime(1000, time);
-        oscillator2.frequency.linearRampToValueAtTime(900, time);
-      }
+  const testSiren = () => {
+    if (alertSounds) {
+      alertSounds.playSiren(sirenType);
+      const sirenNames = {
+        police: 'Polícia',
+        ambulance: 'Ambulância',
+        fire: 'Bombeiros',
+        air_raid: 'Raid Aéreo',
+        car_alarm: 'Alarme de Carro',
+        buzzer: 'Buzzer'
+      };
+      toast.success(`🚨 Som de ${sirenNames[sirenType]}!`, {
+        duration: 3000,
+      });
     }
-    
-    // Fade out no final
-    gainNode.gain.setValueAtTime(0.7, startTime + duration - 0.5);
-    gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
-    
-    oscillator1.start(startTime);
-    oscillator2.start(startTime);
-    oscillator1.stop(startTime + duration);
-    oscillator2.stop(startTime + duration);
-    
-    toast.success("🚨 Som de alerta de perda!", {
-      duration: 3000,
-    });
   };
 
-  const playCoinsSound = () => {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const startTime = audioContext.currentTime;
-    
-    // Criar múltiplos tons para simular moedas caindo
-    const frequencies = [800, 1000, 1200, 900, 1100, 950];
-    
-    frequencies.forEach((freq, index) => {
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(freq, startTime);
-      
-      // Envelope de volume para cada "moeda"
-      const coinStart = startTime + (index * 0.15);
-      gainNode.gain.setValueAtTime(0, coinStart);
-      gainNode.gain.linearRampToValueAtTime(0.3, coinStart + 0.01);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, coinStart + 0.3);
-      
-      oscillator.start(coinStart);
-      oscillator.stop(coinStart + 0.3);
-    });
-    
-    // Som adicional de "tinir" usando ruído branco
-    const bufferSize = audioContext.sampleRate * 0.5;
-    const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
-    const output = buffer.getChannelData(0);
-    
-    for (let i = 0; i < bufferSize; i++) {
-      output[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioContext.sampleRate * 0.1));
+  const testCoinsSound = () => {
+    if (alertSounds) {
+      alertSounds.playCoinsSound();
+      toast.success("💰 Som de moedas de ganho!", {
+        duration: 3000,
+      });
     }
-    
-    const noise = audioContext.createBufferSource();
-    const noiseGain = audioContext.createGain();
-    const filter = audioContext.createBiquadFilter();
-    
-    noise.buffer = buffer;
-    filter.type = 'highpass';
-    filter.frequency.setValueAtTime(2000, startTime);
-    
-    noise.connect(filter);
-    filter.connect(noiseGain);
-    noiseGain.connect(audioContext.destination);
-    
-    noiseGain.gain.setValueAtTime(0.1, startTime);
-    noiseGain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.5);
-    
-    noise.start(startTime);
-    noise.stop(startTime + 0.5);
-    
-    toast.success("💰 Som de moedas de ganho!", {
-      duration: 3000,
-    });
   };
 
   return (
@@ -481,9 +410,35 @@ export const AlertsConfig = () => {
           </p>
         </Card>
 
+        {/* Siren Type Selector */}
+        <Card className="p-4 border-primary/20 bg-card/50">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Volume2 className="w-4 h-4 text-primary" />
+              <Label className="text-sm font-semibold">Tipo de Sirene</Label>
+            </div>
+            <Select value={sirenType} onValueChange={(value) => setSirenType(value as SirenType)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione o tipo de sirene" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="police">🚨 Polícia</SelectItem>
+                <SelectItem value="ambulance">🚑 Ambulância</SelectItem>
+                <SelectItem value="fire">🚒 Bombeiros</SelectItem>
+                <SelectItem value="air_raid">⚠️ Raid Aéreo</SelectItem>
+                <SelectItem value="car_alarm">🚗 Alarme de Carro</SelectItem>
+                <SelectItem value="buzzer">🔔 Buzzer</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Escolha o som que será tocado quando os alertas forem acionados
+            </p>
+          </div>
+        </Card>
+
         <div className="grid grid-cols-4 gap-2">
           <Button 
-            onClick={playPoliceSiren} 
+            onClick={testSiren} 
             variant="outline"
             className="border-destructive/50 hover:bg-destructive/10"
             disabled={loading}
@@ -494,7 +449,7 @@ export const AlertsConfig = () => {
           </Button>
 
           <Button 
-            onClick={playCoinsSound} 
+            onClick={testCoinsSound} 
             variant="outline"
             className="border-green-500/50 hover:bg-green-500/10"
             disabled={loading}
