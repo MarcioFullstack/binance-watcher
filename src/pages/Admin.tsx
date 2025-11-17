@@ -631,6 +631,80 @@ const Admin = () => {
     }
   }, [historyDateRange, isAdmin]);
 
+  // Calcular métricas de alertas
+  const getAlertMetrics = () => {
+    if (!configHistory.length) {
+      return {
+        disableRate: 0,
+        enableRate: 0,
+        totalChanges: 0,
+        thresholdChanges: 0,
+        statusChanges: 0,
+        disabledCount: 0,
+        enabledCount: 0,
+        trendData: [],
+        topUsers: [],
+      };
+    }
+
+    const statusChanges = configHistory.filter(h => h.field_changed === 'enabled');
+    const thresholdChanges = configHistory.filter(h => h.field_changed === 'threshold');
+    
+    const disabledCount = statusChanges.filter(h => h.new_value === 'false').length;
+    const enabledCount = statusChanges.filter(h => h.new_value === 'true').length;
+    
+    const totalStatusChanges = statusChanges.length;
+    const disableRate = totalStatusChanges > 0 ? (disabledCount / totalStatusChanges) * 100 : 0;
+    const enableRate = totalStatusChanges > 0 ? (enabledCount / totalStatusChanges) * 100 : 0;
+
+    // Agrupar por data para gráfico de tendência
+    const changesByDate: Record<string, { date: string; disabled: number; enabled: number; threshold: number }> = {};
+    
+    configHistory.forEach(history => {
+      const date = format(new Date(history.changed_at), 'dd/MM');
+      if (!changesByDate[date]) {
+        changesByDate[date] = { date, disabled: 0, enabled: 0, threshold: 0 };
+      }
+      
+      if (history.field_changed === 'enabled') {
+        if (history.new_value === 'false') {
+          changesByDate[date].disabled++;
+        } else {
+          changesByDate[date].enabled++;
+        }
+      } else {
+        changesByDate[date].threshold++;
+      }
+    });
+
+    const trendData = Object.values(changesByDate).reverse().slice(-14); // Últimos 14 dias
+
+    // Top usuários que mais alteraram configurações
+    const userChanges: Record<string, number> = {};
+    configHistory.forEach(history => {
+      userChanges[history.user_id] = (userChanges[history.user_id] || 0) + 1;
+    });
+
+    const topUsers = Object.entries(userChanges)
+      .map(([userId, count]) => ({ userId, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    return {
+      disableRate: Math.round(disableRate),
+      enableRate: Math.round(enableRate),
+      totalChanges: configHistory.length,
+      thresholdChanges: thresholdChanges.length,
+      statusChanges: statusChanges.length,
+      disabledCount,
+      enabledCount,
+      trendData,
+      topUsers,
+    };
+  };
+
+  const alertMetrics = getAlertMetrics();
+
   const updateAlertConfig = async (id: string, updates: Partial<AlertConfig>) => {
     setUpdatingConfig(id);
     try {
@@ -2058,6 +2132,219 @@ const Admin = () => {
                 </Table>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Alert Metrics Dashboard Card */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              <CardTitle>Dashboard de Métricas de Alertas em Tempo Real</CardTitle>
+            </div>
+            <CardDescription>
+              Análise de tendências e uso das configurações de alerta
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Métricas Principais */}
+            <div className="grid gap-4 md:grid-cols-5">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-xs">Total de Mudanças</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{alertMetrics.totalChanges}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {historyDateRange === 'week' ? 'Última semana' : 
+                     historyDateRange === 'month' ? 'Último mês' :
+                     historyDateRange === '3months' ? 'Últimos 3 meses' : 'Todo período'}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-xs">Alertas Desabilitados</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-destructive">{alertMetrics.disabledCount}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {alertMetrics.disableRate}% do total
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-xs">Alertas Reabilitados</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">{alertMetrics.enabledCount}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {alertMetrics.enableRate}% do total
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-xs">Mudanças de Status</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{alertMetrics.statusChanges}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Ativar/Desativar
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-xs">Ajustes de Limite</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{alertMetrics.thresholdChanges}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Mudanças de %
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Gráfico de Tendências */}
+            {alertMetrics.trendData.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Tendência de Alterações (Últimos 14 Dias)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={alertMetrics.trendData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="date" 
+                        tick={{ fontSize: 12 }}
+                      />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line 
+                        type="monotone" 
+                        dataKey="disabled" 
+                        stroke="#ef4444" 
+                        name="Desabilitados"
+                        strokeWidth={2}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="enabled" 
+                        stroke="#22c55e" 
+                        name="Reabilitados"
+                        strokeWidth={2}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="threshold" 
+                        stroke="#3b82f6" 
+                        name="Ajustes de Limite"
+                        strokeWidth={2}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Top Usuários */}
+            {alertMetrics.topUsers.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Usuários Mais Ativos em Configurações</CardTitle>
+                  <CardDescription>
+                    Top 5 usuários que mais alteraram configurações de alerta
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {alertMetrics.topUsers.map((user, index) => (
+                      <div key={user.userId} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <p className="font-mono text-sm">{user.userId.slice(0, 8)}...</p>
+                            <p className="text-xs text-muted-foreground">Usuário</p>
+                          </div>
+                        </div>
+                        <Badge variant="outline" className="text-base">
+                          {user.count} {user.count === 1 ? 'alteração' : 'alterações'}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Análise de Taxa de Desabilitação */}
+            <Card className="border-destructive/20">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-destructive" />
+                  Análise de Risco - Taxa de Desabilitação
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Taxa de Desabilitação</p>
+                    <p className="text-3xl font-bold text-destructive">{alertMetrics.disableRate}%</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-muted-foreground">Taxa de Reabilitação</p>
+                    <p className="text-3xl font-bold text-green-600">{alertMetrics.enableRate}%</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Desabilitados</span>
+                    <span className="font-medium">{alertMetrics.disabledCount}</span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-destructive transition-all duration-500"
+                      style={{ width: `${alertMetrics.disableRate}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Reabilitados</span>
+                    <span className="font-medium">{alertMetrics.enabledCount}</span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-green-600 transition-all duration-500"
+                      style={{ width: `${alertMetrics.enableRate}%` }}
+                    />
+                  </div>
+                </div>
+
+                {alertMetrics.disableRate > 50 && (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>Atenção:</strong> A taxa de desabilitação está acima de 50%. 
+                      Considere revisar os motivos pelos quais os usuários estão desabilitando alertas críticos.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </CardContent>
+            </Card>
           </CardContent>
         </Card>
 
