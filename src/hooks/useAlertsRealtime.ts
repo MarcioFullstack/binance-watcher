@@ -64,14 +64,12 @@ export const useAlertsRealtime = (userId: string | undefined, isAdmin: boolean =
             });
 
             // Save to notification history for the user
-            if (isAdmin) {
-              await supabase.from('notification_history').insert({
-                user_id: userId,
-                title: `Alerta Crítico: ${alertTypeLabel}`,
-                description,
-                type: 'error'
-              });
-            }
+            await supabase.from('notification_history').insert({
+              user_id: userId,
+              title: `Alerta Crítico: ${alertTypeLabel}`,
+              description,
+              type: 'error'
+            });
           }
         }
       )
