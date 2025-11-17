@@ -6,11 +6,15 @@ export interface BinanceData {
     total: string;
     available: string;
     crossWallet: string;
+    used: string;
+    initial: string;
   };
   pnl: {
     today: string;
     todayPercent: string;
     unrealized: string;
+    totalFromInitial: string;
+    totalPercent: string;
   };
   positions: Array<{
     symbol: string;
@@ -29,6 +33,11 @@ export interface BinanceData {
       symbol: string;
       marginRatio: string;
     }>;
+    hasReachedLimit: boolean;
+    riskPercent: number;
+    maxAllowedLoss: string;
+    currentLoss: string;
+    riskLimitPercent: string;
   };
 }
 
