@@ -134,8 +134,28 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .single();
 
-    const initialBalance = riskSettings?.initial_balance || parseFloat(usdtBalance?.availableBalance || '0');
+    const totalBalance = parseFloat(usdtBalance?.balance || '0');
+    const availableBalance = parseFloat(usdtBalance?.availableBalance || '0');
+    const crossWalletBalance = parseFloat(usdtBalance?.crossWalletBalance || '0');
+    
+    // Saldo usado em posições
+    const usedBalance = crossWalletBalance - availableBalance;
+
+    // Calcular baseado no initial_balance se configurado
+    const initialBalance = riskSettings?.initial_balance || totalBalance;
+    const riskPercent = riskSettings?.risk_percent || 10;
+    const maxAllowedLoss = initialBalance * (riskPercent / 100);
+    
+    // PnL real desde o saldo inicial
+    const totalPnLFromInitial = totalBalance - initialBalance;
+    const totalPnLPercent = initialBalance > 0 ? (totalPnLFromInitial / initialBalance) * 100 : 0;
+    
+    // PnL do dia como porcentagem do saldo inicial
     const todayPnLPercent = initialBalance > 0 ? (todayPnL / initialBalance) * 100 : 0;
+    
+    // Verificar se atingiu limite de perda
+    const hasReachedRiskLimit = totalPnLFromInitial <= -maxAllowedLoss;
+    const riskLimitPercent = initialBalance > 0 ? (Math.abs(totalPnLFromInitial) / initialBalance) * 100 : 0;
 
     // Calcular risco de liquidação
     const criticalPositions = openPositions.filter((p: any) => {
@@ -143,16 +163,35 @@ serve(async (req) => {
       return marginRatio > 80;
     });
 
+    // Se atingiu limite de risco e kill switch está ativo, notificar
+    if (hasReachedRiskLimit && riskSettings?.kill_switch_enabled) {
+      console.log(`⚠️ RISK LIMIT REACHED for user ${user.id}: ${riskLimitPercent.toFixed(2)}% loss`);
+      
+      // Criar notificação
+      await supabaseClient
+        .from('notification_history')
+        .insert({
+          user_id: user.id,
+          type: 'critical_loss',
+          title: '🚨 LIMITE DE RISCO ATINGIDO',
+          description: `Você atingiu ${riskLimitPercent.toFixed(2)}% de perda do saldo inicial (${initialBalance.toFixed(2)} USDT). Saldo atual: ${totalBalance.toFixed(2)} USDT. Considere fechar suas posições.`,
+        });
+    }
+
     const response = {
       balance: {
-        total: usdtBalance?.balance || '0',
-        available: usdtBalance?.availableBalance || '0',
-        crossWallet: usdtBalance?.crossWalletBalance || '0',
+        total: totalBalance.toFixed(2),
+        available: availableBalance.toFixed(2),
+        crossWallet: crossWalletBalance.toFixed(2),
+        used: usedBalance.toFixed(2),
+        initial: initialBalance.toFixed(2),
       },
       pnl: {
         today: todayPnL.toFixed(2),
         todayPercent: todayPnLPercent.toFixed(2),
         unrealized: unrealizedPnL.toFixed(2),
+        totalFromInitial: totalPnLFromInitial.toFixed(2),
+        totalPercent: totalPnLPercent.toFixed(2),
       },
       positions: openPositions.map((p: any) => ({
         symbol: p.symbol,
@@ -171,6 +210,11 @@ serve(async (req) => {
           symbol: p.symbol,
           marginRatio: p.marginRatio,
         })),
+        hasReachedLimit: hasReachedRiskLimit,
+        riskPercent: riskPercent,
+        maxAllowedLoss: maxAllowedLoss.toFixed(2),
+        currentLoss: Math.abs(totalPnLFromInitial).toFixed(2),
+        riskLimitPercent: riskLimitPercent.toFixed(2),
       },
     };
 

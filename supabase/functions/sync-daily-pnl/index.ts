@@ -124,6 +124,14 @@ serve(async (req) => {
     
     console.log(`Total realized PnL for ${date}: ${pnlUsd} USDT`);
 
+    // Buscar configurações de risco para obter initial_balance
+    console.log("Fetching user risk settings for initial balance...");
+    const { data: riskSettings } = await supabaseClient
+      .from('risk_settings')
+      .select('initial_balance')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
     // Calculate percentage based on account balance
     // Fetch current Futures balance to calculate percentage
     console.log("Fetching Futures account balance...");
@@ -169,8 +177,12 @@ serve(async (req) => {
       console.error("Failed to fetch Futures balance:", errorText);
     }
 
-    const pnlPercentage = totalBalance > 0 ? (pnlUsd / totalBalance) * 100 : 0;
-    console.log(`PnL percentage: ${pnlPercentage.toFixed(2)}%`);
+    // Usar initial_balance como base se existir, senão usar saldo atual
+    const baseBalance = riskSettings?.initial_balance || totalBalance;
+    console.log(`Using base balance for percentage calculation: ${baseBalance} (${riskSettings?.initial_balance ? 'from risk_settings' : 'from current balance'})`);
+    
+    const pnlPercentage = baseBalance > 0 ? (pnlUsd / baseBalance) * 100 : 0;
+    console.log(`PnL percentage: ${pnlPercentage.toFixed(2)}% (PnL: ${pnlUsd} USDT / Base: ${baseBalance} USDT)`);
 
     // Upsert the daily PnL record
     console.log("Saving to database...");
