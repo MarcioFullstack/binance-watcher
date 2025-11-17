@@ -20,7 +20,7 @@ export const BalanceCards = () => {
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          Erro ao carregar dados da Binance. Verifique se você configurou uma conta ativa.
+          Error loading Binance data. Check if you have configured an active account.
         </AlertDescription>
       </Alert>
     );
@@ -31,7 +31,7 @@ export const BalanceCards = () => {
       <Alert>
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          Configure uma conta Binance para visualizar seus dados.
+          Configure a Binance account to view your data.
         </AlertDescription>
       </Alert>
     );

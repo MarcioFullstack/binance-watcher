@@ -108,7 +108,7 @@ const SecuritySettings = () => {
     e.preventDefault();
 
     if (verificationCode.length !== 6) {
-      toast.error("O código deve ter 6 dígitos");
+      toast.error("Code must be 6 digits");
       return;
     }
 
@@ -121,7 +121,7 @@ const SecuritySettings = () => {
       });
 
       if (!isValid) {
-        toast.error("Código inválido. Tente novamente.");
+        toast.error("Invalid code. Try again.");
         setLoading(false);
         return;
       }
@@ -157,7 +157,7 @@ const SecuritySettings = () => {
       setShowEnableForm(false);
       setVerificationCode("");
     } catch (error: any) {
-      toast.error(error.message || "Erro ao ativar 2FA");
+      toast.error(error.message || "Error enabling 2FA");
     } finally {
       setLoading(false);
     }
@@ -178,7 +178,7 @@ const SecuritySettings = () => {
       setTwoFAEnabled(false);
       setShowDisableDialog(false);
     } catch (error: any) {
-      toast.error(error.message || "Erro ao desativar 2FA");
+      toast.error(error.message || "Error disabling 2FA");
     } finally {
       setLoading(false);
     }
@@ -214,7 +214,7 @@ const SecuritySettings = () => {
       toast.success("10 novos códigos de backup gerados!");
       await loadBackupCodes(userId);
     } catch (error: any) {
-      toast.error(error.message || "Erro ao gerar códigos de backup");
+      toast.error(error.message || "Error generating backup codes");
     } finally {
       setLoading(false);
     }

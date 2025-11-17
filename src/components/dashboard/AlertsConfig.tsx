@@ -108,7 +108,7 @@ export const AlertsConfig = () => {
   const confirmDisableLossAlert = () => {
     setLossEnabled(false);
     setShowDisableDialog(false);
-    toast.warning("Alerta de perda desabilitado. Seu capital não está mais protegido! Administradores foram notificados.", {
+    toast.warning("Loss alert disabled. Your capital is no longer protected! Administrators were notified.", {
       duration: 5000,
     });
   };
@@ -188,9 +188,9 @@ export const AlertsConfig = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      toast.success("Configurações salvas com sucesso!");
+      toast.success("Settings saved successfully!");
     } catch (error: any) {
-      toast.error(error.message || "Erro ao salvar configurações");
+      toast.error(error.message || "Error saving settings");
       console.error(error);
     } finally {
       setLoading(false);
@@ -217,16 +217,16 @@ export const AlertsConfig = () => {
           );
         } else {
           toast.info(
-            `Verificação concluída! Nenhum alerta disparado`,
+            `Verification completed! No alerts triggered`,
             {
-              description: `${checked} usuário(s) verificado(s)`,
+              description: `${checked} user(s) checked`,
               duration: 4000,
             }
           );
         }
       }
     } catch (error: any) {
-      toast.error("Erro ao testar alertas: " + (error.message || "Erro desconhecido"));
+      toast.error("Error testing alerts: " + (error.message || "Unknown error"));
       console.error(error);
     } finally {
       setTestingAlerts(false);
@@ -567,7 +567,7 @@ export const AlertsConfig = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={cancelDisableLossAlert}>
-              Cancelar (Recomendado)
+              Cancel (Recommended)
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDisableLossAlert}
