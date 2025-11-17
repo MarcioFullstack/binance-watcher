@@ -107,6 +107,7 @@ Deno.serve(async (req) => {
 
     // Registrar mudanças no histórico usando o cliente admin
     const historyEntries = [];
+    let shouldNotifyAdmins = false;
 
     // Verificar mudança no percentual
     if (currentSettings.risk_percent !== riskPercentNum) {
@@ -130,6 +131,11 @@ Deno.serve(async (req) => {
         new_value: risk_active.toString(),
         changed_by: user.id,
       });
+
+      // Se está desabilitando o alerta, notificar admins
+      if (currentSettings.risk_active === true && risk_active === false) {
+        shouldNotifyAdmins = true;
+      }
     }
 
     // Inserir histórico se houver mudanças
@@ -144,6 +150,36 @@ Deno.serve(async (req) => {
       } else {
         console.log(`Registered ${historyEntries.length} history entries`);
       }
+    }
+
+    // Notificar admins se alerta crítico foi desabilitado (background task)
+    if (shouldNotifyAdmins) {
+      console.log('Critical alert disabled, notifying admins...');
+      
+      // Buscar email do usuário
+      const { data: userProfile } = await supabaseClient
+        .from('profiles')
+        .select('email')
+        .eq('id', user.id)
+        .single();
+
+      // Enviar notificação em background sem bloquear a resposta (fire and forget)
+      supabaseAdmin.functions.invoke('notify-admins-alert-disabled', {
+        body: {
+          user_id: user.id,
+          user_email: userProfile?.email || 'unknown',
+          alert_type: 'loss_alert',
+          disabled_at: new Date().toISOString(),
+        },
+      }).then(({ error: notifyError }) => {
+        if (notifyError) {
+          console.error('Error notifying admins:', notifyError);
+        } else {
+          console.log('Admins notified successfully');
+        }
+      }).catch((err) => {
+        console.error('Exception notifying admins:', err);
+      });
     }
 
     return new Response(

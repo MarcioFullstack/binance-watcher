@@ -95,7 +95,9 @@ export const AlertsConfig = () => {
   const confirmDisableLossAlert = () => {
     setLossEnabled(false);
     setShowDisableDialog(false);
-    toast.warning("Alerta de perda desabilitado. Seu capital não está mais protegido!");
+    toast.warning("Alerta de perda desabilitado. Seu capital não está mais protegido! Administradores foram notificados.", {
+      duration: 5000,
+    });
   };
 
   const cancelDisableLossAlert = () => {
@@ -316,6 +318,9 @@ export const AlertsConfig = () => {
                 <li>Dificuldade em controlar o risco das operações</li>
                 <li>Possibilidade de liquidação de posições</li>
               </ul>
+              <p className="font-semibold text-blue-600">
+                📧 Os administradores do sistema serão notificados por email sobre esta ação.
+              </p>
               <p className="font-semibold text-destructive">
                 Tem certeza que deseja continuar?
               </p>
