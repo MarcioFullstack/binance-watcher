@@ -38,7 +38,9 @@ export const useDailyPnLSync = (userId?: string) => {
 
     try {
       setIsSyncing(true);
-      toast.info("Starting PnL sync from Binance...");
+      toast.info("Syncing PnL data from Binance API...", {
+        description: "Fetching historical data for the last 30 days"
+      });
       
       const today = new Date();
       const start = startOfMonth(subDays(today, 30));
@@ -48,6 +50,8 @@ export const useDailyPnLSync = (userId?: string) => {
       const marketTypes = ['USDT', 'COIN'];
       const totalOperations = days.length * marketTypes.length;
       let completedOperations = 0;
+      let successfulSyncs = 0;
+      let failedSyncs = 0;
       
       setSyncProgress({ current: 0, total: totalOperations });
       
@@ -69,6 +73,9 @@ export const useDailyPnLSync = (userId?: string) => {
               
               if (error) {
                 console.error(`Error syncing PnL for ${dateStr} (${marketType}):`, error);
+                failedSyncs++;
+              } else {
+                successfulSyncs++;
               }
               
               completedOperations++;
@@ -76,16 +83,33 @@ export const useDailyPnLSync = (userId?: string) => {
             } catch (error) {
               console.error(`Error syncing ${dateStr}:`, error);
               completedOperations++;
+              failedSyncs++;
               setSyncProgress({ current: completedOperations, total: totalOperations });
             }
           }
         }
         
         console.log('Successfully initiated PnL sync for historical data');
-        toast.success("PnL data synced successfully!");
+        
+        // Show detailed success notification
+        if (failedSyncs === 0) {
+          toast.success("Sync completed successfully!", {
+            description: `${successfulSyncs} records synced from Binance API`
+          });
+        } else if (successfulSyncs > 0) {
+          toast.warning("Sync completed with errors", {
+            description: `${successfulSyncs} synced, ${failedSyncs} failed`
+          });
+        } else {
+          toast.error("Sync failed", {
+            description: "Could not sync any data. Please check your API keys."
+          });
+        }
       } catch (error) {
         console.error('Error in useDailyPnLSync:', error);
-        toast.error("Error syncing PnL data");
+        toast.error("Sync failed", {
+          description: error instanceof Error ? error.message : "Unknown error occurred"
+        });
       } finally {
         setIsSyncing(false);
       }
@@ -112,7 +136,9 @@ export const useDailyPnLSync = (userId?: string) => {
           // If account was activated, start sync immediately
           if (payload.eventType === 'INSERT' || 
               (payload.eventType === 'UPDATE' && payload.new.is_active)) {
-            toast.info("New Binance account detected, starting automatic sync...");
+            toast.success("Binance API connected!", {
+              description: "Starting automatic sync of your trading data..."
+            });
             setTimeout(() => syncPnLData(), 1000);
           }
         }
