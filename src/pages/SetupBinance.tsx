@@ -31,7 +31,7 @@ const SetupBinance = () => {
         return;
       }
 
-      // Verificar se tem assinatura ativa
+      // Check if has active subscription
       const { data: subscription } = await supabase
         .from("subscriptions")
         .select("*")
@@ -39,12 +39,12 @@ const SetupBinance = () => {
         .maybeSingle();
 
       if (!subscription || subscription.status !== "active") {
-        toast.error("Você precisa de uma assinatura ativa");
+        toast.error("You need an active subscription");
         navigate("/payment");
         return;
       }
 
-      // Verificar se já tem conta Binance configurada
+      // Check if already has Binance account configured
       const { data: accounts } = await supabase
         .from("binance_accounts")
         .select("*")
@@ -66,16 +66,16 @@ const SetupBinance = () => {
     e.preventDefault();
 
     if (!accountData.name || !accountData.apiKey || !accountData.apiSecret) {
-      toast.error("Preencha todos os campos");
+      toast.error("Fill in all fields");
       return;
     }
 
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Não autenticado");
+      if (!user) throw new Error("Not authenticated");
 
-      // Adicionar conta Binance
+      // Add Binance account
       const { error } = await supabase.from("binance_accounts").insert([
         {
           user_id: user.id,
@@ -88,10 +88,10 @@ const SetupBinance = () => {
 
       if (error) throw error;
 
-      toast.success("Conta Binance configurada com sucesso!");
+      toast.success("Binance account configured successfully!");
       navigate("/dashboard");
     } catch (error: any) {
-      toast.error(error.message || "Erro ao configurar conta");
+      toast.error(error.message || "Error configuring account");
     } finally {
       setLoading(false);
     }
@@ -115,9 +115,9 @@ const SetupBinance = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Configure sua API Binance</CardTitle>
+            <CardTitle>Configure your Binance API</CardTitle>
             <CardDescription>
-              Conecte sua conta da Binance para começar a monitorar suas operações
+              Connect your Binance account to start monitoring your operations
             </CardDescription>
           </CardHeader>
           <CardContent>

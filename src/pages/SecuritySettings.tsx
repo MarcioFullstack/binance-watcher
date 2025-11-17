@@ -211,7 +211,7 @@ const SecuritySettings = () => {
 
       if (error) throw error;
 
-      toast.success("10 novos códigos de backup gerados!");
+      toast.success("10 new backup codes generated!");
       await loadBackupCodes(userId);
     } catch (error: any) {
       toast.error(error.message || "Error generating backup codes");
@@ -223,7 +223,7 @@ const SecuritySettings = () => {
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code);
     setCopiedCode(code);
-    toast.success("Código copiado!");
+    toast.success("Code copied!");
     setTimeout(() => setCopiedCode(""), 2000);
   };
 
@@ -243,9 +243,9 @@ const SecuritySettings = () => {
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold">Configurações de Segurança</h1>
+            <h1 className="text-3xl font-bold">Security Settings</h1>
             <p className="text-muted-foreground mt-2">
-              Gerencie a autenticação de dois fatores e códigos de backup
+              Manage two-factor authentication and backup codes
             </p>
           </div>
 
@@ -256,9 +256,9 @@ const SecuritySettings = () => {
                 <div className="flex items-center gap-3">
                   <Shield className="w-6 h-6 text-primary" />
                   <div>
-                    <CardTitle>Autenticação de Dois Fatores (2FA)</CardTitle>
+                    <CardTitle>Two-Factor Authentication (2FA)</CardTitle>
                     <CardDescription>
-                      Proteja sua conta com uma camada extra de segurança
+                      Protect your account with an extra layer of security
                     </CardDescription>
                   </div>
                 </div>
@@ -267,7 +267,7 @@ const SecuritySettings = () => {
                     ? "bg-green-500/10 text-green-500" 
                     : "bg-muted text-muted-foreground"
                 }`}>
-                  {twoFAEnabled ? "Ativo" : "Inativo"}
+                  {twoFAEnabled ? "Active" : "Inactive"}
                 </div>
               </div>
             </CardHeader>
@@ -279,7 +279,7 @@ const SecuritySettings = () => {
                       <Alert>
                         <Shield className="h-4 w-4" />
                         <AlertDescription>
-                          Sua conta está protegida com autenticação de dois fatores.
+                          Your account is protected with two-factor authentication.
                         </AlertDescription>
                       </Alert>
                       <div className="flex gap-2">
@@ -288,14 +288,14 @@ const SecuritySettings = () => {
                           onClick={() => setShowDisableDialog(true)}
                         >
                           <ShieldOff className="w-4 h-4 mr-2" />
-                          Desativar 2FA
+                          Disable 2FA
                         </Button>
                         <Button
                           variant="outline"
                           onClick={handleEnable2FA}
                         >
                           <RefreshCw className="w-4 h-4 mr-2" />
-                          Reconfigurar 2FA
+                          Reconfigure 2FA
                         </Button>
                       </div>
                     </div>
@@ -304,12 +304,12 @@ const SecuritySettings = () => {
                       <Alert variant="destructive">
                         <AlertTriangle className="h-4 w-4" />
                         <AlertDescription>
-                          Sua conta não está protegida com 2FA. Recomendamos ativar para maior segurança.
+                          Your account is not protected with 2FA. We recommend enabling it for better security.
                         </AlertDescription>
                       </Alert>
                       <Button onClick={handleEnable2FA}>
                         <Shield className="w-4 h-4 mr-2" />
-                        Ativar 2FA
+                        Enable 2FA
                       </Button>
                     </div>
                   )}
@@ -372,7 +372,7 @@ const SecuritySettings = () => {
                           Verificando...
                         </>
                       ) : (
-                        "Verificar e Ativar"
+                        "Verify and Enable"
                       )}
                     </Button>
                     <Button
@@ -414,7 +414,7 @@ const SecuritySettings = () => {
                   ) : (
                     <>
                       <RefreshCw className="w-4 h-4 mr-2" />
-                      Gerar Novos
+                      Generate New
                     </>
                   )}
                 </Button>

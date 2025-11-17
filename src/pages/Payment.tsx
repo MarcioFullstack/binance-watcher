@@ -37,7 +37,7 @@ const Payment = () => {
         return;
       }
 
-      // Verificar se tem assinatura ativa
+      // Check if has active subscription
       const { data: subscription } = await supabase
         .from("subscriptions")
         .select("*")
@@ -49,7 +49,7 @@ const Payment = () => {
         return;
       }
 
-      // Verificar se tem pagamento pendente
+      // Check if has pending payment
       const { data: payment } = await supabase
         .from("pending_payments")
         .select("*")

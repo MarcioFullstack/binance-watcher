@@ -103,7 +103,7 @@ const Dashboard = () => {
       toast.success("Logout realizado com sucesso");
       navigate("/login");
     } catch (error: any) {
-      toast.error("Erro ao fazer logout");
+      toast.error("Error logging out");
     }
   };
 

@@ -179,7 +179,7 @@ const Admin = () => {
           toast.error(
             `🚨 ${getAlertTypeLabel(config?.alert_type || '')}`,
             {
-              description: newAlert.details?.message || 'Novo alerta disparado',
+              description: newAlert.details?.message || 'New alert triggered',
               duration: 10000,
               action: {
                 label: 'Ver Detalhes',
@@ -221,7 +221,7 @@ const Admin = () => {
 
           // Show toast if resolved
           if (updatedAlert.is_resolved && !payload.old.is_resolved) {
-            toast.success('Alerta resolvido com sucesso');
+            toast.success('Alert resolved successfully');
           }
         }
       )
@@ -248,7 +248,7 @@ const Admin = () => {
       
       setUserId(user.id);
 
-      // Verificar se é admin
+      // Check if is admin
       const { data: roles } = await supabase
         .from("user_roles")
         .select("role")
@@ -257,7 +257,7 @@ const Admin = () => {
         .maybeSingle();
 
       if (!roles) {
-        toast.error("Acesso negado: apenas administradores");
+        toast.error("Access denied: administrators only");
         navigate("/dashboard");
         return;
       }
@@ -284,7 +284,7 @@ const Admin = () => {
       setStats(data);
     } catch (error) {
       console.error("Error loading stats:", error);
-      toast.error("Erro ao carregar estatísticas");
+      toast.error("Error loading statistics");
     } finally {
       setStatsLoading(false);
     }
@@ -302,7 +302,7 @@ const Admin = () => {
       if (error) throw error;
       setAuditLogs(data || []);
 
-      // Carregar perfis de usuários únicos
+      // Load unique user profiles
       const uniqueUserIds = [...new Set(data?.map(log => log.user_id) || [])];
       const { data: profiles } = await supabase
         .from("profiles")
@@ -316,7 +316,7 @@ const Admin = () => {
       setUserProfiles(profileMap);
     } catch (error) {
       console.error("Error loading audit logs:", error);
-      toast.error("Erro ao carregar logs de auditoria");
+      toast.error("Error loading audit logs");
     } finally {
       setAuditLogsLoading(false);
     }
@@ -333,7 +333,7 @@ const Admin = () => {
       setPayments(data || []);
     } catch (error) {
       console.error("Error loading payments:", error);
-      toast.error("Erro ao carregar pagamentos");
+      toast.error("Error loading payments");
     }
   };
 
@@ -350,7 +350,7 @@ const Admin = () => {
       loadPayments();
       loadStats();
     } catch (error: any) {
-      toast.error(error.message || "Erro ao aprovar pagamento");
+      toast.error(error.message || "Error approving payment");
     } finally {
       setActionLoading(null);
     }
@@ -369,7 +369,7 @@ const Admin = () => {
       loadPayments();
       loadStats();
     } catch (error: any) {
-      toast.error(error.message || "Erro ao rejeitar pagamento");
+      toast.error(error.message || "Error rejecting payment");
     } finally {
       setActionLoading(null);
     }
@@ -387,13 +387,13 @@ const Admin = () => {
       setVouchers(data || []);
     } catch (error) {
       console.error("Error loading vouchers:", error);
-      toast.error("Erro ao carregar vouchers");
+      toast.error("Error loading vouchers");
     }
   };
 
   const handleCreateVoucher = async () => {
     if (!voucherCode.trim()) {
-      toast.error("Digite um código para o voucher");
+      toast.error("Enter a voucher code");
       return;
     }
 
@@ -421,7 +421,7 @@ const Admin = () => {
       setVoucherDays("30");
       loadVouchers();
     } catch (error: any) {
-      toast.error(error.message || "Erro ao criar voucher");
+      toast.error(error.message || "Error creating voucher");
     } finally {
       setCreatingVoucher(false);
     }
@@ -432,7 +432,7 @@ const Admin = () => {
       await navigator.clipboard.writeText(code);
       toast.success("Código copiado!");
     } catch (error) {
-      toast.error("Erro ao copiar código");
+      toast.error("Error copying code");
     }
   };
 
@@ -452,7 +452,7 @@ const Admin = () => {
       toast.success("Voucher invalidado com sucesso!");
       loadVouchers();
     } catch (error: any) {
-      toast.error(error.message || "Erro ao invalidar voucher");
+      toast.error(error.message || "Error invalidating voucher");
     } finally {
       setInvalidatingVoucher(null);
     }
@@ -487,7 +487,7 @@ const Admin = () => {
       setVoucherCount(1);
       loadVouchers();
     } catch (error: any) {
-      toast.error(error.message || "Erro ao criar vouchers");
+      toast.error(error.message || "Error creating vouchers");
     } finally {
       setCreatingVoucher(false);
     }
@@ -580,7 +580,7 @@ const Admin = () => {
       setAlertConfigs(data || []);
     } catch (error: any) {
       console.error('Error loading alert configs:', error);
-      toast.error('Erro ao carregar configurações de alertas');
+      toast.error('Error loading alert configurations');
     }
   };
 
@@ -597,7 +597,7 @@ const Admin = () => {
       setAlerts(data || []);
     } catch (error: any) {
       console.error('Error loading alerts:', error);
-      toast.error('Erro ao carregar alertas');
+      toast.error('Error loading alerts');
     } finally {
       setAlertsLoading(false);
     }
@@ -625,7 +625,7 @@ const Admin = () => {
       setConfigHistory(data || []);
     } catch (error: any) {
       console.error('Error loading config history:', error);
-      toast.error('Erro ao carregar histórico de configurações');
+      toast.error('Error loading configuration history');
     } finally {
       setConfigHistoryLoading(false);
     }
@@ -726,7 +726,7 @@ const Admin = () => {
       loadAlertConfigs();
     } catch (error: any) {
       console.error('Error updating alert config:', error);
-      toast.error('Erro ao atualizar configuração');
+      toast.error('Error updating configuration');
     } finally {
       setUpdatingConfig(null);
     }
@@ -751,7 +751,7 @@ const Admin = () => {
       loadAlerts();
     } catch (error: any) {
       console.error('Error resolving alert:', error);
-      toast.error('Erro ao resolver alerta');
+      toast.error('Error resolving alert');
     }
   };
 
@@ -767,7 +767,7 @@ const Admin = () => {
       loadAlerts();
     } catch (error: any) {
       console.error('Error triggering alert check:', error);
-      toast.error('Erro ao verificar alertas');
+      toast.error('Error checking alerts');
     }
   };
 
@@ -910,7 +910,7 @@ const Admin = () => {
       return logDate >= startDate && logDate <= endDate;
     });
 
-    // Gerar array de datas para o período
+    // Generate date array for the period
     const dateArray = Array.from({ length: Math.min(daysInRange, 30) }, (_, i) => {
       const date = new Date(startDate);
       date.setDate(date.getDate() + i * Math.ceil(daysInRange / 30));
