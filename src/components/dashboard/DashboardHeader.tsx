@@ -1,10 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Settings, LogOut, Bell, Shield, History } from "lucide-react";
+import { Settings, LogOut, Bell, Shield, History, KeyRound } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import nottifyLogo from "@/assets/nottify-logo.png";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface DashboardHeaderProps {
   onLogout: () => void;
@@ -97,9 +105,25 @@ export const DashboardHeader = ({ onLogout, isAdmin = false, userId }: Dashboard
             Admin
           </Button>
         )}
-        <Button variant="outline" size="icon" onClick={() => navigate("/settings")}>
-          <Settings className="h-4 w-4" />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="icon">
+              <Settings className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Configurações</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate("/settings")}>
+              <Settings className="mr-2 h-4 w-4" />
+              Gerais
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/security")}>
+              <KeyRound className="mr-2 h-4 w-4" />
+              Segurança
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Button variant="ghost" size="icon" onClick={onLogout}>
           <LogOut className="h-4 w-4" />
         </Button>
