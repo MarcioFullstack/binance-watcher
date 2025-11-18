@@ -20,8 +20,7 @@ serve(async (req) => {
     const payload = await req.json();
     console.log('Webhook received:', JSON.stringify(payload, null, 2));
 
-    // Extrair informações da transação
-    // Formato pode variar dependendo do provedor (BlockCypher, Alchemy, etc.)
+    // Validate input types and format
     const {
       transaction_hash,
       address: wallet_address,
@@ -30,8 +29,42 @@ serve(async (req) => {
       currency = 'ETH'
     } = payload;
 
-    if (!transaction_hash || !wallet_address) {
-      throw new Error('Missing required fields: transaction_hash or wallet_address');
+    if (!transaction_hash || typeof transaction_hash !== 'string') {
+      throw new Error('Invalid or missing transaction_hash');
+    }
+
+    if (!wallet_address || typeof wallet_address !== 'string') {
+      throw new Error('Invalid or missing wallet_address');
+    }
+
+    if (value === undefined || isNaN(parseFloat(value))) {
+      throw new Error('Invalid or missing value');
+    }
+
+    if (confirmations === undefined || !Number.isInteger(confirmations) || confirmations < 0) {
+      throw new Error('Invalid or missing confirmations');
+    }
+
+    // Check for transaction hash replay attack
+    const { data: existingPayment } = await supabaseClient
+      .from('pending_payments')
+      .select('id, status')
+      .eq('transaction_hash', transaction_hash)
+      .not('status', 'eq', 'pending')
+      .maybeSingle();
+
+    if (existingPayment) {
+      console.log(`Transaction hash already used: ${transaction_hash}`);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: 'Transaction already processed' 
+        }),
+        { 
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
     console.log(`Processing transaction: ${transaction_hash} to ${wallet_address}`);

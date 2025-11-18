@@ -22,12 +22,42 @@ serve(async (req) => {
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: req.headers.get('Authorization')! },
+        },
+      }
     );
 
-    const { userId, pnlData } = await req.json() as { userId: string; pnlData: PnLData };
+    // Get authenticated user
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) {
+      throw new Error('Unauthorized');
+    }
 
+    const userId = user.id;
     console.log(`Checking PnL alerts for user: ${userId}`);
+
+    // Get pnlData from request body (optional - if not provided, fetch from binance-data)
+    const body = await req.json().catch(() => ({}));
+    let pnlData: PnLData | undefined = body.pnlData;
+
+    // If no pnlData provided, fetch current data from binance-data
+    if (!pnlData) {
+      console.log('No PnL data provided, fetching from binance-data...');
+      const { data: binanceData, error: binanceError } = await supabaseClient.functions.invoke('binance-data');
+      
+      if (binanceError) {
+        console.error('Error fetching binance data:', binanceError);
+        throw new Error('Could not fetch current PnL data');
+      }
+
+      pnlData = binanceData?.pnl;
+      if (!pnlData) {
+        throw new Error('No PnL data available');
+      }
+    }
 
     // Buscar alertas configurados e ativos do usuário
     const { data: alerts, error: alertsError } = await supabaseClient
@@ -119,54 +149,76 @@ serve(async (req) => {
       }
 
       if (shouldTrigger) {
-        console.log(`🚨 Alert triggered: ${alert.alert_type} - ${alert.trigger_type}`);
-        
-        const notificationType = alert.alert_type === 'loss' ? 'pnl_loss_alert' : 'pnl_gain_alert';
-        const title = alert.alert_type === 'loss' ? `🔴 Alerta de Perda` : `🟢 Alerta de Ganho`;
+        triggeredAlerts.push({
+          config: alert,
+          value: currentValue,
+          description,
+        });
+      }
+    }
 
+    // Salvar notificações e enviar push se houver alertas disparados
+    if (triggeredAlerts.length > 0) {
+      const supabaseServiceClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+
+      for (const alertData of triggeredAlerts) {
+        const alert = alertData.config;
+        const notificationTitle = alert.alert_type === 'loss' 
+          ? `⚠️ Alerta de Perda - ${alert.trigger_type}`
+          : `✅ Meta Atingida - ${alert.trigger_type}`;
+
+        // Check if similar alert was sent in last hour to avoid spam
         const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-        const { data: recentNotif } = await supabaseClient
+        const { data: recentNotif } = await supabaseServiceClient
           .from('notification_history')
           .select('id')
           .eq('user_id', userId)
-          .eq('type', notificationType)
+          .eq('type', alert.alert_type === 'loss' ? 'pnl_loss_alert' : 'pnl_gain_alert')
           .gte('created_at', oneHourAgo)
           .ilike('description', `%${alert.trigger_type}%`)
           .limit(1);
 
         if (!recentNotif || recentNotif.length === 0) {
-          const { error: notifError } = await supabaseClient
-            .from('notification_history')
-            .insert({
-              user_id: userId,
-              type: notificationType,
-              title,
-              description,
-            });
+          await supabaseServiceClient.from('notification_history').insert({
+            user_id: userId,
+            title: notificationTitle,
+            description: alertData.description,
+            type: alert.alert_type === 'loss' ? 'warning' : 'success',
+          });
 
-          if (!notifError) {
-            triggeredAlerts.push({
-              type: alert.trigger_type,
-              alertType: alert.alert_type,
-              currentValue,
-              threshold: alert.threshold,
-              soundEnabled: alert.sound_enabled,
-              pushEnabled: alert.push_enabled,
-            });
-          }
+          console.log(`Alert triggered: ${notificationTitle} - ${alertData.description}`);
+        } else {
+          console.log(`Skipping duplicate alert for ${alert.trigger_type}`);
         }
       }
     }
 
     return new Response(
-      JSON.stringify({ triggeredAlerts, message: `${triggeredAlerts.length} alert(s) triggered` }),
+      JSON.stringify({
+        success: true,
+        checked: alerts.length,
+        alerts_triggered: triggeredAlerts.length,
+        alerts: triggeredAlerts.map(a => ({
+          title: a.config.alert_type === 'loss' 
+            ? `⚠️ Alerta de Perda - ${a.config.trigger_type}`
+            : `✅ Meta Atingida - ${a.config.trigger_type}`,
+          description: a.description,
+        })),
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+
   } catch (error: any) {
-    console.error('Error:', error);
+    console.error('Error checking PnL alerts:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
     );
   }
 });
