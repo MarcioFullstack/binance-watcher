@@ -10,7 +10,6 @@ import { Loader2, Eye, EyeOff, Shield, Copy, Check, Sparkles } from "lucide-reac
 import nottifyLogo from "@/assets/nottify-logo.png";
 import PasswordStrengthIndicator from "@/components/PasswordStrengthIndicator";
 import { z } from "zod";
-import { authenticator } from "otplib";
 import { QRCodeSVG } from "qrcode.react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -146,14 +145,19 @@ const Signup = () => {
           console.error('Error creating settings:', settingsError);
         }
 
-        const secret = authenticator.generateSecret();
+        setLoadingMessage("Setting up 2FA...");
+        
+        // Generate TOTP secret using edge function
+        const { data: secretData, error: secretError } = await supabase.functions.invoke('generate-totp-secret');
+        
+        if (secretError) {
+          throw secretError;
+        }
+
+        const secret = secretData.secret;
         setTotpSecret(secret);
 
-        const otpauthUrl = authenticator.keyuri(
-          email,
-          'NOTTIFY',
-          secret
-        );
+        const otpauthUrl = `otpauth://totp/NOTTIFY:${encodeURIComponent(email)}?secret=${secret}&issuer=NOTTIFY`;
         setQrCodeUrl(otpauthUrl);
 
         setLoadingMessage("");
@@ -179,12 +183,19 @@ const Signup = () => {
     setLoadingMessage("Verifying code...");
 
     try {
-      const isValid = authenticator.verify({
-        token: totpCode,
-        secret: totpSecret
+      // Verify TOTP using edge function
+      const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-totp', {
+        body: {
+          token: totpCode,
+          secret: totpSecret
+        }
       });
 
-      if (!isValid) {
+      if (verifyError) {
+        throw verifyError;
+      }
+
+      if (!verifyData.isValid) {
         toast.error("Invalid code. Please try again.");
         setLoading(false);
         setLoadingMessage("");
