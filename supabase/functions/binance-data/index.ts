@@ -182,7 +182,6 @@ serve(async (req) => {
     try {
       await supabaseClient.functions.invoke('check-pnl-alerts', {
         body: {
-          userId: user.id,
           pnlData: {
             today: todayPnL,
             todayPercent: todayPnLPercent,
