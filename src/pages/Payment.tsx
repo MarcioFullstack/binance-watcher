@@ -12,6 +12,7 @@ import { activateVoucher } from "@/hooks/useBinanceData";
 import nottifyLogo from "@/assets/nottify-logo.png";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { OnboardingProgress } from "@/components/OnboardingProgress";
 
 const Payment = () => {
   const { t } = useTranslation();
@@ -139,14 +140,17 @@ const Payment = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="w-full max-w-md space-y-6">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-8">
+      <div className="w-full max-w-4xl space-y-6">
+        <OnboardingProgress currentStep={2} />
+        
         <div className="flex items-center justify-center gap-3">
           <img src={nottifyLogo} alt="NOTTIFY" className="w-12 h-12" />
           <h1 className="text-3xl font-bold text-foreground">NOTTIFY</h1>
         </div>
 
-        <Card>
+        <div className="flex justify-center">
+          <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>{t("payment.activateSubscription")}</CardTitle>
             <CardDescription>
@@ -296,6 +300,7 @@ const Payment = () => {
             </Tabs>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );

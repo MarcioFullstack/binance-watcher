@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { OnboardingProgress } from "@/components/OnboardingProgress";
 import nottifyLogo from "@/assets/nottify-logo.png";
 
 const SetupBinance = () => {
@@ -106,8 +107,9 @@ const SetupBinance = () => {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="w-full max-w-md space-y-6">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-8">
+      <div className="w-full max-w-4xl space-y-6">
+        <OnboardingProgress currentStep={3} />
         <div className="flex items-center justify-center gap-3">
           <img src={nottifyLogo} alt="NOTTIFY" className="w-12 h-12" />
           <h1 className="text-3xl font-bold text-foreground">NOTTIFY</h1>
