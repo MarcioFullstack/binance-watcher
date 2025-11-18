@@ -15,6 +15,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
+import { OnboardingProgress } from "@/components/OnboardingProgress";
 
 const passwordSchema = z.string()
   .min(8, "Password must be at least 8 characters")
@@ -289,9 +290,11 @@ const Signup = () => {
 
   if (step === 2) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-4">
-        <div className="w-full max-w-md space-y-4">
-          <Card className="w-full border-border">
+      <div className="flex min-h-screen items-center justify-center bg-background px-4 py-8">
+        <div className="w-full max-w-4xl space-y-6">
+          <OnboardingProgress currentStep={1} />
+          <div className="flex justify-center">
+            <Card className="w-full max-w-md border-border">
             <CardHeader className="space-y-2">
               <div className="flex items-center gap-3 mb-4">
                 <Shield className="w-12 h-12 text-primary" />
@@ -371,15 +374,18 @@ const Signup = () => {
               </form>
             </CardContent>
           </Card>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="w-full max-w-md space-y-4">
-        <Card className="w-full border-border">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-8">
+      <div className="w-full max-w-4xl space-y-6">
+        <OnboardingProgress currentStep={1} />
+        <div className="flex justify-center">
+          <Card className="w-full max-w-md border-border">
           <CardHeader className="space-y-2">
             <div className="flex items-center gap-3 mb-4">
               <img src={nottifyLogo} alt="NOTTIFY" className="w-12 h-12" />
@@ -578,6 +584,7 @@ const Signup = () => {
           </form>
         </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );
