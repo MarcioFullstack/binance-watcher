@@ -219,10 +219,10 @@ const Signup = () => {
       }
 
       toast.success("Two-factor authentication configured successfully!");
-      setLoadingMessage("Redirecting to dashboard...");
+      setLoadingMessage("Redirecting to payment...");
       
       setTimeout(() => {
-        navigate("/dashboard");
+        navigate("/payment");
       }, 500);
     } catch (error: any) {
       toast.error(error.message || "Error verifying code");
