@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.notify-admins-alert-disabled]
 verify_jwt = false
+
+[functions.check-login-rate-limit]
+verify_jwt = false
+
+[functions.secure-2fa-login]
+verify_jwt = false

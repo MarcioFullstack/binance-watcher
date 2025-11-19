@@ -60,13 +60,39 @@ const ResetPassword = () => {
     setLoading(true);
 
     try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      // Check if user has 2FA enabled
+      const { data: twoFA } = await supabase
+        .from('user_2fa')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_enabled', true)
+        .maybeSingle();
+
+      // If 2FA is enabled, require verification before password change
+      if (twoFA) {
+        toast.error("Security Alert: 2FA Verification Required");
+        toast.info("Password reset with 2FA enabled requires additional verification. Please contact support or disable 2FA first.");
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.updateUser({
         password: password
       });
 
       if (error) throw error;
 
-      toast.success("Senha alterada com sucesso! Redirecionando...");
+      // Invalidate all sessions for security
+      await supabase.auth.signOut({ scope: 'global' });
+
+      toast.success("Senha alterada com sucesso! Faça login novamente.");
       setTimeout(() => {
         navigate("/login");
       }, 2000);

@@ -148,6 +148,36 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_attempts: {
+        Row: {
+          attempt_type: string
+          attempted_at: string
+          id: string
+          identifier: string
+          ip_address: string | null
+          success: boolean
+          user_agent: string | null
+        }
+        Insert: {
+          attempt_type: string
+          attempted_at?: string
+          id?: string
+          identifier: string
+          ip_address?: string | null
+          success?: boolean
+          user_agent?: string | null
+        }
+        Update: {
+          attempt_type?: string
+          attempted_at?: string
+          id?: string
+          identifier?: string
+          ip_address?: string | null
+          success?: boolean
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       backup_codes: {
         Row: {
           code: string
@@ -268,6 +298,39 @@ export type Database = {
           title?: string
           type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      pending_2fa_verifications: {
+        Row: {
+          attempts: number
+          challenge_token: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          user_id: string
+          verified: boolean
+        }
+        Insert: {
+          attempts?: number
+          challenge_token: string
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          user_id: string
+          verified?: boolean
+        }
+        Update: {
+          attempts?: number
+          challenge_token?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          user_id?: string
+          verified?: boolean
         }
         Relationships: []
       }
@@ -544,6 +607,16 @@ export type Database = {
     }
     Functions: {
       check_auto_renew_subscriptions: { Args: never; Returns: undefined }
+      check_rate_limit: {
+        Args: {
+          p_attempt_type: string
+          p_identifier: string
+          p_max_attempts: number
+          p_window_minutes: number
+        }
+        Returns: boolean
+      }
+      cleanup_old_auth_attempts: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
