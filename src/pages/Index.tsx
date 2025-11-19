@@ -227,6 +227,18 @@ const Index = () => {
     }
   ];
 
+  const handleGetStarted = () => {
+    if (user) {
+      if (subscription?.status === 'active') {
+        navigate('/dashboard');
+      } else {
+        navigate('/payment');
+      }
+    } else {
+      navigate('/signup');
+    }
+  };
+
   const subscriptionStatus = getSubscriptionStatus();
 
   return (

@@ -130,40 +130,23 @@ const Dashboard = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <DashboardHeader onLogout={handleLogout} isAdmin={isAdmin} userId={user?.id} />
-        
-        {/* Subscription Timer */}
-        <SubscriptionTimer userId={user?.id} onExpired={() => navigate("/payment")} />
-        
-        {hasAccount ? (
-          <>
-            <BalanceCards />
-            <PnLCards />
-            <PnLAlertsConfig />
-            <AlertsConfig />
-            <PnLCalendar 
-              isSyncing={isSyncing} 
-              syncProgress={syncProgress}
-              onManualSync={manualSync}
-            />
-          </>
-        ) : (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        )}
-      </div>
+    <div className="min-h-screen bg-background p-4 md:p-6 space-y-6">
+      <DashboardHeader isAdmin={isAdmin} />
+      
+      <SubscriptionTimer 
+        userId={user?.id} 
+        onExpired={() => {
+          toast.error("Sua assinatura expirou");
+          navigate("/payment");
+        }} 
+      />
+      
+      <BalanceCards />
+      <PnLCards />
+      <PnLCalendar />
+      <AlertsConfig />
+      <PnLAlertsConfig />
     </div>
   );
 };
