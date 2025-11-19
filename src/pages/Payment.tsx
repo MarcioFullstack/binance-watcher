@@ -108,6 +108,34 @@ const Payment = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const generateTestVoucher = async () => {
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      // Generate a unique voucher code
+      const timestamp = Date.now().toString(36).toUpperCase();
+      const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+      const generatedCode = `TEST-${timestamp}-${random}`;
+
+      // Call edge function to create voucher
+      const { data, error: funcError } = await supabase.functions.invoke('create-voucher', {
+        body: { code: generatedCode, days: 15 }
+      });
+      
+      if (funcError) throw funcError;
+
+      setVoucherCode(generatedCode);
+      toast.success(`Voucher gerado: ${generatedCode} (15 dias)`);
+    } catch (error: any) {
+      console.error("Error generating voucher:", error);
+      toast.error("Erro ao gerar voucher. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleActivateVoucher = async () => {
     const trimmedCode = voucherCode.trim().toUpperCase();
     

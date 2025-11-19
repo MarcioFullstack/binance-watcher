@@ -73,6 +73,30 @@ const Signup = () => {
     }
   };
 
+  const handleGoogleSignup = async () => {
+    setLoading(true);
+    setLoadingMessage("Redirecting to Google...");
+    
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/payment`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
+        }
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      console.error("Google signup error:", error);
+      toast.error(error.message || "Error signing up with Google");
+      setLoading(false);
+    }
+  };
+
   const handleInitialSignup = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -99,146 +123,94 @@ const Signup = () => {
     setLoadingMessage("Creating your account...");
 
     try {
-      const redirectUrl = `${window.location.origin}/dashboard`;
+      const redirectUrl = `${window.location.origin}/payment`;
       
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl
-        }
+          emailRedirectTo: redirectUrl,
+        },
       });
 
       if (error) throw error;
 
       if (data.user) {
         setUserId(data.user.id);
+        setLoadingMessage("Generating your 2FA secret...");
 
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([
-            {
-              id: data.user.id,
-              email: email,
-            }
-          ]);
+        const { data: totpData, error: totpError } = await supabase.functions.invoke(
+          "generate-totp-secret",
+          {
+            body: { userId: data.user.id, email },
+          }
+        );
 
-        if (profileError) {
-          console.error('Error creating profile:', profileError);
-          toast.error("Error creating profile");
-          return;
-        }
+        if (totpError) throw totpError;
 
-        const { error: settingsError } = await supabase
-          .from('risk_settings')
-          .insert([
-            {
-              user_id: data.user.id,
-              risk_percent: 5,
-              risk_active: true,
-              initial_balance: 0,
-              loss_push_notifications: true,
-              gain_push_notifications: false,
-              siren_type: 'police'
-            }
-          ]);
+        const encryptedSecret = await encrypt(totpData.secret);
 
-        if (settingsError) {
-          console.error('Error creating settings:', settingsError);
-        }
+        await supabase.from("user_2fa").insert({
+          user_id: data.user.id,
+          totp_secret: encryptedSecret,
+          is_enabled: false,
+        });
 
-        setLoadingMessage("Setting up 2FA...");
-        
-        // Generate TOTP secret using edge function
-        const { data: secretData, error: secretError } = await supabase.functions.invoke('generate-totp-secret');
-        
-        if (secretError) {
-          throw secretError;
-        }
-
-        const secret = secretData.secret;
-        setTotpSecret(secret);
-
-        const otpauthUrl = `otpauth://totp/NOTTIFY:${encodeURIComponent(email)}?secret=${secret}&issuer=NOTTIFY`;
-        setQrCodeUrl(otpauthUrl);
-
-        setLoadingMessage("");
+        setTotpSecret(totpData.secret);
+        setQrCodeUrl(totpData.qrCodeUrl);
         setStep(2);
+        toast.success("Account created! Please configure your 2FA");
       }
     } catch (error: any) {
+      console.error("Signup error:", error);
       toast.error(error.message || "Error creating account");
     } finally {
       setLoading(false);
-      setLoadingMessage("");
     }
   };
 
   const handleVerify2FA = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (totpCode.length !== 6) {
-      toast.error("Please enter a valid 6-digit code");
+      toast.error("Please enter a 6-digit code");
       return;
     }
 
     setLoading(true);
-    setLoadingMessage("Verifying code...");
+    setLoadingMessage("Verifying your 2FA code...");
 
     try {
-      // Verify TOTP using edge function
-      const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-totp', {
+      const { data, error } = await supabase.functions.invoke("verify-totp", {
         body: {
-          token: totpCode,
-          secret: totpSecret,
-          identifier: email
-        }
+          userId,
+          code: totpCode,
+        },
       });
 
-      if (verifyError) {
-        throw verifyError;
-      }
+      if (error) throw error;
 
-      if (!verifyData.isValid) {
-        toast.error("Invalid code. Please try again.");
-        setLoading(false);
-        setLoadingMessage("");
-        return;
-      }
+      if (data.valid) {
+        await supabase.from("user_2fa").update({ is_enabled: true }).eq("user_id", userId);
 
-      const { error: tfaError } = await supabase
-        .from('user_2fa')
-        .upsert({
-          user_id: userId,
-          totp_secret: await encrypt(totpSecret),
-          is_enabled: true
-        });
-
-      if (tfaError) {
-        console.error('Error saving 2FA settings:', tfaError);
-        toast.error("Error saving 2FA settings");
-        setLoading(false);
-        setLoadingMessage("");
-        return;
-      }
-
-      toast.success("Two-factor authentication configured successfully!");
-      setLoadingMessage("Redirecting to payment...");
-      
-      setTimeout(() => {
+        toast.success("2FA configured successfully!");
         navigate("/payment");
-      }, 500);
+      } else {
+        toast.error("Invalid code. Please try again.");
+      }
     } catch (error: any) {
+      console.error("2FA verification error:", error);
       toast.error(error.message || "Error verifying code");
     } finally {
       setLoading(false);
-      setLoadingMessage("");
+      setTotpCode("");
     }
   };
 
   const copySecret = () => {
     navigator.clipboard.writeText(totpSecret);
     setCopied(true);
-    toast.success("Chave copiada para a área de transferência");
+    toast.success("Secret copied to clipboard!");
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -251,26 +223,26 @@ const Signup = () => {
     let charPool = '';
     let password = '';
     
-    if (!includeLowercase && !includeUppercase && !includeNumbers && !includeSpecial) {
-      toast.error("Selecione pelo menos um tipo de caractere");
-      return;
-    }
-    
     if (includeLowercase) {
-      password += lowercase[Math.floor(Math.random() * lowercase.length)];
       charPool += lowercase;
+      password += lowercase[Math.floor(Math.random() * lowercase.length)];
     }
     if (includeUppercase) {
-      password += uppercase[Math.floor(Math.random() * uppercase.length)];
       charPool += uppercase;
+      password += uppercase[Math.floor(Math.random() * uppercase.length)];
     }
     if (includeNumbers) {
-      password += numbers[Math.floor(Math.random() * numbers.length)];
       charPool += numbers;
+      password += numbers[Math.floor(Math.random() * numbers.length)];
     }
     if (includeSpecial) {
-      password += special[Math.floor(Math.random() * special.length)];
       charPool += special;
+      password += special[Math.floor(Math.random() * special.length)];
+    }
+    
+    if (!charPool) {
+      toast.error("Select at least one character type");
+      return;
     }
     
     for (let i = password.length; i < passwordLength; i++) {
@@ -364,14 +336,8 @@ const Signup = () => {
                 </div>
 
                 <Button type="submit" className="w-full" disabled={loading || totpCode.length !== 6}>
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {loadingMessage || "Verificando..."}
-                    </>
-                  ) : (
-                    "Verificar e Ativar 2FA"
-                  )}
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {loadingMessage || "Verify and Continue"}
                 </Button>
               </form>
             </CardContent>
@@ -426,95 +392,62 @@ const Signup = () => {
                       className="h-auto py-1 px-2 text-xs gap-1"
                     >
                       <Sparkles className="w-3 h-3" />
-                      Gerar senha forte
+                      Gerar Senha Forte
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
+                  <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Gerar senha forte</DialogTitle>
+                      <DialogTitle>Gerador de Senha Forte</DialogTitle>
                       <DialogDescription>
-                        Customize as opções para gerar uma senha segura
+                        Personalize sua senha forte com as opções abaixo
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-6 py-4">
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <Label>Comprimento: {passwordLength} caracteres</Label>
-                          </div>
-                          <Slider
-                            value={[passwordLength]}
-                            onValueChange={(value) => setPasswordLength(value[0])}
-                            min={8}
-                            max={32}
-                            step={1}
-                            className="w-full"
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Tamanho: {passwordLength} caracteres</Label>
+                        <Slider
+                          value={[passwordLength]}
+                          onValueChange={(value) => setPasswordLength(value[0])}
+                          min={8}
+                          max={32}
+                          step={1}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="lowercase"
+                            checked={includeLowercase}
+                            onCheckedChange={(checked) => setIncludeLowercase(checked as boolean)}
                           />
+                          <Label htmlFor="lowercase">Letras minúsculas (a-z)</Label>
                         </div>
-                        <div className="space-y-3">
-                          <Label>Tipos de caracteres:</Label>
-                          <div className="space-y-2">
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id="lowercase"
-                                checked={includeLowercase}
-                                onCheckedChange={(checked) => setIncludeLowercase(checked as boolean)}
-                              />
-                              <label
-                                htmlFor="lowercase"
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                              >
-                                Letras minúsculas (a-z)
-                              </label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id="uppercase"
-                                checked={includeUppercase}
-                                onCheckedChange={(checked) => setIncludeUppercase(checked as boolean)}
-                              />
-                              <label
-                                htmlFor="uppercase"
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                              >
-                                Letras maiúsculas (A-Z)
-                              </label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id="numbers"
-                                checked={includeNumbers}
-                                onCheckedChange={(checked) => setIncludeNumbers(checked as boolean)}
-                              />
-                              <label
-                                htmlFor="numbers"
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                              >
-                                Números (0-9)
-                              </label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id="special"
-                                checked={includeSpecial}
-                                onCheckedChange={(checked) => setIncludeSpecial(checked as boolean)}
-                              />
-                              <label
-                                htmlFor="special"
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                              >
-                                Caracteres especiais (!@#$%...)
-                              </label>
-                            </div>
-                          </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="uppercase"
+                            checked={includeUppercase}
+                            onCheckedChange={(checked) => setIncludeUppercase(checked as boolean)}
+                          />
+                          <Label htmlFor="uppercase">Letras maiúsculas (A-Z)</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="numbers"
+                            checked={includeNumbers}
+                            onCheckedChange={(checked) => setIncludeNumbers(checked as boolean)}
+                          />
+                          <Label htmlFor="numbers">Números (0-9)</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="special"
+                            checked={includeSpecial}
+                            onCheckedChange={(checked) => setIncludeSpecial(checked as boolean)}
+                          />
+                          <Label htmlFor="special">Caracteres especiais (!@#$%...)</Label>
                         </div>
                       </div>
-                      <Button
-                        type="button"
-                        onClick={generateStrongPassword}
-                        className="w-full"
-                      >
-                        <Sparkles className="w-4 h-4 mr-2" />
+                      <Button onClick={generateStrongPassword} className="w-full">
                         Gerar Senha
                       </Button>
                     </div>
@@ -538,13 +471,13 @@ const Signup = () => {
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   disabled={loading}
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 w-4" />}
                 </button>
               </div>
               <PasswordStrengthIndicator password={password} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
@@ -566,28 +499,66 @@ const Signup = () => {
                 </button>
               </div>
             </div>
+
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {loadingMessage || "Criando conta..."}
-                </>
-              ) : (
-                "Criar Conta"
-              )}
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Create Account
             </Button>
-            
-            <p className="text-center text-sm text-muted-foreground">
-              Já tem uma conta?{" "}
-              <Link to="/login" className="text-primary hover:underline">
-                Entre aqui
-              </Link>
-            </p>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleGoogleSignup}
+              disabled={loading}
+            >
+              {loading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+                  <path
+                    fill="currentColor"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  />
+                </svg>
+              )}
+              Continue with Google
+            </Button>
           </form>
+
+          <div className="mt-4 text-center text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <Link to="/login" className="text-primary hover:underline">
+              Login
+            </Link>
+          </div>
         </CardContent>
-        </Card>
-        </div>
+      </Card>
       </div>
+    </div>
     </div>
   );
 };
