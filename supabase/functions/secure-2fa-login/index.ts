@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { authenticator } from "npm:otplib@12.0.1";
+import { decrypt } from "../_shared/encryption.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -211,7 +212,7 @@ serve(async (req) => {
       );
     }
 
-    // Get user's 2FA secret
+    // Get user's 2FA secret (encrypted)
     const { data: twoFA } = await supabaseClient
       .from('user_2fa')
       .select('totp_secret')
@@ -228,11 +229,38 @@ serve(async (req) => {
       );
     }
 
-    // Verify TOTP
-    const isValid = authenticator.verify({
+    // Decrypt TOTP secret
+    const decryptedSecret = await decrypt(twoFA.totp_secret);
+
+    // First try TOTP verification
+    let isValid = authenticator.verify({
       token: totpCode,
-      secret: twoFA.totp_secret
+      secret: decryptedSecret
     });
+
+    // If TOTP fails, try backup code
+    if (!isValid) {
+      const { data: backupData, error: backupError } = await supabaseClient
+        .from('backup_codes')
+        .select('*')
+        .eq('user_id', pending.user_id)
+        .eq('code', totpCode.toUpperCase())
+        .eq('is_used', false)
+        .maybeSingle();
+
+      if (backupData) {
+        isValid = true;
+        
+        // Mark backup code as used
+        await supabaseClient
+          .from('backup_codes')
+          .update({ 
+            is_used: true,
+            used_at: new Date().toISOString()
+          })
+          .eq('id', backupData.id);
+      }
+    }
 
     // Increment attempts
     await supabaseClient

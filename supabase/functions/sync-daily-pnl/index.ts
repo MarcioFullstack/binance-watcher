@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { decrypt } from "../_shared/encryption.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -59,6 +60,10 @@ serve(async (req) => {
 
     console.log(`Using Binance account: ${binanceAccount.account_name}`);
 
+    // Decrypt API credentials
+    const apiKey = await decrypt(binanceAccount.api_key);
+    const apiSecret = await decrypt(binanceAccount.api_secret);
+
     const { date, market_type = "USDT" } = await req.json();
 
     console.log(`Syncing data for date: ${date}, market: ${market_type}`);
@@ -76,7 +81,7 @@ serve(async (req) => {
 
     // Create signature
     const encoder = new TextEncoder();
-    const keyData = encoder.encode(binanceAccount.api_secret);
+    const keyData = encoder.encode(apiSecret);
     const key = await crypto.subtle.importKey(
       "raw",
       keyData,
@@ -98,7 +103,7 @@ serve(async (req) => {
       `https://fapi.binance.com/fapi/v1/income?${queryString}&signature=${signatureHex}`,
       {
         headers: {
-          "X-MBX-APIKEY": binanceAccount.api_key,
+          "X-MBX-APIKEY": apiKey,
         },
       }
     );
@@ -138,7 +143,7 @@ serve(async (req) => {
     const balanceQueryString = `timestamp=${timestamp}&recvWindow=5000`;
     const balanceKey = await crypto.subtle.importKey(
       "raw",
-      encoder.encode(binanceAccount.api_secret),
+      encoder.encode(apiSecret),
       { name: "HMAC", hash: "SHA-256" },
       false,
       ["sign"]
@@ -156,7 +161,7 @@ serve(async (req) => {
       `https://fapi.binance.com/fapi/v2/balance?${balanceQueryString}&signature=${balanceSignatureHex}`,
       {
         headers: {
-          "X-MBX-APIKEY": binanceAccount.api_key,
+          "X-MBX-APIKEY": apiKey,
         },
       }
     );

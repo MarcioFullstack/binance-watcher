@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { OnboardingProgress } from "@/components/OnboardingProgress";
+import { encrypt } from "@/utils/encryption";
 
 const passwordSchema = z.string()
   .min(8, "Password must be at least 8 characters")
@@ -207,7 +208,7 @@ const Signup = () => {
         .from('user_2fa')
         .upsert({
           user_id: userId,
-          totp_secret: totpSecret,
+          totp_secret: await encrypt(totpSecret),
           is_enabled: true
         });
 
