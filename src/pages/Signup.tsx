@@ -139,7 +139,7 @@ const Signup = () => {
               initial_balance: 0,
               loss_push_notifications: true,
               gain_push_notifications: false,
-              siren_type: 'siren1'
+              siren_type: 'police'
             }
           ]);
 
@@ -189,7 +189,8 @@ const Signup = () => {
       const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-totp', {
         body: {
           token: totpCode,
-          secret: totpSecret
+          secret: totpSecret,
+          identifier: email
         }
       });
 
