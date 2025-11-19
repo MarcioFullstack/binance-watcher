@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAlertsRealtime } from "@/hooks/useAlertsRealtime";
+import { VoucherGenerator } from "@/components/admin/VoucherGenerator";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1354,6 +1355,8 @@ const Admin = () => {
         </Card>
 
         {/* Vouchers Card */}
+        <VoucherGenerator />
+        
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">

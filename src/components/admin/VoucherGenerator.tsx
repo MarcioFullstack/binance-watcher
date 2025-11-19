@@ -1,0 +1,302 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
+import { Loader2, Plus, Copy, Check } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { z } from "zod";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+const voucherSchema = z.object({
+  prefix: z.string().min(2).max(10).regex(/^[A-Z0-9-]+$/, "Only uppercase letters, numbers and hyphens"),
+  days: z.number().min(1).max(365),
+  quantity: z.number().min(1).max(100),
+});
+
+interface GeneratedVoucher {
+  code: string;
+  days: number;
+  created: boolean;
+}
+
+export const VoucherGenerator = () => {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    prefix: "PROMO",
+    days: 30,
+    quantity: 1,
+  });
+  const [customCode, setCustomCode] = useState("");
+  const [customDays, setCustomDays] = useState(30);
+  const [generatedVouchers, setGeneratedVouchers] = useState<GeneratedVoucher[]>([]);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+
+  const generateRandomCode = (prefix: string) => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    const randomPart = Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+    return `${prefix}-${randomPart}`;
+  };
+
+  const handleBatchGenerate = async () => {
+    try {
+      voucherSchema.parse(formData);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+        return;
+      }
+    }
+
+    setLoading(true);
+    const newVouchers: GeneratedVoucher[] = [];
+
+    try {
+      for (let i = 0; i < formData.quantity; i++) {
+        const code = generateRandomCode(formData.prefix);
+        
+        const { data, error } = await supabase.functions.invoke('create-voucher', {
+          body: { code, days: formData.days }
+        });
+
+        if (error) {
+          console.error(`Failed to create voucher ${code}:`, error);
+          newVouchers.push({ code, days: formData.days, created: false });
+        } else {
+          newVouchers.push({ code, days: formData.days, created: true });
+        }
+      }
+
+      const successCount = newVouchers.filter(v => v.created).length;
+      setGeneratedVouchers(newVouchers);
+      
+      if (successCount === formData.quantity) {
+        toast.success(`${successCount} vouchers created successfully!`);
+      } else {
+        toast.warning(`${successCount}/${formData.quantity} vouchers created. Some failed.`);
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Error generating vouchers");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCustomGenerate = async () => {
+    if (!customCode || customCode.length < 10 || customCode.length > 30) {
+      toast.error("Code must be between 10-30 characters");
+      return;
+    }
+
+    if (!/^[A-Z0-9-]+$/.test(customCode)) {
+      toast.error("Only uppercase letters, numbers and hyphens allowed");
+      return;
+    }
+
+    if (customDays < 1 || customDays > 365) {
+      toast.error("Days must be between 1-365");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-voucher', {
+        body: { code: customCode, days: customDays }
+      });
+
+      if (error) throw error;
+
+      toast.success("Custom voucher created successfully!");
+      setGeneratedVouchers([{ code: customCode, days: customDays, created: true }]);
+      setCustomCode("");
+    } catch (error: any) {
+      toast.error(error.message || "Error creating voucher");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyToClipboard = (code: string, index: number) => {
+    navigator.clipboard.writeText(code);
+    setCopiedIndex(index);
+    toast.success("Code copied to clipboard");
+    setTimeout(() => setCopiedIndex(null), 2000);
+  };
+
+  const exportVouchers = () => {
+    const csv = [
+      "Code,Days,Status",
+      ...generatedVouchers.map(v => `${v.code},${v.days},${v.created ? 'Created' : 'Failed'}`)
+    ].join('\n');
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `vouchers-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    toast.success("Vouchers exported to CSV");
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Voucher Generator</CardTitle>
+        <CardDescription>
+          Create single or multiple vouchers with custom settings
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue="batch" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="batch">Batch Generate</TabsTrigger>
+            <TabsTrigger value="custom">Custom Code</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="batch" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="prefix">Prefix</Label>
+                <Input
+                  id="prefix"
+                  placeholder="PROMO"
+                  value={formData.prefix}
+                  onChange={(e) => setFormData({ ...formData, prefix: e.target.value.toUpperCase() })}
+                  maxLength={10}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Will generate: {formData.prefix}-XXXXXXXX
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="days">Days Valid</Label>
+                <Input
+                  id="days"
+                  type="number"
+                  min="1"
+                  max="365"
+                  value={formData.days}
+                  onChange={(e) => setFormData({ ...formData, days: parseInt(e.target.value) })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="quantity">Quantity</Label>
+                <Input
+                  id="quantity"
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={formData.quantity}
+                  onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
+                />
+              </div>
+            </div>
+
+            <Button
+              onClick={handleBatchGenerate}
+              disabled={loading}
+              className="w-full"
+            >
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Plus className="mr-2 h-4 w-4" />
+              Generate {formData.quantity} Voucher{formData.quantity > 1 ? 's' : ''}
+            </Button>
+          </TabsContent>
+
+          <TabsContent value="custom" className="space-y-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="customCode">Custom Code</Label>
+                <Input
+                  id="customCode"
+                  placeholder="MY-SPECIAL-VOUCHER-2025"
+                  value={customCode}
+                  onChange={(e) => setCustomCode(e.target.value.toUpperCase())}
+                  maxLength={30}
+                />
+                <p className="text-xs text-muted-foreground">
+                  10-30 characters: letters, numbers, hyphens only
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="customDays">Days Valid</Label>
+                <Input
+                  id="customDays"
+                  type="number"
+                  min="1"
+                  max="365"
+                  value={customDays}
+                  onChange={(e) => setCustomDays(parseInt(e.target.value))}
+                />
+              </div>
+            </div>
+
+            <Button
+              onClick={handleCustomGenerate}
+              disabled={loading || !customCode}
+              className="w-full"
+            >
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Plus className="mr-2 h-4 w-4" />
+              Create Custom Voucher
+            </Button>
+          </TabsContent>
+        </Tabs>
+
+        {generatedVouchers.length > 0 && (
+          <div className="mt-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">
+                Generated Vouchers ({generatedVouchers.length})
+              </h3>
+              <Button onClick={exportVouchers} variant="outline" size="sm">
+                Export CSV
+              </Button>
+            </div>
+
+            <ScrollArea className="h-[300px] w-full rounded-md border p-4">
+              <div className="space-y-2">
+                {generatedVouchers.map((voucher, index) => (
+                  <div
+                    key={index}
+                    className={`flex items-center justify-between p-3 rounded-lg ${
+                      voucher.created
+                        ? 'bg-green-500/10 border border-green-500/20'
+                        : 'bg-destructive/10 border border-destructive/20'
+                    }`}
+                  >
+                    <div className="flex-1">
+                      <p className="font-mono font-semibold">{voucher.code}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {voucher.days} days • {voucher.created ? 'Created' : 'Failed'}
+                      </p>
+                    </div>
+                    {voucher.created && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyToClipboard(voucher.code, index)}
+                      >
+                        {copiedIndex === index ? (
+                          <Check className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
