@@ -68,13 +68,29 @@ const Dashboard = () => {
 
       // Check subscription only on first load
       if (loading) {
-        const { data: subscription } = await supabase
+        const { data: subscription, error: subError } = await supabase
           .from('subscriptions')
           .select('*')
           .eq('user_id', user.id)
+          .eq('status', 'active')
           .maybeSingle();
 
-        if (!subscription || subscription.status !== 'active') {
+        console.log("Dashboard subscription check:", { subscription, subError });
+
+        if (!subscription) {
+          console.log("No active subscription found");
+          toast.error("You need an active subscription to access the dashboard");
+          navigate("/payment");
+          return;
+        }
+
+        // Check if subscription is expired
+        const expiresAt = new Date(subscription.expires_at);
+        const now = new Date();
+        
+        if (expiresAt < now) {
+          console.log("Subscription expired at:", expiresAt);
+          toast.error("Your subscription has expired");
           navigate("/payment");
           return;
         }

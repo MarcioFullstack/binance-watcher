@@ -34,14 +34,30 @@ const SetupBinance = () => {
       }
 
       // Check if has active subscription
-      const { data: subscription } = await supabase
+      const { data: subscription, error: subError } = await supabase
         .from("subscriptions")
         .select("*")
         .eq("user_id", user.id)
+        .eq("status", "active")
         .maybeSingle();
 
-      if (!subscription || subscription.status !== "active") {
-        toast.error("You need an active subscription");
+      console.log("Subscription check:", { subscription, subError });
+
+      // Verify subscription exists and is not expired
+      if (!subscription) {
+        console.log("No active subscription found");
+        toast.error("You need an active subscription to access this page");
+        navigate("/payment");
+        return;
+      }
+
+      // Check if subscription is expired
+      const expiresAt = new Date(subscription.expires_at);
+      const now = new Date();
+      
+      if (expiresAt < now) {
+        console.log("Subscription expired at:", expiresAt);
+        toast.error("Your subscription has expired");
         navigate("/payment");
         return;
       }
