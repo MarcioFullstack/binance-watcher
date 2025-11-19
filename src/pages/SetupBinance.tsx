@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { OnboardingProgress } from "@/components/OnboardingProgress";
 import nottifyLogo from "@/assets/nottify-logo.png";
+import { encrypt } from "@/utils/encryption";
 
 const SetupBinance = () => {
   const [loading, setLoading] = useState(false);
@@ -76,13 +77,17 @@ const SetupBinance = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      // Encrypt sensitive data before storing
+      const encryptedApiKey = await encrypt(accountData.apiKey);
+      const encryptedApiSecret = await encrypt(accountData.apiSecret);
+
       // Add Binance account
       const { error } = await supabase.from("binance_accounts").insert([
         {
           user_id: user.id,
           account_name: accountData.name,
-          api_key: accountData.apiKey,
-          api_secret: accountData.apiSecret,
+          api_key: encryptedApiKey,
+          api_secret: encryptedApiSecret,
           is_active: true,
         },
       ]);

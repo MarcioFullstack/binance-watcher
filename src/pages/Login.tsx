@@ -11,7 +11,6 @@ import { toast } from "sonner";
 import { Loader2, ArrowLeft, Eye, EyeOff, Shield } from "lucide-react";
 import nottifyLogo from "@/assets/nottify-logo.png";
 import { useTranslation } from "react-i18next";
-import { authenticator } from "otplib";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { z } from "zod";
 
@@ -29,8 +28,7 @@ const Login = () => {
   const [resetEmailError, setResetEmailError] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
-  const [userId, setUserId] = useState("");
-  const [totpSecret, setTotpSecret] = useState("");
+  const [challengeToken, setChallengeToken] = useState("");
   const [totpCode, setTotpCode] = useState("");
   const [backupCode, setBackupCode] = useState("");
   const navigate = useNavigate();
@@ -93,35 +91,20 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // Phase 1: Email/password verification using secure-2fa-login
+      const { data, error } = await supabase.functions.invoke('secure-2fa-login', {
+        body: { email, password }
       });
 
       if (error) throw error;
-      
-      if (!data.user) throw new Error("User not found");
 
-      // Check if user has 2FA enabled
-      const { data: twoFAData, error: twoFAError } = await supabase
-        .from("user_2fa")
-        .select("*")
-        .eq("user_id", data.user.id)
-        .maybeSingle();
-
-      if (twoFAError && twoFAError.code !== "PGRST116") {
-        console.error("Error checking 2FA:", twoFAError);
-      }
-
-      if (twoFAData && twoFAData.is_enabled) {
-        // User has 2FA enabled - logout and show 2FA verification
-        setUserId(data.user.id);
-        setTotpSecret(twoFAData.totp_secret);
-        await supabase.auth.signOut();
+      if (data.requires2FA) {
+        // User has 2FA enabled - store challenge token and show 2FA screen
+        setChallengeToken(data.challengeToken);
         setStep(2);
-        toast.info("Enter the authentication code");
+        toast.info("Enter your authentication code");
       } else {
-        // No 2FA - proceed to dashboard
+        // No 2FA - session created, proceed to dashboard
         toast.success("Login realizado com sucesso!");
         navigate("/dashboard");
       }
@@ -137,62 +120,35 @@ const Login = () => {
     setLoading(true);
 
     try {
-      let isValid = false;
+      // Determine which code to use (TOTP or backup code)
+      const codeToVerify = totpCode.length === 6 ? totpCode : backupCode;
 
-      // Try TOTP code first
-      if (totpCode.length === 6) {
-        isValid = authenticator.verify({
-          token: totpCode,
-          secret: totpSecret
-        });
-      }
-
-      // If TOTP is invalid and backup code is provided, try backup code
-      if (!isValid && backupCode) {
-        const { data: backupData, error: backupError } = await supabase
-          .from("backup_codes")
-          .select("*")
-          .eq("user_id", userId)
-          .eq("code", backupCode.toUpperCase())
-          .eq("is_used", false)
-          .maybeSingle();
-
-        if (backupError && backupError.code !== "PGRST116") {
-          console.error("Error checking backup code:", backupError);
-        }
-
-        if (backupData) {
-          isValid = true;
-          
-          // Mark backup code as used
-          await supabase
-            .from("backup_codes")
-            .update({ 
-              is_used: true,
-              used_at: new Date().toISOString()
-            })
-            .eq("id", backupData.id);
-        }
-      }
-
-      if (!isValid) {
-        toast.error("Invalid code. Try again.");
+      if (!codeToVerify) {
+        toast.error("Please enter a code");
         setLoading(false);
         return;
       }
 
-      // Login again after successful 2FA verification
-      const { error: loginError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // Phase 2: Verify 2FA code using secure-2fa-login
+      const { data, error } = await supabase.functions.invoke('secure-2fa-login', {
+        body: { 
+          challengeToken,
+          totpCode: codeToVerify
+        }
       });
 
-      if (loginError) throw loginError;
+      if (error) throw error;
 
+      if (!data.success || !data.magicLink) {
+        throw new Error("Invalid code. Try again.");
+      }
+
+      // Use magic link to create session
+      window.location.href = data.magicLink;
+      
       toast.success("Login successful!");
-      navigate("/dashboard");
     } catch (error: any) {
-      toast.error(error.message || "Error verifying code");
+      toast.error(error.message || "Invalid code. Try again.");
     } finally {
       setLoading(false);
     }
