@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.secure-2fa-login]
 verify_jwt = false
+
+[functions.migrate-encrypt-secrets]
+verify_jwt = true
