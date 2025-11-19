@@ -33,9 +33,14 @@ const ResetPassword = () => {
     const accessToken = hashParams.get('access_token');
     const type = hashParams.get('type');
 
+    console.log('Reset password page loaded');
+    console.log('Access token:', accessToken ? 'Present' : 'Missing');
+    console.log('Type:', type);
+
+    // Se não houver token, pode ser que o usuário acabou de chegar
+    // Apenas mostra uma mensagem informativa, não redireciona imediatamente
     if (!accessToken || type !== 'recovery') {
-      toast.error("Link de recuperação inválido ou expirado");
-      navigate("/login");
+      console.log('No valid recovery token found in URL');
     }
   }, [navigate]);
 
