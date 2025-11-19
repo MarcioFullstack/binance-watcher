@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { activateVoucher } from "@/hooks/useBinanceData";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "react-i18next";
+import { encrypt } from "@/utils/encryption";
 
 const Settings = () => {
   const { t } = useTranslation();
@@ -56,7 +57,7 @@ const Settings = () => {
         .from("subscriptions")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       setSubscription(data);
@@ -76,6 +77,10 @@ const Settings = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      // Encrypt sensitive data before storing
+      const encryptedApiKey = await encrypt(newAccount.apiKey);
+      const encryptedApiSecret = await encrypt(newAccount.apiSecret);
+
       // Deactivate all other accounts
       await supabase
         .from("binance_accounts")
@@ -87,8 +92,8 @@ const Settings = () => {
         {
           user_id: user.id,
           account_name: newAccount.name,
-          api_key: newAccount.apiKey,
-          api_secret: newAccount.apiSecret,
+          api_key: encryptedApiKey,
+          api_secret: encryptedApiSecret,
           is_active: true,
         },
       ]);

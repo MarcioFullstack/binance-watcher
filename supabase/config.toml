@@ -1,16 +1,58 @@
 project_id = "snkdhcilyorroeyeveul"
 
-[functions.crypto-payment-webhook]
-verify_jwt = false
+[functions.activate-voucher]
+verify_jwt = true
 
-[functions.notify-admins-alert-disabled]
+[functions.admin-stats]
+verify_jwt = true
+
+[functions.approve-payment]
+verify_jwt = true
+
+[functions.binance-data]
+verify_jwt = true
+
+[functions.binance-kill-switch]
+verify_jwt = true
+
+[functions.check-alerts]
 verify_jwt = false
 
 [functions.check-login-rate-limit]
 verify_jwt = false
 
+[functions.check-pnl-alerts]
+verify_jwt = false
+
+[functions.check-subscription-renewals]
+verify_jwt = false
+
+[functions.create-voucher]
+verify_jwt = true
+
+[functions.crypto-payment-webhook]
+verify_jwt = false
+
+[functions.generate-totp-secret]
+verify_jwt = true
+
+[functions.invalidate-voucher]
+verify_jwt = true
+
+[functions.migrate-encrypt-secrets]
+verify_jwt = true
+
+[functions.notify-admins-alert-disabled]
+verify_jwt = false
+
+[functions.save-alert-config]
+verify_jwt = true
+
 [functions.secure-2fa-login]
 verify_jwt = false
 
-[functions.migrate-encrypt-secrets]
+[functions.sync-daily-pnl]
+verify_jwt = true
+
+[functions.verify-totp]
 verify_jwt = true

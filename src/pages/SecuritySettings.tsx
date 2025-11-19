@@ -68,9 +68,9 @@ const SecuritySettings = () => {
       .from("user_2fa")
       .select("*")
       .eq("user_id", uid)
-      .single();
+      .maybeSingle();
 
-    if (error && error.code !== "PGRST116") {
+    if (error) {
       console.error("Error checking 2FA:", error);
       return;
     }
