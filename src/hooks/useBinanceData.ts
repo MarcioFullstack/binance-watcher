@@ -45,6 +45,12 @@ export const useBinanceData = () => {
   return useQuery({
     queryKey: ['binance-data'],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+
       const { data, error } = await supabase.functions.invoke('binance-data');
       
       if (error) throw error;
