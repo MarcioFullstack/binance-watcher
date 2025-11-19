@@ -17,6 +17,7 @@ import SecuritySettings from "./pages/SecuritySettings";
 import Admin from "./pages/Admin";
 import NotificationHistory from "./pages/NotificationHistory";
 import Install from "./pages/Install";
+import ForceLogout from "./pages/ForceLogout";
 import NotFound from "./pages/NotFound";
 
 const App = () => {
@@ -42,6 +43,7 @@ const App = () => {
             <Route path="/admin" element={<Admin />} />
             <Route path="/notifications" element={<NotificationHistory />} />
             <Route path="/install" element={<Install />} />
+            <Route path="/force-logout" element={<ForceLogout />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
