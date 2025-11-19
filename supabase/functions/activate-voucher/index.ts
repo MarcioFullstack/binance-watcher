@@ -64,17 +64,43 @@ serve(async (req) => {
       );
     }
 
-    console.log('Attempting to activate voucher:', code);
+    // Validar formato: aceita XXXX-XXXX-XXXX-XXXX ou códigos personalizados (10-30 caracteres alfanuméricos com hífens)
+    const trimmedCode = code.trim().toUpperCase();
+    
+    if (trimmedCode.length < 10 || trimmedCode.length > 30) {
+      console.error('Voucher code length invalid:', trimmedCode.length);
+      return new Response(
+        JSON.stringify({ error_code: 'INVALID_CODE_LENGTH' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // Validar caracteres permitidos (A-Z, 0-9, hífens)
+    if (!/^[A-Z0-9-]+$/.test(trimmedCode)) {
+      console.error('Voucher code contains invalid characters:', trimmedCode);
+      return new Response(
+        JSON.stringify({ error_code: 'INVALID_CHARACTERS' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    console.log('Attempting to activate voucher:', trimmedCode);
 
     // Buscar voucher
     const { data: voucher, error: voucherError } = await supabaseClient
       .from('vouchers')
       .select('*')
-      .eq('code', code.trim().toUpperCase())
+      .eq('code', trimmedCode)
       .single();
 
     if (voucherError || !voucher) {
-      console.error('Error fetching voucher:', voucherError, 'Code:', code);
+      console.error('Error fetching voucher:', voucherError, 'Code:', trimmedCode);
       return new Response(
         JSON.stringify({ error_code: 'VOUCHER_NOT_FOUND' }),
         {
@@ -85,7 +111,7 @@ serve(async (req) => {
     }
 
     if (voucher.is_used) {
-      console.error('Voucher already used:', code);
+      console.error('Voucher already used:', trimmedCode);
       return new Response(
         JSON.stringify({ error_code: 'VOUCHER_ALREADY_USED' }),
         {
@@ -105,7 +131,7 @@ serve(async (req) => {
         used_by: user.id,
         used_at: new Date().toISOString(),
       })
-      .eq('code', code.trim().toUpperCase());
+      .eq('code', trimmedCode);
 
     if (updateVoucherError) {
       console.error('Error updating voucher:', updateVoucherError);

@@ -60,10 +60,12 @@ serve(async (req) => {
       throw new Error('Código e dias são obrigatórios');
     }
 
-    // Validar formato do código: XXXX-XXXX-XXXX-XXXX
-    const voucherRegex = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
-    if (!voucherRegex.test(code)) {
-      throw new Error('Formato inválido. Use: XXXX-XXXX-XXXX-XXXX');
+    // Validar formato do código: aceita XXXX-XXXX-XXXX-XXXX ou códigos personalizados (10-30 caracteres)
+    const standardFormat = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+    const customFormat = /^[A-Z0-9-]{10,30}$/;
+    
+    if (!standardFormat.test(code) && !customFormat.test(code)) {
+      throw new Error('Formato inválido. Use XXXX-XXXX-XXXX-XXXX ou código personalizado (10-30 caracteres alfanuméricos)');
     }
 
     // Validar dias

@@ -273,10 +273,10 @@ const Payment = () => {
                     <Label htmlFor="voucher">{t("payment.voucherCode")}</Label>
                     <Input
                       id="voucher"
-                      placeholder={t("payment.voucherPlaceholder")}
+                      placeholder="PROMO-2025-TEST-GIFT"
                       value={voucherCode}
                       onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
-                      maxLength={19}
+                      maxLength={30}
                       disabled={loading}
                     />
                   </div>
