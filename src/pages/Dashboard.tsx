@@ -8,6 +8,7 @@ import { PnLCards } from "@/components/dashboard/PnLCards";
 import { AlertsConfig } from "@/components/dashboard/AlertsConfig";
 import { PnLAlertsConfig } from "@/components/dashboard/PnLAlertsConfig";
 import { PnLCalendar } from "@/components/dashboard/PnLCalendar";
+import { SubscriptionTimer } from "@/components/SubscriptionTimer";
 import { Loader2, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -141,6 +142,9 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         <DashboardHeader onLogout={handleLogout} isAdmin={isAdmin} userId={user?.id} />
+        
+        {/* Subscription Timer */}
+        <SubscriptionTimer userId={user?.id} onExpired={() => navigate("/payment")} />
         
         {hasAccount ? (
           <>

@@ -8,12 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { OnboardingProgress } from "@/components/OnboardingProgress";
+import { SubscriptionTimer } from "@/components/SubscriptionTimer";
 import nottifyLogo from "@/assets/nottify-logo.png";
 import { encrypt } from "@/utils/encryption";
 
 const SetupBinance = () => {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [user, setUser] = useState<any>(null);
   const [accountData, setAccountData] = useState({
     name: "",
     apiKey: "",
@@ -32,6 +34,8 @@ const SetupBinance = () => {
         navigate("/login");
         return;
       }
+
+      setUser(user);
 
       // Check if has active subscription
       const { data: subscription, error: subError } = await supabase
@@ -135,6 +139,9 @@ const SetupBinance = () => {
           <img src={nottifyLogo} alt="NOTTIFY" className="w-12 h-12" />
           <h1 className="text-3xl font-bold text-foreground">NOTTIFY</h1>
         </div>
+
+        {/* Subscription Timer */}
+        <SubscriptionTimer userId={user?.id} onExpired={() => navigate("/payment")} />
 
         <Card>
           <CardHeader>
