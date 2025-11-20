@@ -97,7 +97,7 @@ const SecuritySettings = () => {
   };
 
   const handleEnable2FA = () => {
-    const secret = authenticator.generateSecret();
+    const secret = authenticator.generateSecret(32); // Ensure 32 characters
     setTotpSecret(secret);
     const otpauth = authenticator.keyuri(email, "NOTTIFY Security", secret);
     setQrCodeUrl(otpauth);
