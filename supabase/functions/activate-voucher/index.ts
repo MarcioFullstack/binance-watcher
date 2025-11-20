@@ -64,10 +64,14 @@ serve(async (req) => {
       );
     }
 
-    // Validar formato: aceita XXXX-XXXX-XXXX-XXXX ou códigos personalizados (10-30 caracteres alfanuméricos com hífens)
+    // Validar e limpar código
     const trimmedCode = code.trim().toUpperCase();
     
-    if (trimmedCode.length < 10 || trimmedCode.length > 30) {
+    // Aceita formatos:
+    // - PROMO-12345678 (batch gerado)
+    // - CUSTOM-CODE-HERE (custom)
+    // - Qualquer código alfanumérico com hífens entre 5 e 30 caracteres
+    if (trimmedCode.length < 5 || trimmedCode.length > 30) {
       console.error('Voucher code length invalid:', trimmedCode.length);
       return new Response(
         JSON.stringify({ error_code: 'INVALID_CODE_LENGTH' }),
