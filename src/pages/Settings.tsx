@@ -258,9 +258,9 @@ const Settings = () => {
       return;
     }
 
-    // Validação: aceita formato XXXX-XXXX-XXXX-XXXX ou códigos personalizados (10-30 caracteres)
-    if (trimmedCode.length < 10 || trimmedCode.length > 30) {
-      toast.error("Código inválido. Deve ter entre 10 e 30 caracteres");
+    // Validação: aceita códigos alfanuméricos com hífens entre 5 e 30 caracteres
+    if (trimmedCode.length < 5 || trimmedCode.length > 30) {
+      toast.error("Código inválido. Deve ter entre 5 e 30 caracteres");
       return;
     }
 
@@ -341,7 +341,7 @@ const Settings = () => {
                     placeholder="Enter voucher code"
                     value={voucherCode}
                     onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
-                    maxLength={19}
+                    maxLength={30}
                   />
                   <Button onClick={handleActivateVoucher} disabled={loading}>
                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Activate"}
