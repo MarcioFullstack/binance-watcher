@@ -273,8 +273,8 @@ export const useAlertSounds = (userId: string | undefined) => {
     // Toca imediatamente
     playSound();
 
-    // Define intervalo para repetir - 3.5 segundos para loss (após sirene), 2.5 para gain (após moedas)
-    const interval = type === 'loss' ? 3500 : 2500;
+    // Define intervalo para repetir continuamente - 6 segundos para loss, 3 segundos para gain
+    const interval = type === 'loss' ? 6000 : 3000;
     const intervalId = window.setInterval(playSound, interval);
 
     activeAlarmRef.current = intervalId;
