@@ -20,7 +20,6 @@ const mainItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Notificações", url: "/notifications", icon: Bell },
   { title: "Configurações", url: "/settings", icon: Settings },
-  { title: "Segurança", url: "/security", icon: Shield },
 ];
 
 export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
