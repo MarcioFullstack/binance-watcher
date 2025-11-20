@@ -49,6 +49,9 @@ export const SubscriptionTimer = ({ userId, onExpired }: SubscriptionTimerProps)
   const showWarning = timeRemaining.days < 3;
   const isUrgent = timeRemaining.days === 0 && timeRemaining.hours < 12;
 
+  // Don't show anything if subscription is active and no warnings
+  if (!showWarning) return null;
+
   return (
     <Card className={`${showWarning ? 'border-amber-500 bg-amber-500/10' : ''} ${isUrgent ? 'border-destructive bg-destructive/10' : ''}`}>
       <CardContent className="pt-6">
