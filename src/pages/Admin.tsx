@@ -18,6 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format, subDays, subMonths, startOfDay, endOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Payment {
   id: string;
@@ -108,6 +109,10 @@ const Admin = () => {
   const [statsLoading, setStatsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userId, setUserId] = useState<string | undefined>();
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [password, setPassword] = useState("");
+  const [verifyingPassword, setVerifyingPassword] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -255,21 +260,66 @@ const Admin = () => {
         .maybeSingle();
 
       if (!roles) {
-        toast.error("Access denied: administrators only");
+        toast.error("Acesso negado: apenas administradores");
         navigate("/dashboard");
         return;
       }
 
       setIsAdmin(true);
-      loadPayments();
-      loadStats();
-      loadVouchers();
-      loadAuditLogs();
+      // Show password dialog instead of loading data immediately
+      setShowPasswordDialog(true);
     } catch (error) {
       console.error("Error checking admin access:", error);
       navigate("/dashboard");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePasswordVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!password.trim()) {
+      toast.error("Digite sua senha");
+      return;
+    }
+
+    setVerifyingPassword(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email) {
+        throw new Error("Usuário não encontrado");
+      }
+
+      // Verify password by attempting to sign in
+      const { error } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: password,
+      });
+
+      if (error) {
+        toast.error("Senha incorreta");
+        setPassword("");
+        return;
+      }
+
+      // Password verified successfully
+      setIsAuthenticated(true);
+      setShowPasswordDialog(false);
+      setPassword("");
+      toast.success("Acesso autorizado");
+      
+      // Now load all admin data
+      loadPayments();
+      loadStats();
+      loadVouchers();
+      loadAuditLogs();
+    } catch (error: any) {
+      console.error("Error verifying password:", error);
+      toast.error("Erro ao verificar senha");
+      setPassword("");
+    } finally {
+      setVerifyingPassword(false);
     }
   };
 
@@ -1049,6 +1099,59 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-6">
+      {/* Password Authentication Dialog */}
+      <Dialog open={showPasswordDialog} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary" />
+              Autenticação de Administrador
+            </DialogTitle>
+            <DialogDescription>
+              Por segurança, digite sua senha para acessar o painel administrativo.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handlePasswordVerification} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="admin-password">Senha</Label>
+              <Input
+                id="admin-password"
+                type="password"
+                placeholder="Digite sua senha"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={verifyingPassword}
+                autoFocus
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate("/dashboard")}
+                disabled={verifyingPassword}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={verifyingPassword}>
+                {verifyingPassword ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Verificando...
+                  </>
+                ) : (
+                  <>
+                    <Shield className="mr-2 h-4 w-4" />
+                    Acessar
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {!isAuthenticated ? null : (
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -2559,6 +2662,7 @@ const Admin = () => {
           </CardContent>
         </Card>
       </div>
+      )}
     </div>
   );
 };
