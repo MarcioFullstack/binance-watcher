@@ -18,6 +18,8 @@ import { PnLDashboard } from "@/components/dashboard/PnLDashboard";
 import { BalanceCards } from "@/components/dashboard/BalanceCards";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { AlarmStopButton } from "@/components/AlarmStopButton";
+import { useAlertSounds } from "@/hooks/useAlertSounds";
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -37,6 +39,9 @@ const Dashboard = () => {
 
   // Enable realtime subscription notifications
   useSubscriptionRealtime(user?.id);
+
+  // Alert sounds hook
+  const { activeAlarm, stopAlarm: stopAlarmSound } = useAlertSounds(user?.id);
 
   useEffect(() => {
     checkUser();
@@ -230,11 +235,18 @@ const Dashboard = () => {
               </Card>
             )}
             
+            {/* Alarm Stop Button */}
+            <AlarmStopButton
+              isActive={!!activeAlarm}
+              type={activeAlarm?.type}
+              onStop={stopAlarmSound}
+            />
+
             {/* Floating Action Button */}
             <Link to="/settings">
               <Button
                 size="lg"
-                className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 z-50"
+                className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 z-40"
                 title="Configurar Alertas de Perda"
               >
                 <Settings className="h-6 w-6" />
