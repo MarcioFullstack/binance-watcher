@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, Plus, Trash2, AlertTriangle } from "lucide-react";
+import { Loader2, ArrowLeft, Plus, Trash2, AlertTriangle, Volume2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { activateVoucher } from "@/utils/voucher";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "react-i18next";
@@ -27,6 +28,7 @@ const Settings = () => {
   const [subscription, setSubscription] = useState<any>(null);
   const [maxLossPercent, setMaxLossPercent] = useState<string>("10");
   const [savingLossLimit, setSavingLossLimit] = useState(false);
+  const [sirenType, setSirenType] = useState<string>("police");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -77,13 +79,16 @@ const Settings = () => {
 
       const { data, error } = await supabase
         .from("risk_settings")
-        .select("risk_percent")
+        .select("risk_percent, siren_type")
         .eq("user_id", user.id)
         .maybeSingle();
 
       if (error) throw error;
       if (data?.risk_percent) {
         setMaxLossPercent(data.risk_percent.toString());
+      }
+      if (data?.siren_type) {
+        setSirenType(data.siren_type);
       }
     } catch (error) {
       console.error("Error loading loss limit:", error);
@@ -108,6 +113,7 @@ const Settings = () => {
         .upsert({
           user_id: user.id,
           risk_percent: lossValue,
+          siren_type: sirenType,
           updated_at: new Date().toISOString(),
         }, {
           onConflict: "user_id"
@@ -115,13 +121,57 @@ const Settings = () => {
 
       if (error) throw error;
 
-      toast.success("Margem de perda configurada com sucesso!");
+      toast.success("Configurações salvas com sucesso!");
     } catch (error: any) {
       console.error("Error saving loss limit:", error);
-      toast.error("Erro ao salvar margem de perda");
+      toast.error("Erro ao salvar configurações");
     } finally {
       setSavingLossLimit(false);
     }
+  };
+
+  const testSiren = (type: string) => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    // Different siren patterns
+    switch(type) {
+      case 'police': // Classic police siren
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.5);
+        oscillator.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 1);
+        break;
+      case 'ambulance': // Ambulance siren
+        oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(900, audioContext.currentTime + 0.3);
+        oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.6);
+        break;
+      case 'fire': // Fire truck siren
+        oscillator.frequency.setValueAtTime(500, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(1500, audioContext.currentTime + 0.4);
+        oscillator.frequency.exponentialRampToValueAtTime(500, audioContext.currentTime + 0.8);
+        break;
+      case 'alarm': // Building alarm
+        oscillator.frequency.setValueAtTime(1000, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(1500, audioContext.currentTime + 0.2);
+        oscillator.frequency.exponentialRampToValueAtTime(1000, audioContext.currentTime + 0.4);
+        break;
+      case 'alert': // Sharp alert
+        oscillator.frequency.setValueAtTime(1500, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(2000, audioContext.currentTime + 0.15);
+        oscillator.frequency.exponentialRampToValueAtTime(1500, audioContext.currentTime + 0.3);
+        break;
+    }
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 1);
   };
 
   const handleAddAccount = async () => {
@@ -292,13 +342,14 @@ const Settings = () => {
           <CardHeader>
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-warning" />
-              <CardTitle>Margem de Perda Máxima</CardTitle>
+              <CardTitle>Configurações de Risco</CardTitle>
             </div>
             <CardDescription>
-              Define o limite percentual de perda que você aceita antes de receber alertas críticos
+              Configure sua margem de perda e o tipo de alerta sonoro
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
+            {/* Loss Percentage */}
             <div className="space-y-2">
               <Label htmlFor="maxLoss" className="text-base font-medium">
                 Porcentagem Máxima de Perda (%)
@@ -315,23 +366,58 @@ const Settings = () => {
                   className="text-lg font-semibold"
                   placeholder="Ex: 10"
                 />
-                <Button 
-                  onClick={handleSaveLossLimit} 
-                  disabled={savingLossLimit}
-                  size="lg"
-                  className="min-w-[120px]"
-                >
-                  {savingLossLimit ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    "Salvar"
-                  )}
-                </Button>
               </div>
               <p className="text-sm text-muted-foreground">
                 Esta é sua margem de risco global. Configure alertas personalizados abaixo para diferentes níveis.
               </p>
             </div>
+
+            {/* Siren Type Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="sirenType" className="text-base font-medium flex items-center gap-2">
+                <Volume2 className="h-4 w-4" />
+                Tipo de Sirene
+              </Label>
+              <div className="flex gap-2">
+                <Select value={sirenType} onValueChange={setSirenType}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Selecione o tipo de sirene" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="police">🚓 Sirene de Polícia</SelectItem>
+                    <SelectItem value="ambulance">🚑 Sirene de Ambulância</SelectItem>
+                    <SelectItem value="fire">🚒 Sirene de Bombeiros</SelectItem>
+                    <SelectItem value="alarm">🔔 Alarme de Prédio</SelectItem>
+                    <SelectItem value="alert">⚠️ Alerta Agudo</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="default"
+                  onClick={() => testSiren(sirenType)}
+                  title="Testar som"
+                >
+                  <Volume2 className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Escolha o som que será reproduzido quando um alerta for disparado.
+              </p>
+            </div>
+
+            {/* Save Button */}
+            <Button 
+              onClick={handleSaveLossLimit} 
+              disabled={savingLossLimit}
+              size="lg"
+              className="w-full"
+            >
+              {savingLossLimit ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Salvar Configurações"
+              )}
+            </Button>
           </CardContent>
         </Card>
 
