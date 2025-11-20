@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { Loader2, ArrowLeft, Plus, Trash2, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { activateVoucher } from "@/utils/voucher";
 import { LanguageSelector } from "@/components/LanguageSelector";
@@ -25,11 +25,14 @@ const Settings = () => {
   });
   const [voucherCode, setVoucherCode] = useState("");
   const [subscription, setSubscription] = useState<any>(null);
+  const [maxLossPercent, setMaxLossPercent] = useState<string>("10");
+  const [savingLossLimit, setSavingLossLimit] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     loadAccounts();
     loadSubscription();
+    loadLossLimit();
   }, []);
 
   const loadAccounts = async () => {
@@ -64,6 +67,60 @@ const Settings = () => {
       setSubscription(data);
     } catch (error) {
       console.error("Error loading subscription:", error);
+    }
+  };
+
+  const loadLossLimit = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("risk_settings")
+        .select("risk_percent")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (data?.risk_percent) {
+        setMaxLossPercent(data.risk_percent.toString());
+      }
+    } catch (error) {
+      console.error("Error loading loss limit:", error);
+    }
+  };
+
+  const handleSaveLossLimit = async () => {
+    const lossValue = parseFloat(maxLossPercent);
+    
+    if (isNaN(lossValue) || lossValue <= 0 || lossValue > 100) {
+      toast.error("Digite uma porcentagem válida entre 0.1 e 100");
+      return;
+    }
+
+    setSavingLossLimit(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Não autenticado");
+
+      const { error } = await supabase
+        .from("risk_settings")
+        .upsert({
+          user_id: user.id,
+          risk_percent: lossValue,
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: "user_id"
+        });
+
+      if (error) throw error;
+
+      toast.success("Margem de perda configurada com sucesso!");
+    } catch (error: any) {
+      console.error("Error saving loss limit:", error);
+      toast.error("Erro ao salvar margem de perda");
+    } finally {
+      setSavingLossLimit(false);
     }
   };
 
@@ -227,6 +284,54 @@ const Settings = () => {
           </CardHeader>
           <CardContent>
             <LanguageSelector />
+          </CardContent>
+        </Card>
+
+        {/* Quick Loss Limit Setting */}
+        <Card className="border-warning/50 bg-warning/5">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-warning" />
+              <CardTitle>Margem de Perda Máxima</CardTitle>
+            </div>
+            <CardDescription>
+              Define o limite percentual de perda que você aceita antes de receber alertas críticos
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="maxLoss" className="text-base font-medium">
+                Porcentagem Máxima de Perda (%)
+              </Label>
+              <div className="flex gap-2">
+                <Input
+                  id="maxLoss"
+                  type="number"
+                  value={maxLossPercent}
+                  onChange={(e) => setMaxLossPercent(e.target.value)}
+                  min="0.1"
+                  max="100"
+                  step="0.1"
+                  className="text-lg font-semibold"
+                  placeholder="Ex: 10"
+                />
+                <Button 
+                  onClick={handleSaveLossLimit} 
+                  disabled={savingLossLimit}
+                  size="lg"
+                  className="min-w-[120px]"
+                >
+                  {savingLossLimit ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Salvar"
+                  )}
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Esta é sua margem de risco global. Configure alertas personalizados abaixo para diferentes níveis.
+              </p>
+            </div>
           </CardContent>
         </Card>
 
