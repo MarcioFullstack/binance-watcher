@@ -6,8 +6,17 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, AlertTriangle, AlertCircle, AlertOctagon, Siren } from "lucide-react";
+import { Loader2, AlertTriangle, AlertCircle, AlertOctagon, Siren, Plus, Trash2, Volume2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface AlertLevel {
   id: string;
@@ -54,6 +63,15 @@ export const AdvancedLossAlertSettings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [alertLevels, setAlertLevels] = useState<AlertLevel[]>([]);
+  const [showNewAlertDialog, setShowNewAlertDialog] = useState(false);
+  const [newAlert, setNewAlert] = useState({
+    level_name: "",
+    loss_percentage: 5,
+    enabled: true,
+    sound_enabled: true,
+    visual_alert: true,
+    push_notification: false,
+  });
 
   useEffect(() => {
     loadSettings();
@@ -96,7 +114,7 @@ export const AdvancedLossAlertSettings = () => {
       const sortedLevels = [...alertLevels].sort((a, b) => a.loss_percentage - b.loss_percentage);
       for (let i = 0; i < sortedLevels.length - 1; i++) {
         if (sortedLevels[i].loss_percentage >= sortedLevels[i + 1].loss_percentage) {
-          toast.error("Os percentuais de perda devem estar em ordem crescente");
+          toast.error("Os percentuais de perda devem ser únicos");
           return;
         }
       }
@@ -119,6 +137,82 @@ export const AdvancedLossAlertSettings = () => {
       toast.error("Erro ao salvar configurações");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleAddNewAlert = async () => {
+    if (!newAlert.level_name.trim()) {
+      toast.error("Digite um nome para o nível de alerta");
+      return;
+    }
+
+    if (newAlert.loss_percentage <= 0 || newAlert.loss_percentage > 100) {
+      toast.error("Porcentagem deve estar entre 0 e 100");
+      return;
+    }
+
+    // Verificar se já existe um alerta com esse nome
+    if (alertLevels.some(level => level.level_name.toLowerCase() === newAlert.level_name.toLowerCase())) {
+      toast.error("Já existe um alerta com este nome");
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Usuário não autenticado");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("loss_alert_levels")
+        .insert({
+          ...newAlert,
+          user_id: user.id,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setAlertLevels([...alertLevels, data]);
+      setShowNewAlertDialog(false);
+      setNewAlert({
+        level_name: "",
+        loss_percentage: 5,
+        enabled: true,
+        sound_enabled: true,
+        visual_alert: true,
+        push_notification: false,
+      });
+      toast.success("Novo nível de alerta adicionado!");
+    } catch (error: any) {
+      console.error("Error adding alert:", error);
+      toast.error("Erro ao adicionar nível de alerta");
+    }
+  };
+
+  const handleDeleteAlert = async (id: string, levelName: string) => {
+    // Não permitir deletar níveis padrão
+    const defaultLevels = ['warning', 'danger', 'critical', 'emergency'];
+    if (defaultLevels.includes(levelName)) {
+      toast.error("Não é possível deletar níveis padrão. Desative-os se não quiser usá-los.");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("loss_alert_levels")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      setAlertLevels(alertLevels.filter(level => level.id !== id));
+      toast.success("Nível de alerta removido!");
+    } catch (error: any) {
+      console.error("Error deleting alert:", error);
+      toast.error("Erro ao remover nível de alerta");
     }
   };
 
@@ -175,7 +269,8 @@ export const AdvancedLossAlertSettings = () => {
     oscillator1.stop(startTime + duration);
     oscillator2.stop(startTime + duration);
 
-    toast.info(`Testando alarme de ${levelConfig[levelName as keyof typeof levelConfig]?.title}`);
+    const config = levelConfig[levelName as keyof typeof levelConfig];
+    toast.info(`Testando alarme de ${config?.title || levelName}`);
   };
 
   if (loading) {
@@ -194,103 +289,208 @@ export const AdvancedLossAlertSettings = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Siren className="h-6 w-6" />
-          Sistema de Alarmes de Perda
-        </CardTitle>
-        <CardDescription>
-          Configure alarmes em múltiplos níveis para proteger seu capital. Cada nível é acionado quando sua perda atinge a porcentagem especificada.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {alertLevels.map((level) => {
-          const config = levelConfig[level.level_name as keyof typeof levelConfig];
-          const Icon = config.icon;
-
-          return (
-            <div key={level.id} className={`p-4 rounded-lg border ${config.bgColor}`}>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <Icon className={`h-6 w-6 ${config.color}`} />
-                  <div>
-                    <h3 className="font-semibold">{config.title}</h3>
-                    <p className="text-sm text-muted-foreground">{config.description}</p>
-                  </div>
-                </div>
-                <Switch
-                  checked={level.enabled}
-                  onCheckedChange={(checked) =>
-                    updateLevel(level.level_name, 'enabled', checked)
-                  }
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor={`${level.level_name}-percentage`}>
-                    Porcentagem de Perda (%)
-                  </Label>
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <CardTitle className="flex items-center gap-2">
+              <Siren className="h-6 w-6" />
+              Sistema de Alarmes de Perda
+            </CardTitle>
+            <CardDescription>
+              Configure alarmes em múltiplos níveis para proteger seu capital. Cada nível é acionado quando sua perda atinge a porcentagem especificada.
+            </CardDescription>
+          </div>
+          <Dialog open={showNewAlertDialog} onOpenChange={setShowNewAlertDialog}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Alerta
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Adicionar Novo Nível de Alerta</DialogTitle>
+                <DialogDescription>
+                  Configure um novo nível de alerta personalizado com suas próprias configurações.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-level-name">Nome do Nível</Label>
                   <Input
-                    id={`${level.level_name}-percentage`}
+                    id="new-level-name"
+                    placeholder="Ex: Moderado, Alto, Extremo"
+                    value={newAlert.level_name}
+                    onChange={(e) => setNewAlert({ ...newAlert, level_name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-loss-percentage">Porcentagem de Perda (%)</Label>
+                  <Input
+                    id="new-loss-percentage"
                     type="number"
                     step="0.1"
                     min="0"
                     max="100"
-                    value={level.loss_percentage}
-                    onChange={(e) =>
-                      updateLevel(level.level_name, 'loss_percentage', parseFloat(e.target.value))
-                    }
-                    disabled={!level.enabled}
+                    value={newAlert.loss_percentage}
+                    onChange={(e) => setNewAlert({ ...newAlert, loss_percentage: parseFloat(e.target.value) })}
                   />
                 </div>
-
+                <Separator />
                 <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label>Ativar este alerta</Label>
+                    <Switch
+                      checked={newAlert.enabled}
+                      onCheckedChange={(checked) => setNewAlert({ ...newAlert, enabled: checked })}
+                    />
+                  </div>
                   <div className="flex items-center justify-between">
                     <Label>Som de Alarme</Label>
                     <Switch
-                      checked={level.sound_enabled}
-                      onCheckedChange={(checked) =>
-                        updateLevel(level.level_name, 'sound_enabled', checked)
-                      }
-                      disabled={!level.enabled}
+                      checked={newAlert.sound_enabled}
+                      onCheckedChange={(checked) => setNewAlert({ ...newAlert, sound_enabled: checked })}
                     />
                   </div>
                   <div className="flex items-center justify-between">
                     <Label>Alerta Visual</Label>
                     <Switch
-                      checked={level.visual_alert}
-                      onCheckedChange={(checked) =>
-                        updateLevel(level.level_name, 'visual_alert', checked)
-                      }
-                      disabled={!level.enabled}
+                      checked={newAlert.visual_alert}
+                      onCheckedChange={(checked) => setNewAlert({ ...newAlert, visual_alert: checked })}
                     />
                   </div>
                   <div className="flex items-center justify-between">
                     <Label>Notificação Push</Label>
                     <Switch
-                      checked={level.push_notification}
-                      onCheckedChange={(checked) =>
-                        updateLevel(level.level_name, 'push_notification', checked)
-                      }
-                      disabled={!level.enabled}
+                      checked={newAlert.push_notification}
+                      onCheckedChange={(checked) => setNewAlert({ ...newAlert, push_notification: checked })}
                     />
                   </div>
                 </div>
               </div>
-
-              {level.enabled && level.sound_enabled && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => testAlarmForLevel(level.level_name)}
-                  className="mt-3 w-full"
-                >
-                  Testar Alarme
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowNewAlertDialog(false)}>
+                  Cancelar
                 </Button>
-              )}
-            </div>
-          );
-        })}
+                <Button onClick={handleAddNewAlert}>
+                  Adicionar Alerta
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {alertLevels.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <Siren className="h-12 w-12 mx-auto mb-3 opacity-50" />
+            <p>Nenhum alerta configurado. Adicione seu primeiro alerta!</p>
+          </div>
+        ) : (
+          alertLevels.map((level) => {
+            const config = levelConfig[level.level_name as keyof typeof levelConfig];
+            const Icon = config?.icon || AlertCircle;
+            const isDefaultLevel = ['warning', 'danger', 'critical', 'emergency'].includes(level.level_name);
+
+            return (
+              <div key={level.id} className={`p-4 rounded-lg border ${config?.bgColor || 'bg-muted/10'}`}>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <Icon className={`h-6 w-6 ${config?.color || 'text-foreground'}`} />
+                    <div>
+                      <h3 className="font-semibold">{config?.title || level.level_name}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {config?.description || `Alerta em ${level.loss_percentage}% de perda`}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={level.enabled}
+                      onCheckedChange={(checked) =>
+                        updateLevel(level.level_name, 'enabled', checked)
+                      }
+                    />
+                    {!isDefaultLevel && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteAlert(level.id, level.level_name)}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor={`${level.level_name}-percentage`}>
+                      Porcentagem de Perda (%)
+                    </Label>
+                    <Input
+                      id={`${level.level_name}-percentage`}
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="100"
+                      value={level.loss_percentage}
+                      onChange={(e) =>
+                        updateLevel(level.level_name, 'loss_percentage', parseFloat(e.target.value))
+                      }
+                      disabled={!level.enabled}
+                    />
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label>Som de Alarme</Label>
+                      <Switch
+                        checked={level.sound_enabled}
+                        onCheckedChange={(checked) =>
+                          updateLevel(level.level_name, 'sound_enabled', checked)
+                        }
+                        disabled={!level.enabled}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label>Alerta Visual</Label>
+                      <Switch
+                        checked={level.visual_alert}
+                        onCheckedChange={(checked) =>
+                          updateLevel(level.level_name, 'visual_alert', checked)
+                        }
+                        disabled={!level.enabled}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label>Notificação Push</Label>
+                      <Switch
+                        checked={level.push_notification}
+                        onCheckedChange={(checked) =>
+                          updateLevel(level.level_name, 'push_notification', checked)
+                        }
+                        disabled={!level.enabled}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {level.enabled && level.sound_enabled && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => testAlarmForLevel(level.level_name)}
+                    className="mt-3 w-full"
+                  >
+                    <Volume2 className="h-4 w-4 mr-2" />
+                    Testar Alarme
+                  </Button>
+                )}
+              </div>
+            );
+          })
+        )}
 
         <Separator />
 
