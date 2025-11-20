@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import nottifyLogo from "@/assets/nottify-logo.png";
 import { supabase } from "@/integrations/supabase/client";
+import { SubscriptionTimer } from "@/components/SubscriptionTimer";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -75,6 +76,7 @@ export const DashboardHeader = ({ onLogout, isAdmin = false, userId }: Dashboard
       </div>
       
       <div className="flex items-center gap-3">
+        <SubscriptionTimer userId={userId} />
         <Button 
           variant="outline" 
           size="icon"
