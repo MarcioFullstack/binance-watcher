@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { useBinanceData } from "@/hooks/useBinanceData";
+import { useDailyPnL } from "@/hooks/useDailyPnL";
 import { Loader2, Calendar as CalendarIcon, RefreshCw } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ type PeriodFilter = "7days" | "1month" | "3months" | "1year" | "custom";
 
 export const PnLDashboard = () => {
   const { data: binanceData, isLoading, error, isFetching } = useBinanceData();
+  const { data: dailyPnLData } = useDailyPnL();
   const [marketType, setMarketType] = useState<"USD-M" | "COIN-M">("USD-M");
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("7days");
   const [activeTab, setActiveTab] = useState("overview");
@@ -30,13 +32,20 @@ export const PnLDashboard = () => {
 
   const todayPnL = parseFloat(binanceData.pnl.today);
   const todayPercent = parseFloat(binanceData.pnl.todayPercent);
-  const yesterdayPnL = parseFloat(binanceData.pnl.yesterday);
   const totalPnL = parseFloat(binanceData.pnl.totalFromInitial);
   
-  // Calcular valores simulados baseados nos dados reais
-  const totalProfit = totalPnL > 0 ? totalPnL : 86.30;
-  const totalLoss = totalPnL < 0 ? totalPnL : -464.08;
-  const netPnL = totalProfit + totalLoss;
+  // Usar dados de daily_pnl para períodos históricos
+  const pnl7Days = dailyPnLData?.last7Days.pnl || 0;
+  const pnl7DaysPercent = dailyPnLData?.last7Days.percent || 0;
+  const pnl30Days = dailyPnLData?.last30Days.pnl || 0;
+  const pnl30DaysPercent = dailyPnLData?.last30Days.percent || 0;
+  const pnlAllTime = dailyPnLData?.allTime.pnl || totalPnL;
+  const pnlAllTimePercent = dailyPnLData?.allTime.percent || parseFloat(binanceData.pnl.totalPercent);
+  
+  // Calcular valores para resumo
+  const totalProfit = pnlAllTime > 0 ? pnlAllTime : 0;
+  const totalLoss = pnlAllTime < 0 ? pnlAllTime : 0;
+  const netPnL = pnlAllTime;
 
   const periodButtons: { value: PeriodFilter; label: string }[] = [
     { value: "7days", label: "7 Dias" },
@@ -51,12 +60,6 @@ export const PnLDashboard = () => {
       {/* Header com Market Type */}
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold">Análise de Ganhos e Perdas de Futuros</h1>
-        {isFetching && !isLoading && (
-          <div className="flex items-center gap-1.5 text-xs text-primary font-medium">
-            <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-            <span>Atualizando dados...</span>
-          </div>
-        )}
       </div>
 
       {/* Market Type Toggle */}
@@ -84,28 +87,31 @@ export const PnLDashboard = () => {
       <div className="grid gap-3 grid-cols-3">
         <Card className="p-3 border-border">
           <p className="text-xs text-muted-foreground mb-1">Ganhos e Perdas de 7D</p>
-          <p className={`text-base font-semibold ${todayPercent >= 0 ? 'text-success' : 'text-destructive'}`}>
-            {todayPercent >= 0 ? '+' : ''}{todayPercent.toFixed(2)}%
+          <p className={`text-base font-semibold ${pnl7Days >= 0 ? 'text-success' : 'text-destructive'}`}>
+            {pnl7Days >= 0 ? '+' : ''}{pnl7DaysPercent.toFixed(2)}%
           </p>
-          <p className={`text-xs ${todayPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
-            {todayPnL >= 0 ? '+' : ''}{todayPnL.toFixed(2)} USD
+          <p className={`text-xs ${pnl7Days >= 0 ? 'text-success' : 'text-destructive'}`}>
+            {pnl7Days >= 0 ? '+' : ''}{pnl7Days.toFixed(2)} USD
           </p>
         </Card>
 
         <Card className="p-3 border-border">
           <p className="text-xs text-muted-foreground mb-1">Ganhos e Perdas de 30D</p>
-          <p className={`text-base font-semibold ${yesterdayPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
-            {yesterdayPnL >= 0 ? '+' : ''}{yesterdayPnL.toFixed(2)}%
+          <p className={`text-base font-semibold ${pnl30Days >= 0 ? 'text-success' : 'text-destructive'}`}>
+            {pnl30Days >= 0 ? '+' : ''}{pnl30DaysPercent.toFixed(2)}%
           </p>
-          <p className={`text-xs ${yesterdayPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
-            {yesterdayPnL >= 0 ? '+' : ''}{yesterdayPnL.toFixed(2)} USD
+          <p className={`text-xs ${pnl30Days >= 0 ? 'text-success' : 'text-destructive'}`}>
+            {pnl30Days >= 0 ? '+' : ''}{pnl30Days.toFixed(2)} USD
           </p>
         </Card>
 
         <Card className="p-3 border-border">
           <p className="text-xs text-muted-foreground mb-1">Ganhos e Perdas desde sempre</p>
-          <p className={`text-base font-semibold ${totalPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
-            {totalPnL >= 0 ? '+' : ''}{totalPnL.toFixed(2)} USD
+          <p className={`text-base font-semibold ${pnlAllTime >= 0 ? 'text-success' : 'text-destructive'}`}>
+            {pnlAllTime >= 0 ? '+' : ''}{pnlAllTimePercent.toFixed(2)}%
+          </p>
+          <p className={`text-xs ${pnlAllTime >= 0 ? 'text-success' : 'text-destructive'}`}>
+            {pnlAllTime >= 0 ? '+' : ''}{pnlAllTime.toFixed(2)} USD
           </p>
         </Card>
       </div>
