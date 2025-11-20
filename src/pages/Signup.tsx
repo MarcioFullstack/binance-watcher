@@ -404,29 +404,46 @@ const Signup = () => {
                         Digite o código de 6 dígitos do Google Authenticator
                       </Label>
                       <div className="flex justify-center">
-                        <InputOTP
-                          maxLength={6}
-                          value={totpCode}
-                          onChange={setTotpCode}
-                          disabled={loading}
-                        >
-                          <InputOTPGroup>
-                            <InputOTPSlot index={0} />
-                            <InputOTPSlot index={1} />
-                            <InputOTPSlot index={2} />
-                            <InputOTPSlot index={3} />
-                            <InputOTPSlot index={4} />
-                            <InputOTPSlot index={5} />
-                          </InputOTPGroup>
-                        </InputOTP>
+                        <div className={`transition-all duration-200 ${loading ? 'opacity-50 scale-95' : 'opacity-100 scale-100'}`}>
+                          <InputOTP
+                            maxLength={6}
+                            value={totpCode}
+                            onChange={setTotpCode}
+                            disabled={loading}
+                          >
+                            <InputOTPGroup>
+                              <InputOTPSlot index={0} />
+                              <InputOTPSlot index={1} />
+                              <InputOTPSlot index={2} />
+                              <InputOTPSlot index={3} />
+                              <InputOTPSlot index={4} />
+                              <InputOTPSlot index={5} />
+                            </InputOTPGroup>
+                          </InputOTP>
+                        </div>
                       </div>
+                      {loading && (
+                        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground animate-pulse">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Verificando código de autenticação...</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full" disabled={loading || totpCode.length !== 6}>
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {loadingMessage || "Verify and Continue"}
+                <Button 
+                  type="submit" 
+                  className="w-full relative overflow-hidden" 
+                  disabled={loading || totpCode.length !== 6}
+                >
+                  {loading && (
+                    <div className="absolute inset-0 bg-primary/20 animate-pulse" />
+                  )}
+                  <span className="relative flex items-center justify-center">
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {loading ? "Verificando..." : "Verificar e Continuar"}
+                  </span>
                 </Button>
               </form>
             </CardContent>
