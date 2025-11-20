@@ -1,10 +1,12 @@
 import { Card } from "@/components/ui/card";
 import { useBinanceData } from "@/hooks/useBinanceData";
 import { Loader2, Calendar as CalendarIcon } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { PnLCalendar } from "./PnLCalendar";
+import { PositionsTable } from "./PositionsTable";
+import { TradingStats } from "./TradingStats";
 
 type PeriodFilter = "7days" | "1month" | "3months" | "1year" | "custom";
 
@@ -12,6 +14,7 @@ export const PnLDashboard = () => {
   const { data: binanceData, isLoading, error } = useBinanceData();
   const [marketType, setMarketType] = useState<"USD-M" | "COIN-M">("USD-M");
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("7days");
+  const [activeTab, setActiveTab] = useState("overview");
 
   if (isLoading) {
     return (
@@ -141,32 +144,54 @@ export const PnLDashboard = () => {
         </div>
       </Card>
 
-      {/* Abas inferiores como na Binance */}
-      <div className="flex gap-6 border-b border-border text-sm">
-        <button className="pb-2 border-b-2 border-primary text-primary font-medium">
-          Visão Geral
-        </button>
-        <button className="pb-2 text-muted-foreground hover:text-foreground">
-          Detalhes
-        </button>
-        <button className="pb-2 text-muted-foreground hover:text-foreground">
-          Análise do Símbolo
-        </button>
-        <button className="pb-2 text-muted-foreground hover:text-foreground">
-          Finanças
-        </button>
-      </div>
+      {/* Abas inferiores */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="positions">Posições</TabsTrigger>
+          <TabsTrigger value="stats">Estatísticas</TabsTrigger>
+          <TabsTrigger value="calendar">Calendário</TabsTrigger>
+        </TabsList>
 
-      {/* Seção de calendário de PnL diário */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium">Ganhos e Perdas Diários</h2>
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <span>2025-11</span>
+        <TabsContent value="overview" className="space-y-4 mt-4">
+          {/* Seção de calendário de PnL diário */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-medium">Ganhos e Perdas Diários</h2>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <span>2025-11</span>
+              </div>
+            </div>
+            <PnLCalendar />
           </div>
-        </div>
-        <PnLCalendar />
-      </div>
+        </TabsContent>
+
+        <TabsContent value="positions" className="space-y-4 mt-4">
+          <div className="space-y-3">
+            <h2 className="text-sm font-medium">Posições Abertas</h2>
+            <PositionsTable />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="stats" className="space-y-4 mt-4">
+          <div className="space-y-3">
+            <h2 className="text-sm font-medium">Estatísticas de Trading</h2>
+            <TradingStats />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="calendar" className="space-y-4 mt-4">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-medium">Calendário de PnL</h2>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <span>2025-11</span>
+              </div>
+            </div>
+            <PnLCalendar />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
