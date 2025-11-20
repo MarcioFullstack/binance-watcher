@@ -28,10 +28,22 @@ const Dashboard = () => {
   // Check Binance account status
   const { data: accountStatus, isLoading: accountLoading } = useBinanceAccountStatus(user?.id);
   
-  // Check for Binance keys validity
-  const { error: binanceError } = useBinanceData();
+  console.log('Dashboard accountStatus:', accountStatus);
+  
+  // Only try to fetch Binance data if we have a user and account
+  const shouldFetchBinanceData = !!user?.id && accountStatus?.hasAccount;
+  
+  // Check for Binance keys validity (only when we should fetch data)
+  const { error: binanceError, data: binanceData } = useBinanceData();
   const hasBinanceKeysError = binanceError instanceof Error && 
     binanceError.message === 'BINANCE_KEYS_INVALID';
+  
+  console.log('Dashboard Binance check:', { 
+    shouldFetch: shouldFetchBinanceData, 
+    hasData: !!binanceData, 
+    hasError: !!binanceError,
+    errorMessage: binanceError?.message 
+  });
 
   // Enable realtime subscription notifications
   useSubscriptionRealtime(user?.id);
