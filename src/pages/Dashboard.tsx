@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { PnLDashboard } from "@/components/dashboard/PnLDashboard";
+import { BalanceCards } from "@/components/dashboard/BalanceCards";
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -166,6 +167,8 @@ const Dashboard = () => {
           navigate("/payment");
         }} 
       />
+
+      <BalanceCards />
 
       <PnLDashboard />
     </div>
