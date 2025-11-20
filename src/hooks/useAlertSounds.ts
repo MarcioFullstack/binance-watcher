@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -6,6 +6,10 @@ export type SirenType = 'police' | 'ambulance' | 'fire' | 'air_raid' | 'car_alar
 
 export const useAlertSounds = (userId: string | undefined) => {
   const lastNotificationId = useRef<string | null>(null);
+  const [activeAlarm, setActiveAlarm] = useState<{
+    type: 'loss' | 'gain';
+    intervalId: number | null;
+  } | null>(null);
 
   const playCoinsSound = () => {
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -252,6 +256,68 @@ export const useAlertSounds = (userId: string | undefined) => {
     }
   };
 
+  const startContinuousAlarm = (type: 'loss' | 'gain', sirenType?: SirenType) => {
+    // Para qualquer alarme anterior
+    stopAlarm();
+
+    const playSound = () => {
+      if (type === 'gain') {
+        playCoinsSound();
+      } else {
+        playSiren(sirenType || 'police');
+      }
+    };
+
+    // Toca imediatamente
+    playSound();
+
+    // Define intervalo para repetir - 3.5 segundos para loss (após sirene), 2.5 para gain (após moedas)
+    const interval = type === 'loss' ? 3500 : 2500;
+    const intervalId = window.setInterval(playSound, interval);
+
+    setActiveAlarm({ type, intervalId });
+  };
+
+  const stopAlarm = () => {
+    if (activeAlarm?.intervalId) {
+      clearInterval(activeAlarm.intervalId);
+      setActiveAlarm(null);
+    }
+  };
+
+  const requestNotificationPermission = async () => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      await Notification.requestPermission();
+    }
+  };
+
+  const showPushNotification = (title: string, body: string, type: 'gain' | 'loss') => {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const options: any = {
+        body,
+        icon: '/nottify-logo.png',
+        badge: '/nottify-logo.png',
+        tag: type,
+        requireInteraction: type === 'loss',
+      };
+
+      if (navigator.vibrate) {
+        options.vibrate = type === 'loss' ? [200, 100, 200, 100, 200] : [100, 50, 100];
+      }
+
+      const notification = new Notification(title, options);
+
+      notification.onclick = () => {
+        window.focus();
+        notification.close();
+      };
+    }
+  };
+
+  useEffect(() => {
+    requestNotificationPermission();
+  }, []);
+
   useEffect(() => {
     if (!userId) return;
 
@@ -280,18 +346,36 @@ export const useAlertSounds = (userId: string | undefined) => {
           lastNotificationId.current = notification.id;
           
           if (notification.type === 'gain') {
-            playCoinsSound();
+            startContinuousAlarm('gain');
+            showPushNotification(
+              notification.title, 
+              notification.description, 
+              'gain'
+            );
             toast.success(notification.title, {
               description: notification.description,
-              duration: 5000,
+              duration: 10000,
               icon: '🎉',
+              action: {
+                label: 'Parar Som',
+                onClick: stopAlarm,
+              },
             });
           } else if (notification.type === 'critical_loss') {
-            playPoliceSiren();
+            startContinuousAlarm('loss', 'police');
+            showPushNotification(
+              notification.title, 
+              notification.description, 
+              'loss'
+            );
             toast.error(notification.title, {
               description: notification.description,
-              duration: 5000,
+              duration: 10000,
               icon: '🚨',
+              action: {
+                label: 'Parar Alarme',
+                onClick: stopAlarm,
+              },
             });
           }
         }
@@ -302,6 +386,7 @@ export const useAlertSounds = (userId: string | undefined) => {
 
     return () => {
       console.log('Cleaning up notification alerts channel');
+      stopAlarm();
       supabase.removeChannel(channel);
     };
   }, [userId]);
@@ -315,5 +400,8 @@ export const useAlertSounds = (userId: string | undefined) => {
     playCarAlarm,
     playBuzzer,
     playSiren,
+    startContinuousAlarm,
+    stopAlarm,
+    activeAlarm,
   };
 };
