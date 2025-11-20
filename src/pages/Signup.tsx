@@ -270,8 +270,21 @@ const Signup = () => {
       if (data.isValid) {
         await supabase.from("user_2fa").update({ is_enabled: true }).eq("user_id", userId);
 
-        toast.success("2FA configured successfully!");
-        navigate("/payment");
+        // Criar assinatura automática de 30 dias para todos os novos usuários
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 30);
+        
+        await supabase
+          .from("subscriptions")
+          .upsert({
+            user_id: userId,
+            status: "active",
+            expires_at: expiresAt.toISOString(),
+            plan_type: "trial",
+          });
+
+        toast.success("Conta criada com sucesso! 30 dias de acesso liberado.");
+        navigate("/dashboard");
       } else {
         toast.error("Invalid code. Please try again.");
       }
