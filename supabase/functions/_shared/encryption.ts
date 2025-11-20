@@ -9,7 +9,19 @@ async function getEncryptionKey(): Promise<CryptoKey> {
     throw new Error('ENCRYPTION_KEY not configured');
   }
 
-  const keyData = new TextEncoder().encode(keyString);
+  // Ensure the key is exactly 32 bytes for AES-256-GCM
+  const encoder = new TextEncoder();
+  const keyBytes = encoder.encode(keyString);
+  
+  // Pad or truncate to exactly 32 bytes
+  const keyData = new Uint8Array(32);
+  if (keyBytes.length >= 32) {
+    keyData.set(keyBytes.slice(0, 32));
+  } else {
+    keyData.set(keyBytes);
+    // Fill remaining bytes with zeros
+    keyData.fill(0, keyBytes.length);
+  }
   
   return await crypto.subtle.importKey(
     'raw',
