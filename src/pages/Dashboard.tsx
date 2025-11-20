@@ -4,28 +4,25 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { SubscriptionTimer } from "@/components/SubscriptionTimer";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2, Settings as SettingsIcon } from "lucide-react";
 import { useSubscriptionRealtime } from "@/hooks/useSubscriptionRealtime";
+import { useBinanceData } from "@/hooks/useBinanceData";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { PnLDashboard } from "@/components/dashboard/PnLDashboard";
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
+
+  // Check Binance data
+  const { data: binanceData, error: binanceError } = useBinanceData();
+  const hasBinanceKeysError = binanceError instanceof Error && 
+    binanceError.message === 'BINANCE_KEYS_INVALID';
 
   // Enable realtime subscription notifications
   useSubscriptionRealtime(user?.id);
@@ -118,25 +115,45 @@ const Dashboard = () => {
     }
   };
 
-  const handleDeleteAllData = async () => {
-    setIsDeleting(true);
-    try {
-      const { error } = await supabase.functions.invoke('delete-binance-accounts');
-      
-      if (error) {
-        console.error('Error deleting Binance data:', error);
-        toast.error("Erro ao excluir dados da Binance");
-        return;
-      }
+  // Show setup prompt if no Binance account or keys error
+  if (!binanceData || hasBinanceKeysError) {
+    return (
+      <div className="min-h-screen bg-background p-4 md:p-6 space-y-6">
+        <DashboardHeader isAdmin={isAdmin} onLogout={handleLogout} />
+        
+        <SubscriptionTimer 
+          userId={user?.id} 
+          onExpired={() => {
+            toast.error("Sua assinatura expirou");
+            navigate("/payment");
+          }} 
+        />
 
-      toast.success("Todos os dados da Binance foram excluídos com sucesso");
-    } catch (error) {
-      console.error('Error:', error);
-      toast.error("Erro ao excluir dados");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
+        {hasBinanceKeysError && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Suas chaves da API da Binance são inválidas ou expiraram. 
+              Configure novamente para acessar o dashboard.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <Card className="p-8 text-center space-y-4">
+          <SettingsIcon className="h-16 w-16 mx-auto text-muted-foreground" />
+          <div>
+            <h2 className="text-2xl font-bold mb-2">Configure sua Conta Binance</h2>
+            <p className="text-muted-foreground mb-6">
+              Conecte sua conta Binance para começar a visualizar seus dados de trading.
+            </p>
+          </div>
+          <Button onClick={() => navigate("/setup-binance")} size="lg">
+            Configurar Binance
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-6 space-y-6">
@@ -150,69 +167,7 @@ const Dashboard = () => {
         }} 
       />
 
-      <Card className="p-8">
-        <div className="text-center space-y-6">
-          <div>
-            <h2 className="text-2xl font-bold mb-2">Dashboard</h2>
-            <p className="text-muted-foreground">
-              Dashboard limpo e pronto para nova configuração.
-            </p>
-          </div>
-          
-          <div className="flex flex-col items-center gap-4 pt-4">
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button 
-                  variant="destructive" 
-                  size="lg"
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Excluindo...
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Excluir Todas as Chaves de API
-                    </>
-                  )}
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Esta ação irá excluir permanentemente:
-                    <ul className="list-disc list-inside mt-2 space-y-1">
-                      <li>Todas as contas Binance configuradas</li>
-                      <li>Histórico de P&L diário</li>
-                      <li>Configurações de alertas de P&L</li>
-                      <li>Configurações de gestão de risco</li>
-                    </ul>
-                    <p className="mt-3 font-semibold">Esta ação não pode ser desfeita.</p>
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleDeleteAllData}
-                    className="bg-destructive hover:bg-destructive/90"
-                  >
-                    Sim, excluir tudo
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-
-            <p className="text-xs text-muted-foreground max-w-md">
-              Exclua todas as chaves de API e dados relacionados à Binance. 
-              Você pode configurar uma nova conta a qualquer momento.
-            </p>
-          </div>
-        </div>
-      </Card>
+      <PnLDashboard />
     </div>
   );
 };
