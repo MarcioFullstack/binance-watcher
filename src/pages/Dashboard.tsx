@@ -20,6 +20,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AlarmStopButton } from "@/components/AlarmStopButton";
 import { AlarmBanner } from "@/components/AlarmBanner";
+import { TestAlarmButton } from "@/components/TestAlarmButton";
 import { useAlertSounds } from "@/hooks/useAlertSounds";
 
 const Dashboard = () => {
@@ -149,7 +150,8 @@ const Dashboard = () => {
               <SidebarTrigger />
               <h1 className="text-lg font-semibold text-foreground hidden sm:block">Dashboard</h1>
             </div>
-            <div className="flex-1 flex justify-end px-4">
+            <div className="flex items-center gap-3">
+              <TestAlarmButton />
               <SubscriptionTimer 
                 userId={user?.id} 
                 onExpired={() => {
