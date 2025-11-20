@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { SubscriptionTimer } from "@/components/SubscriptionTimer";
-import { Loader2, Settings as SettingsIcon } from "lucide-react";
+import { Loader2, Settings } from "lucide-react";
 import { useSubscriptionRealtime } from "@/hooks/useSubscriptionRealtime";
 import { useBinanceData } from "@/hooks/useBinanceData";
 import { useAdvancedLossAlarm } from "@/hooks/useAdvancedLossAlarm";
@@ -157,7 +157,7 @@ const Dashboard = () => {
                 )}
 
                 <div className="text-center space-y-4">
-                  <SettingsIcon className="h-16 w-16 mx-auto text-muted-foreground" />
+                  <Settings className="h-16 w-16 mx-auto text-muted-foreground" />
                   <h2 className="text-2xl font-bold">Configure sua Conta Binance</h2>
                   <p className="text-muted-foreground">
                     Conecte sua conta Binance para começar a visualizar seus dados de trading.
