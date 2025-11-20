@@ -45,6 +45,43 @@ serve(async (req) => {
 
     console.log(`Found ${expiringSubscriptions?.length || 0} expiring subscriptions`);
 
+    // Check for subscriptions expiring in exactly 24 hours (critical alert)
+    const { data: criticalSubscriptions, error: criticalError } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('status', 'active')
+      .gte('expires_at', new Date(Date.now() + 23 * 60 * 60 * 1000).toISOString())
+      .lte('expires_at', new Date(Date.now() + 25 * 60 * 60 * 1000).toISOString());
+
+    if (criticalError) {
+      console.error('Error fetching critical subscriptions:', criticalError);
+    } else if (criticalSubscriptions && criticalSubscriptions.length > 0) {
+      console.log(`Found ${criticalSubscriptions.length} subscriptions expiring in 24 hours`);
+
+      // Send critical notifications for subscriptions expiring in 24 hours
+      for (const subscription of criticalSubscriptions) {
+        // Check if we already sent this notification today
+        const { data: existingNotification } = await supabase
+          .from('notification_history')
+          .select('id')
+          .eq('user_id', subscription.user_id)
+          .eq('type', 'critical')
+          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+          .like('title', '%24 horas%')
+          .maybeSingle();
+
+        if (!existingNotification) {
+          await supabase.from('notification_history').insert({
+            user_id: subscription.user_id,
+            title: '⚠️ URGENTE: Assinatura expira em 24 horas!',
+            description: `Sua assinatura ${subscription.plan_type === 'yearly' ? 'anual' : subscription.plan_type === 'quarterly' ? 'trimestral' : 'mensal'} expira em 24 horas. Renove AGORA para evitar interrupção do serviço!`,
+            type: 'critical'
+          });
+          console.log(`Critical 24h notification sent to user ${subscription.user_id}`);
+        }
+      }
+    }
+
     // Send notifications for expiring subscriptions
     if (expiringSubscriptions && expiringSubscriptions.length > 0) {
       for (const subscription of expiringSubscriptions) {
@@ -70,13 +107,24 @@ serve(async (req) => {
           type = 'info';
         }
 
-        // Insert notification
-        await supabase.from('notification_history').insert({
-          user_id: subscription.user_id,
-          title,
-          description,
-          type
-        });
+        // Check if notification was already sent in the last 24 hours (to avoid duplicates)
+        const { data: recentNotification } = await supabase
+          .from('notification_history')
+          .select('id')
+          .eq('user_id', subscription.user_id)
+          .eq('title', title)
+          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+          .maybeSingle();
+
+        if (!recentNotification) {
+          // Insert notification
+          await supabase.from('notification_history').insert({
+            user_id: subscription.user_id,
+            title,
+            description,
+            type
+          });
+        }
       }
     }
 
