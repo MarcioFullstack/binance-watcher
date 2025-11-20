@@ -134,7 +134,10 @@ const Signup = () => {
         });
 
         setTotpSecret(totpData.secret);
-        setQrCodeUrl(totpData.qrCodeUrl);
+        // Generate proper TOTP URI for QR code
+        const issuer = "ChartGuard Pro";
+        const totpUri = `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(email)}?secret=${totpData.secret}&issuer=${encodeURIComponent(issuer)}`;
+        setQrCodeUrl(totpUri);
         setStep(2);
         toast.success("Account created! Please configure your 2FA");
       }
