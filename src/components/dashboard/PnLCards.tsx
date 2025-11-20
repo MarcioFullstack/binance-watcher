@@ -3,7 +3,14 @@ import { useBinanceData } from "@/hooks/useBinanceData";
 import { Loader2 } from "lucide-react";
 
 export const PnLCards = () => {
-  const { data: binanceData, isLoading } = useBinanceData();
+  const { data: binanceData, isLoading, error } = useBinanceData();
+
+  // Don't render anything if there's a keys error - it will be shown in the main alert
+  const isKeysError = error instanceof Error && error.message === 'BINANCE_KEYS_INVALID';
+  
+  if (isKeysError) {
+    return null;
+  }
 
   if (isLoading || !binanceData) {
     return (

@@ -9,6 +9,7 @@ import { AlertsConfig } from "@/components/dashboard/AlertsConfig";
 import { PnLAlertsConfig } from "@/components/dashboard/PnLAlertsConfig";
 import { PnLCalendar } from "@/components/dashboard/PnLCalendar";
 import { RiskAlertsInfo } from "@/components/dashboard/RiskAlertsInfo";
+import { BinanceKeysAlert } from "@/components/dashboard/BinanceKeysAlert";
 import { SubscriptionTimer } from "@/components/SubscriptionTimer";
 import { Loader2, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useSubscriptionRealtime } from "@/hooks/useSubscriptionRealtime";
 import { useAlertsRealtime } from "@/hooks/useAlertsRealtime";
 import { useDailyPnLSync } from "@/hooks/useDailyPnLSync";
+import { useBinanceData } from "@/hooks/useBinanceData";
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -23,6 +25,11 @@ const Dashboard = () => {
   const [hasAccount, setHasAccount] = useState<boolean | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
+
+  // Check for Binance keys validity
+  const { error: binanceError } = useBinanceData();
+  const hasBinanceKeysError = binanceError instanceof Error && 
+    binanceError.message === 'BINANCE_KEYS_INVALID';
 
   // Enable realtime subscription notifications
   useSubscriptionRealtime(user?.id);
@@ -142,6 +149,8 @@ const Dashboard = () => {
           navigate("/payment");
         }} 
       />
+      
+      {hasBinanceKeysError && <BinanceKeysAlert />}
       
       <BalanceCards />
       <PnLCards />

@@ -54,10 +54,26 @@ export const useBinanceData = () => {
       const { data, error } = await supabase.functions.invoke('binance-data');
       
       if (error) throw error;
+      
+      // Check for specific error codes
+      if (data && typeof data === 'object' && 'error' in data) {
+        const errorData = data as { error: string; message?: string };
+        if (errorData.error === 'BINANCE_KEYS_INVALID') {
+          throw new Error('BINANCE_KEYS_INVALID');
+        }
+        throw new Error(errorData.message || errorData.error);
+      }
+      
       return data as BinanceData;
     },
-    refetchInterval: 5000, // Atualizar a cada 5 segundos
-    retry: 2,
+    refetchInterval: 5000,
+    retry: (failureCount, error) => {
+      // Don't retry if it's a key validation error
+      if (error instanceof Error && error.message === 'BINANCE_KEYS_INVALID') {
+        return false;
+      }
+      return failureCount < 2;
+    },
   });
 };
 

@@ -16,7 +16,10 @@ export const BalanceCards = () => {
     );
   }
 
-  if (error) {
+  // Don't show error here if it's a keys validation error - it will be shown in the main alert
+  const isKeysError = error instanceof Error && error.message === 'BINANCE_KEYS_INVALID';
+
+  if (error && !isKeysError) {
     return (
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
@@ -28,14 +31,7 @@ export const BalanceCards = () => {
   }
 
   if (!data) {
-    return (
-      <Alert>
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          Configure a Binance account to view your data.
-        </AlertDescription>
-      </Alert>
-    );
+    return null;
   }
 
   const isProfit = parseFloat(data.pnl.today) >= 0;
