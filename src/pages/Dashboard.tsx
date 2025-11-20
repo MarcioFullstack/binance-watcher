@@ -7,6 +7,7 @@ import { SubscriptionTimer } from "@/components/SubscriptionTimer";
 import { Loader2, Settings as SettingsIcon } from "lucide-react";
 import { useSubscriptionRealtime } from "@/hooks/useSubscriptionRealtime";
 import { useBinanceData } from "@/hooks/useBinanceData";
+import { useLossAlarm } from "@/hooks/useLossAlarm";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -26,6 +27,10 @@ const Dashboard = () => {
   const { data: binanceData, error: binanceError } = useBinanceData();
   const hasBinanceKeysError = binanceError instanceof Error && 
     binanceError.message === 'BINANCE_KEYS_INVALID';
+  
+  // Monitor loss alarm
+  const currentBalance = binanceData ? parseFloat(binanceData.balance.available) : 0;
+  useLossAlarm(currentBalance, !!binanceData);
 
   // Enable realtime subscription notifications
   useSubscriptionRealtime(user?.id);

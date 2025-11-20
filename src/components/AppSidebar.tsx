@@ -3,6 +3,7 @@ import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import nottifyLogo from "@/assets/nottify-logo.png";
 import {
   Sidebar,
   SidebarContent,
@@ -49,10 +50,8 @@ export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
         {/* Logo */}
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <TrendingUp className="h-5 w-5 text-primary-foreground" />
-            </div>
-            {!isCollapsed && <span className="font-bold text-lg">Nottify</span>}
+            <img src={nottifyLogo} alt="Nottify" className="w-10 h-10" />
+            {!isCollapsed && <span className="font-bold text-xl text-foreground">Nottify</span>}
           </div>
         </div>
 
