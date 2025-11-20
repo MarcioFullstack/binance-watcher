@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { useBinanceData } from "@/hooks/useBinanceData";
-import { Loader2, TrendingUp, TrendingDown, Calendar as CalendarIcon } from "lucide-react";
+import { Loader2, Calendar as CalendarIcon } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -44,95 +44,60 @@ export const PnLDashboard = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header com Market Type */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Análise de Ganhos e Perdas de Futuros</h1>
+        <h1 className="text-lg font-semibold">Análise de Ganhos e Perdas de Futuros</h1>
       </div>
 
       {/* Market Type Toggle */}
       <Tabs value={marketType} onValueChange={(v) => setMarketType(v as "USD-M" | "COIN-M")}>
-        <TabsList className="grid w-[200px] grid-cols-2 bg-muted">
+        <TabsList className="grid w-[180px] grid-cols-2">
           <TabsTrigger value="USD-M">USD-M</TabsTrigger>
           <TabsTrigger value="COIN-M">COIN-M</TabsTrigger>
         </TabsList>
       </Tabs>
 
-      {/* Main P&L Card */}
-      <Card className="p-6 bg-gradient-to-br from-card via-card to-primary/5 border-border">
-        <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">Ganhos e Perdas de hoje</p>
-          <div className="flex items-baseline gap-3">
-            <h2 className={`text-5xl font-bold ${todayPercent >= 0 ? 'text-success' : 'text-destructive'}`}>
-              {todayPercent >= 0 ? '+' : ''}{todayPercent.toFixed(2)}%
-            </h2>
-            <span className={`text-xl font-medium ${todayPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
-              {todayPnL >= 0 ? '+' : ''}{todayPnL.toFixed(2)} USD
-            </span>
-          </div>
+      {/* Main P&L Card - Ganhos e Perdas de hoje */}
+      <Card className="p-4 border-border">
+        <p className="text-xs text-muted-foreground mb-1">Ganhos e Perdas de hoje</p>
+        <div className="flex items-baseline gap-2">
+          <h2 className={`text-3xl font-bold ${todayPercent >= 0 ? 'text-success' : 'text-destructive'}`}>
+            {todayPercent >= 0 ? '+' : ''}{todayPercent.toFixed(2)}%
+          </h2>
+          <span className={`text-base font-medium ${todayPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
+            {todayPnL >= 0 ? '+' : ''}{todayPnL.toFixed(2)} USD
+          </span>
         </div>
       </Card>
 
-      {/* Summary Cards Grid */}
-      <div className="grid gap-4 md:grid-cols-3">
-        {/* Today's Realized PnL */}
-        <Card className="p-5 border-border hover:border-primary/50 transition-colors">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              {todayPnL >= 0 ? (
-                <TrendingUp className="h-4 w-4 text-success" />
-              ) : (
-                <TrendingDown className="h-4 w-4 text-destructive" />
-              )}
-              <span>PNL Realizado de Hoje</span>
-            </div>
-            <div>
-              <p className={`text-2xl font-bold ${todayPercent >= 0 ? 'text-success' : 'text-destructive'}`}>
-                {todayPercent >= 0 ? '+' : ''}{todayPercent.toFixed(2)}%
-              </p>
-              <p className={`text-base font-medium ${todayPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
-                {todayPnL >= 0 ? '+' : ''}{todayPnL.toFixed(2)} USD
-              </p>
-            </div>
-          </div>
+      {/* Cards de 7D / 30D / desde sempre */}
+      <div className="grid gap-3 grid-cols-3">
+        <Card className="p-3 border-border">
+          <p className="text-xs text-muted-foreground mb-1">Ganhos e Perdas de 7D</p>
+          <p className={`text-base font-semibold ${todayPercent >= 0 ? 'text-success' : 'text-destructive'}`}>
+            {todayPercent >= 0 ? '+' : ''}{todayPercent.toFixed(2)}%
+          </p>
+          <p className={`text-xs ${todayPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
+            {todayPnL >= 0 ? '+' : ''}{todayPnL.toFixed(2)} USD
+          </p>
         </Card>
 
-        {/* Yesterday's PnL */}
-        <Card className="p-5 border-border hover:border-primary/50 transition-colors">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              {yesterdayPnL >= 0 ? (
-                <TrendingUp className="h-4 w-4 text-success" />
-              ) : (
-                <TrendingDown className="h-4 w-4 text-destructive" />
-              )}
-              <span>PNL Realizado de Ontem</span>
-            </div>
-            <div>
-              <p className={`text-2xl font-bold ${yesterdayPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
-                {yesterdayPnL >= 0 ? '+' : ''}{yesterdayPnL.toFixed(2)} USD
-              </p>
-            </div>
-          </div>
+        <Card className="p-3 border-border">
+          <p className="text-xs text-muted-foreground mb-1">Ganhos e Perdas de 30D</p>
+          <p className={`text-base font-semibold ${yesterdayPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
+            {yesterdayPnL >= 0 ? '+' : ''}{yesterdayPnL.toFixed(2)}%
+          </p>
+          <p className={`text-xs ${yesterdayPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
+            {yesterdayPnL >= 0 ? '+' : ''}{yesterdayPnL.toFixed(2)} USD
+          </p>
         </Card>
 
-        {/* Total Realized PnL */}
-        <Card className="p-5 border-border hover:border-primary/50 transition-colors">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              {totalPnL >= 0 ? (
-                <TrendingUp className="h-4 w-4 text-success" />
-              ) : (
-                <TrendingDown className="h-4 w-4 text-destructive" />
-              )}
-              <span>Ganhos/Perdas Realizados</span>
-            </div>
-            <div>
-              <p className={`text-2xl font-bold ${totalPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
-                {totalPnL >= 0 ? '+' : ''}{totalPnL.toFixed(2)} USD
-              </p>
-            </div>
-          </div>
+        <Card className="p-3 border-border">
+          <p className="text-xs text-muted-foreground mb-1">Ganhos e Perdas desde sempre</p>
+          <p className={`text-base font-semibold ${totalPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
+            {totalPnL >= 0 ? '+' : ''}{totalPnL.toFixed(2)} USD
+          </p>
         </Card>
       </div>
 
@@ -144,7 +109,7 @@ export const PnLDashboard = () => {
             variant={periodFilter === btn.value ? "default" : "outline"}
             size="sm"
             onClick={() => setPeriodFilter(btn.value)}
-            className="min-w-[90px]"
+            className="text-xs"
           >
             {btn.value === "custom" && <CalendarIcon className="mr-1 h-3 w-3" />}
             {btn.label}
@@ -152,41 +117,53 @@ export const PnLDashboard = () => {
         ))}
       </div>
 
-      {/* Total Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="p-5 border-success/20 bg-success/5">
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">Lucro Total</p>
-            <p className="text-3xl font-bold text-success">
+      {/* Lista de resumo de lucros e perdas */}
+      <Card className="p-4 border-border">
+        <div className="space-y-3 text-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Lucro Total</span>
+            <span className="font-medium text-foreground">
               {totalProfit.toFixed(2)} USD
-            </p>
+            </span>
           </div>
-        </Card>
-        
-        <Card className="p-5 border-destructive/20 bg-destructive/5">
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">Total de Perdas</p>
-            <p className="text-3xl font-bold text-destructive">
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Total de Perdas</span>
+            <span className="font-medium text-foreground">
               {totalLoss.toFixed(2)} USD
-            </p>
+            </span>
           </div>
-        </Card>
-        
-        <Card className="p-5 border-border">
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">Ganhos/Perdas Líquidos</p>
-            <p className={`text-3xl font-bold ${netPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Ganhos/Perdas Líquidos</span>
+            <span className={`font-semibold ${netPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
               {netPnL >= 0 ? '+' : ''}{netPnL.toFixed(2)} USD
-            </p>
+            </span>
           </div>
-        </Card>
+        </div>
+      </Card>
+
+      {/* Abas inferiores como na Binance */}
+      <div className="flex gap-6 border-b border-border text-sm">
+        <button className="pb-2 border-b-2 border-primary text-primary font-medium">
+          Visão Geral
+        </button>
+        <button className="pb-2 text-muted-foreground hover:text-foreground">
+          Detalhes
+        </button>
+        <button className="pb-2 text-muted-foreground hover:text-foreground">
+          Análise do Símbolo
+        </button>
+        <button className="pb-2 text-muted-foreground hover:text-foreground">
+          Finanças
+        </button>
       </div>
 
-      {/* Calendar Section */}
-      <div className="space-y-4">
+      {/* Seção de calendário de PnL diário */}
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Ganhos e Perdas Diários</h2>
-          <p className="text-sm text-muted-foreground">2025-11</p>
+          <h2 className="text-sm font-medium">Ganhos e Perdas Diários</h2>
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <span>2025-11</span>
+          </div>
         </div>
         <PnLCalendar />
       </div>
