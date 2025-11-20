@@ -121,7 +121,7 @@ const Dashboard = () => {
   // Show setup prompt if no Binance account or keys error
   if (!binanceData || hasBinanceKeysError) {
     return (
-      <SidebarProvider>
+      <SidebarProvider defaultOpen={true}>
         <div className="min-h-screen flex w-full bg-background">
           <AppSidebar isAdmin={isAdmin} />
           <div className="flex-1 flex flex-col">
@@ -167,7 +167,7 @@ const Dashboard = () => {
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar isAdmin={isAdmin} />
         <div className="flex-1 flex flex-col">
