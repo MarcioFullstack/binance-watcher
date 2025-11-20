@@ -45,6 +45,93 @@ export const useLossAlarm = (currentBalance: number, enabled: boolean = true) =>
     oscillator2.stop(startTime + duration);
   };
 
+  const playAlarm = (type: string) => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const duration = 3;
+    const startTime = audioContext.currentTime;
+    
+    if (type === "police") {
+      playPoliceSiren();
+    } else if (type === "ambulance") {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.setValueAtTime(500, startTime);
+      gainNode.gain.setValueAtTime(0.6, startTime);
+      
+      for (let i = 0; i < duration * 4; i++) {
+        const time = startTime + (i * 0.25);
+        oscillator.frequency.linearRampToValueAtTime(
+          i % 2 === 0 ? 500 : 700,
+          time
+        );
+      }
+      
+      gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
+      oscillator.start(startTime);
+      oscillator.stop(startTime + duration);
+    } else if (type === "fire") {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.type = 'sawtooth';
+      oscillator.frequency.setValueAtTime(600, startTime);
+      gainNode.gain.setValueAtTime(0.5, startTime);
+      
+      for (let i = 0; i < duration * 8; i++) {
+        const time = startTime + (i * 0.125);
+        oscillator.frequency.linearRampToValueAtTime(
+          i % 2 === 0 ? 600 : 450,
+          time
+        );
+      }
+      
+      gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
+      oscillator.start(startTime);
+      oscillator.stop(startTime + duration);
+    } else if (type === "air-raid") {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.setValueAtTime(200, startTime);
+      gainNode.gain.setValueAtTime(0.6, startTime);
+      
+      oscillator.frequency.exponentialRampToValueAtTime(800, startTime + duration / 2);
+      oscillator.frequency.exponentialRampToValueAtTime(200, startTime + duration);
+      gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
+      
+      oscillator.start(startTime);
+      oscillator.stop(startTime + duration);
+    } else if (type === "alarm-clock") {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.type = 'square';
+      oscillator.frequency.setValueAtTime(1000, startTime);
+      
+      for (let i = 0; i < duration * 4; i++) {
+        const time = startTime + (i * 0.25);
+        gainNode.gain.setValueAtTime(i % 2 === 0 ? 0.5 : 0, time);
+      }
+      
+      gainNode.gain.setValueAtTime(0, startTime + duration);
+      oscillator.start(startTime);
+      oscillator.stop(startTime + duration);
+    }
+  };
+
   const { data: settings } = useQuery({
     queryKey: ["loss-alarm-settings"],
     queryFn: async () => {
@@ -82,7 +169,8 @@ export const useLossAlarm = (currentBalance: number, enabled: boolean = true) =>
     // Verificar se atingiu o limite de perda
     if (lossPercentage >= riskPercent && !alarmTriggered) {
       // Trigger alarm
-      playPoliceSiren();
+      const sirenType = settings.siren_type || "police";
+      playAlarm(sirenType);
       
       toast.error(
         `⚠️ ALARME DE PERDA ACIONADO!\nPerda de ${lossPercentage.toFixed(2)}% (${loss.toFixed(2)} USD)`,

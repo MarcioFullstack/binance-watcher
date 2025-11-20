@@ -87,39 +87,120 @@ export const LossAlarmSettings = () => {
     const duration = 3;
     const startTime = audioContext.currentTime;
     
-    const oscillator1 = audioContext.createOscillator();
-    const oscillator2 = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator1.connect(gainNode);
-    oscillator2.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator1.frequency.setValueAtTime(800, startTime);
-    oscillator2.frequency.setValueAtTime(1200, startTime);
-    
-    gainNode.gain.setValueAtTime(0.7, startTime);
-    
-    for (let i = 0; i < duration * 2; i++) {
-      const time = startTime + (i * 0.5);
-      if (i % 2 === 0) {
-        oscillator1.frequency.linearRampToValueAtTime(800, time);
-        oscillator2.frequency.linearRampToValueAtTime(1200, time);
-      } else {
-        oscillator1.frequency.linearRampToValueAtTime(1000, time);
-        oscillator2.frequency.linearRampToValueAtTime(900, time);
+    if (sirenType === "police") {
+      // Som de sirene de polícia
+      const oscillator1 = audioContext.createOscillator();
+      const oscillator2 = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator1.connect(gainNode);
+      oscillator2.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator1.frequency.setValueAtTime(800, startTime);
+      oscillator2.frequency.setValueAtTime(1200, startTime);
+      gainNode.gain.setValueAtTime(0.7, startTime);
+      
+      for (let i = 0; i < duration * 2; i++) {
+        const time = startTime + (i * 0.5);
+        if (i % 2 === 0) {
+          oscillator1.frequency.linearRampToValueAtTime(800, time);
+          oscillator2.frequency.linearRampToValueAtTime(1200, time);
+        } else {
+          oscillator1.frequency.linearRampToValueAtTime(1000, time);
+          oscillator2.frequency.linearRampToValueAtTime(900, time);
+        }
       }
+      
+      gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
+      oscillator1.start(startTime);
+      oscillator2.start(startTime);
+      oscillator1.stop(startTime + duration);
+      oscillator2.stop(startTime + duration);
+    } else if (sirenType === "ambulance") {
+      // Som de ambulância
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.setValueAtTime(500, startTime);
+      gainNode.gain.setValueAtTime(0.6, startTime);
+      
+      for (let i = 0; i < duration * 4; i++) {
+        const time = startTime + (i * 0.25);
+        oscillator.frequency.linearRampToValueAtTime(
+          i % 2 === 0 ? 500 : 700,
+          time
+        );
+      }
+      
+      gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
+      oscillator.start(startTime);
+      oscillator.stop(startTime + duration);
+    } else if (sirenType === "fire") {
+      // Som de bombeiro (alternância rápida)
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.type = 'sawtooth';
+      oscillator.frequency.setValueAtTime(600, startTime);
+      gainNode.gain.setValueAtTime(0.5, startTime);
+      
+      for (let i = 0; i < duration * 8; i++) {
+        const time = startTime + (i * 0.125);
+        oscillator.frequency.linearRampToValueAtTime(
+          i % 2 === 0 ? 600 : 450,
+          time
+        );
+      }
+      
+      gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
+      oscillator.start(startTime);
+      oscillator.stop(startTime + duration);
+    } else if (sirenType === "air-raid") {
+      // Som de ataque aéreo
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.setValueAtTime(200, startTime);
+      gainNode.gain.setValueAtTime(0.6, startTime);
+      
+      oscillator.frequency.exponentialRampToValueAtTime(800, startTime + duration / 2);
+      oscillator.frequency.exponentialRampToValueAtTime(200, startTime + duration);
+      gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
+      
+      oscillator.start(startTime);
+      oscillator.stop(startTime + duration);
+    } else if (sirenType === "alarm-clock") {
+      // Som de despertador
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.type = 'square';
+      oscillator.frequency.setValueAtTime(1000, startTime);
+      
+      for (let i = 0; i < duration * 4; i++) {
+        const time = startTime + (i * 0.25);
+        gainNode.gain.setValueAtTime(i % 2 === 0 ? 0.5 : 0, time);
+      }
+      
+      gainNode.gain.setValueAtTime(0, startTime + duration);
+      oscillator.start(startTime);
+      oscillator.stop(startTime + duration);
     }
     
-    gainNode.gain.setValueAtTime(0.7, startTime + duration - 0.5);
-    gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
-    
-    oscillator1.start(startTime);
-    oscillator2.start(startTime);
-    oscillator1.stop(startTime + duration);
-    oscillator2.stop(startTime + duration);
-    
-    toast.info("Testando alarme sonoro");
+    toast.info(`Testando alarme: ${sirenType}`);
   };
 
   if (loading) {
@@ -214,11 +295,13 @@ export const LossAlarmSettings = () => {
         {/* Tipo de Sirene */}
         <div className="space-y-2">
           <Label>Tipo de Alarme Sonoro</Label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {[
-              { value: "police", label: "Polícia" },
-              { value: "air-raid", label: "Ataque Aéreo" },
-              { value: "alarm-clock", label: "Despertador" },
+              { value: "police", label: "🚨 Polícia" },
+              { value: "air-raid", label: "⚠️ Ataque Aéreo" },
+              { value: "alarm-clock", label: "⏰ Despertador" },
+              { value: "ambulance", label: "🚑 Ambulância" },
+              { value: "fire", label: "🔥 Bombeiro" },
             ].map((option) => (
               <button
                 key={option.value}
@@ -226,7 +309,7 @@ export const LossAlarmSettings = () => {
                 disabled={!riskActive}
                 className={`p-3 rounded-lg border-2 transition-all ${
                   sirenType === option.value
-                    ? "border-primary bg-primary/10 text-primary font-semibold"
+                    ? "border-primary bg-primary/10 text-primary font-semibold glow-primary"
                     : "border-border hover:border-primary/50"
                 } ${!riskActive ? "opacity-50 cursor-not-allowed" : ""}`}
               >
