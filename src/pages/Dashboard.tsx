@@ -10,22 +10,24 @@ import { PnLAlertsConfig } from "@/components/dashboard/PnLAlertsConfig";
 import { PnLCalendar } from "@/components/dashboard/PnLCalendar";
 import { RiskAlertsInfo } from "@/components/dashboard/RiskAlertsInfo";
 import { BinanceKeysAlert } from "@/components/dashboard/BinanceKeysAlert";
+import { BinanceSetupPrompt } from "@/components/dashboard/BinanceSetupPrompt";
 import { SubscriptionTimer } from "@/components/SubscriptionTimer";
-import { Loader2, Settings } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 import { useSubscriptionRealtime } from "@/hooks/useSubscriptionRealtime";
 import { useAlertsRealtime } from "@/hooks/useAlertsRealtime";
 import { useDailyPnLSync } from "@/hooks/useDailyPnLSync";
 import { useBinanceData } from "@/hooks/useBinanceData";
+import { useBinanceAccountStatus } from "@/hooks/useBinanceAccountStatus";
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
-  const [hasAccount, setHasAccount] = useState<boolean | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
+  // Check Binance account status
+  const { data: accountStatus, isLoading: accountLoading } = useBinanceAccountStatus(user?.id);
+  
   // Check for Binance keys validity
   const { error: binanceError } = useBinanceData();
   const hasBinanceKeysError = binanceError instanceof Error && 
@@ -37,8 +39,10 @@ const Dashboard = () => {
   // Enable realtime alerts notifications
   useAlertsRealtime(user?.id, isAdmin);
 
-  // Sync daily PnL data
-  const { isSyncing, syncProgress, manualSync } = useDailyPnLSync(user?.id);
+  // Sync daily PnL data (only if account exists and keys are valid)
+  const { isSyncing, syncProgress, manualSync } = useDailyPnLSync(
+    accountStatus?.hasAccount && !hasBinanceKeysError ? user?.id : undefined
+  );
 
   useEffect(() => {
     checkUser();
@@ -75,58 +79,48 @@ const Dashboard = () => {
 
       setIsAdmin(!!roles);
 
-      // Check subscription only on first load
-      if (loading) {
-        const { data: subscription, error: subError } = await supabase
-          .from('subscriptions')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('status', 'active')
-          .maybeSingle();
+      // Check subscription
+      const { data: subscription, error: subError } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle();
 
-        console.log("Dashboard subscription check:", { subscription, subError });
+      console.log("Dashboard subscription check:", { subscription, subError });
 
-        if (!subscription) {
-          console.log("No active subscription found");
-          toast.error("You need an active subscription to access the dashboard");
-          navigate("/payment");
-          return;
-        }
-
-        // Check if subscription is expired
-        const expiresAt = new Date(subscription.expires_at);
-        const now = new Date();
-        
-        if (expiresAt < now) {
-          console.log("Subscription expired at:", expiresAt);
-          toast.error("Your subscription has expired");
-          navigate("/payment");
-          return;
-        }
-
-        // Check if Binance account is configured
-        const { data: accounts } = await supabase
-          .from('binance_accounts')
-          .select('id, is_active')
-          .eq('user_id', user.id)
-          .eq('is_active', true);
-
-        if (!accounts || accounts.length === 0) {
-          navigate("/setup-binance");
-          return;
-        }
+      if (!subscription) {
+        console.log("No active subscription found");
+        toast.error("You need an active subscription to access the dashboard");
+        navigate("/payment");
+        return;
       }
 
-      setHasAccount(true);
+      // Check if subscription is expired
+      const expiresAt = new Date(subscription.expires_at);
+      const now = new Date();
+      
+      if (expiresAt < now) {
+        console.log("Subscription expired at:", expiresAt);
+        toast.error("Your subscription has expired");
+        navigate("/payment");
+        return;
+      }
+
+      setLoading(false);
     } catch (error) {
       console.error("Error checking user:", error);
-      if (loading) {
-        navigate("/login");
-      }
-    } finally {
-      setLoading(false);
+      navigate("/login");
     }
   };
+
+  if (loading || accountLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   const handleLogout = async () => {
     try {
@@ -137,6 +131,27 @@ const Dashboard = () => {
       toast.error("Error logging out");
     }
   };
+
+  // Show setup prompt if no Binance account is configured
+  if (!accountStatus?.hasAccount) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="p-4 md:p-6 space-y-6">
+          <DashboardHeader isAdmin={isAdmin} onLogout={handleLogout} />
+          
+          <SubscriptionTimer 
+            userId={user?.id} 
+            onExpired={() => {
+              toast.error("Sua assinatura expirou");
+              navigate("/payment");
+            }} 
+          />
+          
+          <BinanceSetupPrompt />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-6 space-y-6">
