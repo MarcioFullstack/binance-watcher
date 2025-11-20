@@ -183,6 +183,10 @@ serve(async (req) => {
       return marginRatio > 80;
     });
 
+    // PnL do dia inclui realizado + não realizado
+    const todayTotalPnL = todayPnL + unrealizedPnL;
+    const todayTotalPercent = initialBalance > 0 ? (todayTotalPnL / initialBalance) * 100 : 0;
+
     // Sistema de alertas progressivos de risco
     const checkAndSendRiskAlert = async (thresholdPercent: number, title: string, emoji: string) => {
       // Verificar se já enviou alerta deste tipo recentemente (última hora)
@@ -233,8 +237,8 @@ serve(async (req) => {
       await supabaseClient.functions.invoke('check-pnl-alerts', {
         body: {
           pnlData: {
-            today: todayPnL,
-            todayPercent: todayPnLPercent,
+            today: todayTotalPnL,
+            todayPercent: todayTotalPercent,
             unrealized: unrealizedPnL,
             totalFromInitial: totalPnLFromInitial,
             totalPercent: totalPnLPercent,
@@ -255,8 +259,9 @@ serve(async (req) => {
         initial: initialBalance.toFixed(2),
       },
       pnl: {
-        today: todayPnL.toFixed(2),
-        todayPercent: todayPnLPercent.toFixed(2),
+        today: todayTotalPnL.toFixed(2),
+        todayPercent: todayTotalPercent.toFixed(2),
+        realized: todayPnL.toFixed(2),
         unrealized: unrealizedPnL.toFixed(2),
         totalFromInitial: totalPnLFromInitial.toFixed(2),
         totalPercent: totalPnLPercent.toFixed(2),
