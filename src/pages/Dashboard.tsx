@@ -126,53 +126,6 @@ const Dashboard = () => {
     }
   };
 
-  // Show setup prompt if no Binance account or keys error
-  if (!binanceData || hasBinanceKeysError) {
-    return (
-      <SidebarProvider defaultOpen={true}>
-        <div className="min-h-screen flex w-full bg-background">
-          <AppSidebar isAdmin={isAdmin} />
-          <div className="flex-1 flex flex-col">
-            <header className="h-14 flex items-center justify-between border-b border-border px-4 bg-card">
-              <SidebarTrigger />
-              <SubscriptionTimer 
-                userId={user?.id} 
-                onExpired={() => {
-                  toast.error("Sua assinatura expirou");
-                  navigate("/payment");
-                }} 
-              />
-            </header>
-            
-            <main className="flex-1 p-6">
-              <Card className="p-8 border-border">
-                {hasBinanceKeysError && (
-                  <Alert variant="destructive" className="mb-6">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
-                      Suas chaves da API da Binance são inválidas ou expiraram. 
-                      Configure novamente para acessar o dashboard.
-                    </AlertDescription>
-                  </Alert>
-                )}
-
-                <div className="text-center space-y-4">
-                  <Settings className="h-16 w-16 mx-auto text-muted-foreground" />
-                  <h2 className="text-2xl font-bold">Configure sua Conta Binance</h2>
-                  <p className="text-muted-foreground">
-                    Conecte sua conta Binance para começar a visualizar seus dados de trading.
-                  </p>
-                  <Button onClick={() => navigate("/setup-binance")} size="lg" className="mt-4">
-                    Configurar Binance
-                  </Button>
-                </div>
-              </Card>
-            </main>
-          </div>
-        </div>
-      </SidebarProvider>
-    );
-  }
 
   return (
     <SidebarProvider defaultOpen={true}>
@@ -191,7 +144,29 @@ const Dashboard = () => {
           </header>
           
           <main className="flex-1 p-4 md:p-6 space-y-4 overflow-auto relative">
-            {lossStatus.isInLoss && (
+            {/* Binance Setup Alert */}
+            {(!binanceData || hasBinanceKeysError) && (
+              <Alert variant={hasBinanceKeysError ? "destructive" : "default"} className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="flex items-center justify-between">
+                  <span>
+                    {hasBinanceKeysError 
+                      ? "Suas chaves da API da Binance são inválidas ou expiraram."
+                      : "Conecte sua conta Binance para visualizar seus dados de trading."}
+                  </span>
+                  <Button 
+                    size="sm" 
+                    variant={hasBinanceKeysError ? "destructive" : "default"}
+                    onClick={() => navigate("/setup-binance")}
+                  >
+                    {hasBinanceKeysError ? "Reconfigurar" : "Configurar Agora"}
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Loss Risk Indicator */}
+            {binanceData && lossStatus.isInLoss && (
               <div className="space-y-3">
                 <LossRiskIndicator
                   currentLossPercent={lossStatus.currentLossPercent}
@@ -214,8 +189,39 @@ const Dashboard = () => {
                 </div>
               </div>
             )}
-            <BalanceCards />
-            <PnLDashboard />
+
+            {/* Balance Cards */}
+            {binanceData ? (
+              <BalanceCards />
+            ) : (
+              <Card className="p-8 border-dashed">
+                <div className="text-center space-y-4">
+                  <Settings className="h-12 w-12 mx-auto text-muted-foreground" />
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Aguardando Configuração</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Configure sua conta Binance para visualizar seu saldo e dados de trading em tempo real.
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            )}
+
+            {/* PnL Dashboard */}
+            {binanceData ? (
+              <PnLDashboard />
+            ) : (
+              <Card className="p-8 border-dashed">
+                <div className="text-center space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Dashboard P&L</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Seus gráficos de lucro e perda aparecerão aqui após conectar sua conta.
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            )}
             
             {/* Floating Action Button */}
             <Link to="/settings">
