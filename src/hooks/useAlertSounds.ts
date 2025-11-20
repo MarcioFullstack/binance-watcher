@@ -10,6 +10,7 @@ export const useAlertSounds = (userId: string | undefined) => {
     type: 'loss' | 'gain';
     intervalId: number | null;
   } | null>(null);
+  const [userSirenType, setUserSirenType] = useState<SirenType>('police');
 
   const playCoinsSound = () => {
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -318,6 +319,25 @@ export const useAlertSounds = (userId: string | undefined) => {
     requestNotificationPermission();
   }, []);
 
+  // Buscar o tipo de sirene do usuário
+  useEffect(() => {
+    if (!userId) return;
+
+    const fetchSirenType = async () => {
+      const { data } = await supabase
+        .from('risk_settings')
+        .select('siren_type')
+        .eq('user_id', userId)
+        .single();
+      
+      if (data?.siren_type) {
+        setUserSirenType(data.siren_type as SirenType);
+      }
+    };
+
+    fetchSirenType();
+  }, [userId]);
+
   useEffect(() => {
     if (!userId) return;
 
@@ -362,7 +382,7 @@ export const useAlertSounds = (userId: string | undefined) => {
               },
             });
           } else if (notification.type === 'critical_loss') {
-            startContinuousAlarm('loss', 'police');
+            startContinuousAlarm('loss', userSirenType);
             showPushNotification(
               notification.title, 
               notification.description, 
