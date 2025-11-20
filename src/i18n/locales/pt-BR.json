@@ -82,6 +82,11 @@
       "CODE_REQUIRED": "Código do voucher é obrigatório",
       "VOUCHER_NOT_FOUND": "Voucher não encontrado ou inválido",
       "VOUCHER_ALREADY_USED": "Este voucher já foi utilizado",
+      "VOUCHER_MAX_USES_REACHED": "Este voucher atingiu o número máximo de usos",
+      "VOUCHER_ALREADY_ACTIVATED_BY_USER": "Você já ativou este voucher",
+      "ACTIVATION_RECORD_ERROR": "Erro ao registrar ativação do voucher. Tente novamente.",
+      "INVALID_CODE_LENGTH": "Código do voucher deve ter entre 10-30 caracteres",
+      "INVALID_CHARACTERS": "Código do voucher contém caracteres inválidos",
       "UPDATE_VOUCHER_ERROR": "Erro ao processar voucher. Tente novamente.",
       "SUBSCRIPTION_ERROR": "Erro ao ativar assinatura. Contate o suporte.",
       "UNEXPECTED_ERROR": "Erro inesperado. Tente novamente mais tarde."

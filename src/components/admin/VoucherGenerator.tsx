@@ -14,6 +14,7 @@ const voucherSchema = z.object({
   prefix: z.string().min(2).max(10).regex(/^[A-Z0-9-]+$/, "Only uppercase letters, numbers and hyphens"),
   days: z.number().min(1).max(365),
   quantity: z.number().min(1).max(100),
+  maxUses: z.number().min(0).max(10000).optional(),
 });
 
 interface GeneratedVoucher {
@@ -28,9 +29,11 @@ export const VoucherGenerator = () => {
     prefix: "PROMO",
     days: 30,
     quantity: 1,
+    maxUses: 0,
   });
   const [customCode, setCustomCode] = useState("");
   const [customDays, setCustomDays] = useState(30);
+  const [customMaxUses, setCustomMaxUses] = useState(0);
   const [generatedVouchers, setGeneratedVouchers] = useState<GeneratedVoucher[]>([]);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
@@ -57,8 +60,13 @@ export const VoucherGenerator = () => {
       for (let i = 0; i < formData.quantity; i++) {
         const code = generateRandomCode(formData.prefix);
         
+        const body: any = { code, days: formData.days };
+        if (formData.maxUses && formData.maxUses > 0) {
+          body.maxUses = formData.maxUses;
+        }
+        
         const { data, error } = await supabase.functions.invoke('create-voucher', {
-          body: { code, days: formData.days }
+          body
         });
 
         if (error) {
@@ -102,8 +110,13 @@ export const VoucherGenerator = () => {
 
     setLoading(true);
     try {
+      const body: any = { code: customCode, days: customDays };
+      if (customMaxUses && customMaxUses > 0) {
+        body.maxUses = customMaxUses;
+      }
+      
       const { data, error } = await supabase.functions.invoke('create-voucher', {
-        body: { code: customCode, days: customDays }
+        body
       });
 
       if (error) throw error;
@@ -195,6 +208,21 @@ export const VoucherGenerator = () => {
                   onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="maxUses">Max Uses (0 = single use)</Label>
+                <Input
+                  id="maxUses"
+                  type="number"
+                  min="0"
+                  max="10000"
+                  value={formData.maxUses}
+                  onChange={(e) => setFormData({ ...formData, maxUses: parseInt(e.target.value) })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {formData.maxUses === 0 ? 'Single-use voucher' : `Can be used ${formData.maxUses} times`}
+                </p>
+              </div>
             </div>
 
             <Button
@@ -234,6 +262,21 @@ export const VoucherGenerator = () => {
                   value={customDays}
                   onChange={(e) => setCustomDays(parseInt(e.target.value))}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="customMaxUses">Max Uses (0 = single use)</Label>
+                <Input
+                  id="customMaxUses"
+                  type="number"
+                  min="0"
+                  max="10000"
+                  value={customMaxUses}
+                  onChange={(e) => setCustomMaxUses(parseInt(e.target.value))}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {customMaxUses === 0 ? 'Single-use voucher' : `Can be used ${customMaxUses} times by different users`}
+                </p>
               </div>
             </div>
 

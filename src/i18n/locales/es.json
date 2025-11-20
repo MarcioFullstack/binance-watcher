@@ -82,6 +82,11 @@
       "CODE_REQUIRED": "El código del cupón es obligatorio",
       "VOUCHER_NOT_FOUND": "Cupón no encontrado o inválido",
       "VOUCHER_ALREADY_USED": "Este cupón ya ha sido utilizado",
+      "VOUCHER_MAX_USES_REACHED": "Este cupón ha alcanzado su número máximo de usos",
+      "VOUCHER_ALREADY_ACTIVATED_BY_USER": "Ya has activado este cupón",
+      "ACTIVATION_RECORD_ERROR": "Error al registrar la activación del cupón. Inténtalo de nuevo.",
+      "INVALID_CODE_LENGTH": "El código del cupón debe tener entre 10-30 caracteres",
+      "INVALID_CHARACTERS": "El código del cupón contiene caracteres inválidos",
       "UPDATE_VOUCHER_ERROR": "Error al procesar cupón. Inténtelo de nuevo.",
       "SUBSCRIPTION_ERROR": "Error al activar suscripción. Contacte soporte.",
       "UNEXPECTED_ERROR": "Error inesperado. Inténtelo de nuevo más tarde."
