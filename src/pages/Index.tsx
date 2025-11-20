@@ -803,7 +803,7 @@ const Index = () => {
                     Qual é a política de cancelamento?
                   </AccordionTrigger>
                   <AccordionContent className="text-muted-foreground">
-                    A assinatura mensal de $15 dá acesso completo por 30 dias. Você pode cancelar a qualquer momento 
+                    A assinatura mensal de $10 dá acesso completo por 30 dias. Você pode cancelar a qualquer momento
                     através das configurações da sua conta. Não há período de fidelidade ou taxas de cancelamento. 
                     Seu acesso permanece ativo até o fim do período pago. Também oferecemos vouchers para períodos 
                     específicos de acesso.
@@ -822,7 +822,7 @@ const Index = () => {
                     Quais métodos de pagamento são aceitos?
                   </AccordionTrigger>
                   <AccordionContent className="text-muted-foreground">
-                    Aceitamos pagamentos em criptomoedas (valor equivalente a $15 USD) através de várias redes blockchain. 
+                    Aceitamos pagamentos em criptomoedas (valor equivalente a $10 USD) através de várias redes blockchain.
                     O pagamento é confirmado automaticamente após 3 confirmações na rede. Também oferecemos vouchers 
                     que podem ser ativados instantaneamente para acesso imediato. O processo é rápido, seguro e totalmente automatizado.
                   </AccordionContent>
@@ -861,7 +861,7 @@ const Index = () => {
             <Card className="max-w-md mx-auto border-2 border-primary">
               <CardContent className="p-8 text-center space-y-6">
                 <div>
-                  <div className="text-5xl font-bold text-primary mb-2">$15</div>
+                  <div className="text-5xl font-bold text-primary mb-2">$10</div>
                   <div className="text-muted-foreground">por mês</div>
                 </div>
 
