@@ -13,6 +13,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { PnLDashboard } from "@/components/dashboard/PnLDashboard";
 import { BalanceCards } from "@/components/dashboard/BalanceCards";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -119,59 +121,74 @@ const Dashboard = () => {
   // Show setup prompt if no Binance account or keys error
   if (!binanceData || hasBinanceKeysError) {
     return (
-      <div className="min-h-screen bg-background p-4 md:p-6 space-y-6">
-        <DashboardHeader isAdmin={isAdmin} onLogout={handleLogout} />
-        
-        <SubscriptionTimer 
-          userId={user?.id} 
-          onExpired={() => {
-            toast.error("Sua assinatura expirou");
-            navigate("/payment");
-          }} 
-        />
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-background">
+          <AppSidebar isAdmin={isAdmin} />
+          <div className="flex-1 flex flex-col">
+            <header className="h-14 flex items-center justify-between border-b border-border px-4 bg-card">
+              <SidebarTrigger />
+              <SubscriptionTimer 
+                userId={user?.id} 
+                onExpired={() => {
+                  toast.error("Sua assinatura expirou");
+                  navigate("/payment");
+                }} 
+              />
+            </header>
+            
+            <main className="flex-1 p-6">
+              <Card className="p-8 border-border">
+                {hasBinanceKeysError && (
+                  <Alert variant="destructive" className="mb-6">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Suas chaves da API da Binance são inválidas ou expiraram. 
+                      Configure novamente para acessar o dashboard.
+                    </AlertDescription>
+                  </Alert>
+                )}
 
-        {hasBinanceKeysError && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Suas chaves da API da Binance são inválidas ou expiraram. 
-              Configure novamente para acessar o dashboard.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <Card className="p-8 text-center space-y-4">
-          <SettingsIcon className="h-16 w-16 mx-auto text-muted-foreground" />
-          <div>
-            <h2 className="text-2xl font-bold mb-2">Configure sua Conta Binance</h2>
-            <p className="text-muted-foreground mb-6">
-              Conecte sua conta Binance para começar a visualizar seus dados de trading.
-            </p>
+                <div className="text-center space-y-4">
+                  <SettingsIcon className="h-16 w-16 mx-auto text-muted-foreground" />
+                  <h2 className="text-2xl font-bold">Configure sua Conta Binance</h2>
+                  <p className="text-muted-foreground">
+                    Conecte sua conta Binance para começar a visualizar seus dados de trading.
+                  </p>
+                  <Button onClick={() => navigate("/setup-binance")} size="lg" className="mt-4">
+                    Configurar Binance
+                  </Button>
+                </div>
+              </Card>
+            </main>
           </div>
-          <Button onClick={() => navigate("/setup-binance")} size="lg">
-            Configurar Binance
-          </Button>
-        </Card>
-      </div>
+        </div>
+      </SidebarProvider>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6 space-y-6">
-      <DashboardHeader isAdmin={isAdmin} onLogout={handleLogout} />
-      
-      <SubscriptionTimer 
-        userId={user?.id} 
-        onExpired={() => {
-          toast.error("Sua assinatura expirou");
-          navigate("/payment");
-        }} 
-      />
-
-      <BalanceCards />
-
-      <PnLDashboard />
-    </div>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <AppSidebar isAdmin={isAdmin} />
+        <div className="flex-1 flex flex-col">
+          <header className="h-14 flex items-center justify-between border-b border-border px-4 bg-card">
+            <SidebarTrigger />
+            <SubscriptionTimer 
+              userId={user?.id} 
+              onExpired={() => {
+                toast.error("Sua assinatura expirou");
+                navigate("/payment");
+              }} 
+            />
+          </header>
+          
+          <main className="flex-1 p-4 md:p-6 space-y-4 overflow-auto">
+            <BalanceCards />
+            <PnLDashboard />
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 };
 
