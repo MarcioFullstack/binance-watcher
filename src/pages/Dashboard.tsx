@@ -3,57 +3,32 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { BalanceCards } from "@/components/dashboard/BalanceCards";
-import { PnLDashboard } from "@/components/dashboard/PnLDashboard";
-import { AlertsConfig } from "@/components/dashboard/AlertsConfig";
-import { PnLAlertsConfig } from "@/components/dashboard/PnLAlertsConfig";
-import { RiskAlertsInfo } from "@/components/dashboard/RiskAlertsInfo";
-import { BinanceKeysAlert } from "@/components/dashboard/BinanceKeysAlert";
-import { BinanceSetupPrompt } from "@/components/dashboard/BinanceSetupPrompt";
 import { SubscriptionTimer } from "@/components/SubscriptionTimer";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { useSubscriptionRealtime } from "@/hooks/useSubscriptionRealtime";
-import { useAlertsRealtime } from "@/hooks/useAlertsRealtime";
-import { useDailyPnLSync } from "@/hooks/useDailyPnLSync";
-import { useBinanceData } from "@/hooks/useBinanceData";
-import { useBinanceAccountStatus } from "@/hooks/useBinanceAccountStatus";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
-
-  // Check Binance account status
-  const { data: accountStatus, isLoading: accountLoading } = useBinanceAccountStatus(user?.id);
-  
-  console.log('Dashboard accountStatus:', accountStatus);
-  
-  // Only try to fetch Binance data if we have a user and account
-  const shouldFetchBinanceData = !!user?.id && accountStatus?.hasAccount;
-  
-  // Check for Binance keys validity (only when we should fetch data)
-  const { error: binanceError, data: binanceData } = useBinanceData();
-  const hasBinanceKeysError = binanceError instanceof Error && 
-    binanceError.message === 'BINANCE_KEYS_INVALID';
-  
-  console.log('Dashboard Binance check:', { 
-    shouldFetch: shouldFetchBinanceData, 
-    hasData: !!binanceData, 
-    hasError: !!binanceError,
-    errorMessage: binanceError?.message 
-  });
 
   // Enable realtime subscription notifications
   useSubscriptionRealtime(user?.id);
-  
-  // Enable realtime alerts notifications
-  useAlertsRealtime(user?.id, isAdmin);
-
-  // Sync daily PnL data (only if account exists and keys are valid)
-  const { isSyncing, syncProgress, manualSync } = useDailyPnLSync(
-    accountStatus?.hasAccount && !hasBinanceKeysError ? user?.id : undefined
-  );
 
   useEffect(() => {
     checkUser();
@@ -125,7 +100,7 @@ const Dashboard = () => {
     }
   };
 
-  if (loading || accountLoading) {
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -136,33 +111,32 @@ const Dashboard = () => {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      toast.success("Logout successful");
+      toast.success("Logout realizado com sucesso");
       navigate("/login");
     } catch (error: any) {
-      toast.error("Error logging out");
+      toast.error("Erro ao fazer logout");
     }
   };
 
-  // Show setup prompt if no Binance account is configured
-  if (!accountStatus?.hasAccount) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="p-4 md:p-6 space-y-6">
-          <DashboardHeader isAdmin={isAdmin} onLogout={handleLogout} />
-          
-          <SubscriptionTimer 
-            userId={user?.id} 
-            onExpired={() => {
-              toast.error("Sua assinatura expirou");
-              navigate("/payment");
-            }} 
-          />
-          
-          <BinanceSetupPrompt />
-        </div>
-      </div>
-    );
-  }
+  const handleDeleteAllData = async () => {
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase.functions.invoke('delete-binance-accounts');
+      
+      if (error) {
+        console.error('Error deleting Binance data:', error);
+        toast.error("Erro ao excluir dados da Binance");
+        return;
+      }
+
+      toast.success("Todos os dados da Binance foram excluídos com sucesso");
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error("Erro ao excluir dados");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-6 space-y-6">
@@ -175,14 +149,70 @@ const Dashboard = () => {
           navigate("/payment");
         }} 
       />
-      
-      {hasBinanceKeysError && <BinanceKeysAlert />}
-      
-      <BalanceCards />
-      <PnLDashboard />
-      <RiskAlertsInfo />
-      <AlertsConfig />
-      <PnLAlertsConfig />
+
+      <Card className="p-8">
+        <div className="text-center space-y-6">
+          <div>
+            <h2 className="text-2xl font-bold mb-2">Dashboard</h2>
+            <p className="text-muted-foreground">
+              Dashboard limpo e pronto para nova configuração.
+            </p>
+          </div>
+          
+          <div className="flex flex-col items-center gap-4 pt-4">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  variant="destructive" 
+                  size="lg"
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Excluindo...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Excluir Todas as Chaves de API
+                    </>
+                  )}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta ação irá excluir permanentemente:
+                    <ul className="list-disc list-inside mt-2 space-y-1">
+                      <li>Todas as contas Binance configuradas</li>
+                      <li>Histórico de P&L diário</li>
+                      <li>Configurações de alertas de P&L</li>
+                      <li>Configurações de gestão de risco</li>
+                    </ul>
+                    <p className="mt-3 font-semibold">Esta ação não pode ser desfeita.</p>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeleteAllData}
+                    className="bg-destructive hover:bg-destructive/90"
+                  >
+                    Sim, excluir tudo
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <p className="text-xs text-muted-foreground max-w-md">
+              Exclua todas as chaves de API e dados relacionados à Binance. 
+              Você pode configurar uma nova conta a qualquer momento.
+            </p>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 };

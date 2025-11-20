@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2, Copy, Check } from "lucide-react";
-import { activateVoucher } from "@/hooks/useBinanceData";
+import { activateVoucher } from "@/utils/voucher";
 import nottifyLogo from "@/assets/nottify-logo.png";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
