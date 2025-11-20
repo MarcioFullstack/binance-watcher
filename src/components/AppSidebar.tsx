@@ -95,8 +95,10 @@ export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
                     className="hover:bg-muted/50 transition-all hover:glow-primary-hover"
                     activeClassName="bg-muted text-primary font-medium border-glow"
                   >
-                      <User className="h-5 w-5" />
-                      {!isCollapsed && <span className="ml-3">Admin</span>}
+                      <div className="flex items-center gap-3 flex-1">
+                        <Shield className="h-5 w-5" />
+                        {!isCollapsed && <span>Administração</span>}
+                      </div>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
