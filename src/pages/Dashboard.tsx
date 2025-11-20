@@ -190,8 +190,8 @@ const Dashboard = () => {
                   currentLossAmount={lossStatus.currentLossAmount}
                   triggeredLevel={lossStatus.triggeredLevel}
                   isInLoss={lossStatus.isInLoss}
-                  alarmActive={lossStatus.alarmActive}
-                  onStopAlarm={stopAlarm}
+                  alarmActive={!!activeAlarm && activeAlarm.type === 'loss'}
+                  onStopAlarm={stopAlarmSound}
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <Link to="/alert-history">
