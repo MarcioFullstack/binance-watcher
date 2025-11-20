@@ -130,19 +130,29 @@ const Login = () => {
         return;
       }
 
+      console.log('Verifying 2FA with challenge token:', challengeToken);
+
       // Phase 2: Verify 2FA code using secure-2fa-login
       const { data, error } = await supabase.functions.invoke('secure-2fa-login', {
         body: { 
           challengeToken,
-          totpCode: codeToVerify
+          totpCode: codeToVerify,
+          password // Need to pass password to create session
         }
       });
 
+      console.log('2FA verification response:', { data, error });
+
       if (error) throw error;
 
-      if (!data.success || !data.magicLink) {
-        throw new Error("Invalid code. Try again.");
+      if (!data.session) {
+        throw new Error(data.error || "Invalid code. Try again.");
       }
+
+      // Set the session in Supabase client
+      await supabase.auth.setSession(data.session);
+
+      toast.success("Login successful!");
 
       // Check subscription and Binance configuration before redirecting
       const { data: { user } } = await supabase.auth.getUser();
@@ -176,15 +186,10 @@ const Login = () => {
           }
         }
 
-        // Add redirect parameter to magic link
-        const urlWithRedirect = `${data.magicLink}&redirect_to=${encodeURIComponent(redirectUrl)}`;
-        window.location.href = urlWithRedirect;
-      } else {
-        window.location.href = data.magicLink;
+        navigate(redirectUrl);
       }
-      
-      toast.success("Login successful!");
     } catch (error: any) {
+      console.error('2FA verification error:', error);
       toast.error(error.message || "Invalid code. Try again.");
     } finally {
       setLoading(false);
