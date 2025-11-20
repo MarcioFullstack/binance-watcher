@@ -43,6 +43,26 @@ export const VoucherGenerator = () => {
     return `${prefix}-${randomPart}`;
   };
 
+  const checkVoucherExists = async (code: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("vouchers")
+        .select("id")
+        .eq("code", code.toUpperCase())
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error checking voucher duplicate:", error);
+        return false;
+      }
+
+      return !!data;
+    } catch (error) {
+      console.error("Unexpected error checking voucher duplicate:", error);
+      return false;
+    }
+  };
+
   const handleBatchGenerate = async () => {
     try {
       voucherSchema.parse(formData);
@@ -55,10 +75,24 @@ export const VoucherGenerator = () => {
 
     setLoading(true);
     const newVouchers: GeneratedVoucher[] = [];
+    const generatedCodes = new Set<string>();
 
     try {
       for (let i = 0; i < formData.quantity; i++) {
-        const code = generateRandomCode(formData.prefix);
+        // Garante códigos únicos dentro do lote
+        let code = generateRandomCode(formData.prefix);
+        while (generatedCodes.has(code)) {
+          code = generateRandomCode(formData.prefix);
+        }
+        generatedCodes.add(code);
+
+        // Verifica duplicidade no banco antes de tentar criar
+        const exists = await checkVoucherExists(code);
+        if (exists) {
+          console.warn(`Skipping duplicate voucher code ${code}`);
+          newVouchers.push({ code, days: formData.days, created: false });
+          continue;
+        }
         
         const body: any = { code, days: formData.days };
         if (formData.maxUses && formData.maxUses > 0) {
@@ -110,6 +144,12 @@ export const VoucherGenerator = () => {
 
     setLoading(true);
     try {
+      const exists = await checkVoucherExists(customCode);
+      if (exists) {
+        toast.error("Este código de voucher já existe. Escolha outro.");
+        return;
+      }
+
       const body: any = { code: customCode, days: customDays };
       if (customMaxUses && customMaxUses > 0) {
         body.maxUses = customMaxUses;

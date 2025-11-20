@@ -292,8 +292,13 @@ const Settings = () => {
         return;
       }
 
-      toast.success(`✅ Voucher ativado! ${result.days_granted} dias adicionados à sua assinatura.`, {
-        description: `Nova data de expiração: ${new Date(result.expires_at).toLocaleDateString('pt-BR')}`,
+      const daysGranted = result.days_granted ?? result.days;
+      const expiresAt = result.expires_at ?? result.expiresAt;
+
+      toast.success(`✅ Voucher ativado! ${daysGranted} dias adicionados à sua assinatura.`, {
+        description: expiresAt
+          ? `Nova data de expiração: ${new Date(expiresAt).toLocaleDateString('pt-BR')}`
+          : undefined,
         duration: 5000,
       });
       
