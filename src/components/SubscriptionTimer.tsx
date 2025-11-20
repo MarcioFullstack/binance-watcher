@@ -3,6 +3,9 @@ import { Clock, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { toast } from "sonner";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface SubscriptionTimerProps {
   userId: string | undefined;
@@ -43,32 +46,46 @@ export const SubscriptionTimer = ({ userId, onExpired }: SubscriptionTimerProps)
   if (!showWarning) return null;
 
   return (
-    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md border ${showWarning ? 'border-amber-500 bg-amber-500/10' : ''} ${isUrgent ? 'border-destructive bg-destructive/10' : ''}`}>
-      {isUrgent ? (
-        <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />
-      ) : (
-        <Clock className={`h-4 w-4 ${showWarning ? 'text-amber-600' : 'text-primary'} flex-shrink-0`} />
-      )}
-      <div className="flex items-center gap-1.5">
-        {timeRemaining.days > 0 && (
-          <>
-            <span className={`text-lg font-bold ${isUrgent ? 'text-destructive' : showWarning ? 'text-amber-600 dark:text-amber-500' : 'text-foreground'}`}>
-              {timeRemaining.days}
-            </span>
-            <span className="text-xs text-muted-foreground">d</span>
-            <span className="text-muted-foreground">:</span>
-          </>
-        )}
-        <span className={`text-lg font-bold ${isUrgent ? 'text-destructive' : showWarning ? 'text-amber-600 dark:text-amber-500' : 'text-foreground'}`}>
-          {String(timeRemaining.hours).padStart(2, '0')}
-        </span>
-        <span className="text-xs text-muted-foreground">h</span>
-        <span className="text-muted-foreground">:</span>
-        <span className={`text-lg font-bold ${isUrgent ? 'text-destructive' : showWarning ? 'text-amber-600 dark:text-amber-500' : 'text-foreground'}`}>
-          {String(timeRemaining.minutes).padStart(2, '0')}
-        </span>
-        <span className="text-xs text-muted-foreground">m</span>
-      </div>
-    </div>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md border cursor-pointer transition-colors hover:bg-accent/50 ${showWarning ? 'border-amber-500 bg-amber-500/10' : ''} ${isUrgent ? 'border-destructive bg-destructive/10' : ''}`}>
+            {isUrgent ? (
+              <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />
+            ) : (
+              <Clock className={`h-4 w-4 ${showWarning ? 'text-amber-600' : 'text-primary'} flex-shrink-0`} />
+            )}
+            <div className="flex items-center gap-1.5">
+              {timeRemaining.days > 0 && (
+                <>
+                  <span className={`text-lg font-bold ${isUrgent ? 'text-destructive' : showWarning ? 'text-amber-600 dark:text-amber-500' : 'text-foreground'}`}>
+                    {timeRemaining.days}
+                  </span>
+                  <span className="text-xs text-muted-foreground">d</span>
+                  <span className="text-muted-foreground">:</span>
+                </>
+              )}
+              <span className={`text-lg font-bold ${isUrgent ? 'text-destructive' : showWarning ? 'text-amber-600 dark:text-amber-500' : 'text-foreground'}`}>
+                {String(timeRemaining.hours).padStart(2, '0')}
+              </span>
+              <span className="text-xs text-muted-foreground">h</span>
+              <span className="text-muted-foreground">:</span>
+              <span className={`text-lg font-bold ${isUrgent ? 'text-destructive' : showWarning ? 'text-amber-600 dark:text-amber-500' : 'text-foreground'}`}>
+                {String(timeRemaining.minutes).padStart(2, '0')}
+              </span>
+              <span className="text-xs text-muted-foreground">m</span>
+            </div>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" className="max-w-xs">
+          <div className="text-center">
+            <p className="font-semibold">Assinatura expira em:</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {timeRemaining.expiresAt && format(timeRemaining.expiresAt, "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+            </p>
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };
