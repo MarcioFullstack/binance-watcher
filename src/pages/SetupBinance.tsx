@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { OnboardingProgress } from "@/components/OnboardingProgress";
 import { SubscriptionTimer } from "@/components/SubscriptionTimer";
 import nottifyLogo from "@/assets/nottify-logo.png";
@@ -14,6 +14,8 @@ import nottifyLogo from "@/assets/nottify-logo.png";
 
 const SetupBinance = () => {
   const [loading, setLoading] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [checking, setChecking] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [accountData, setAccountData] = useState({
@@ -73,11 +75,50 @@ const SetupBinance = () => {
     }
   };
 
+  const handleTestConnection = async () => {
+    if (!accountData.apiKey || !accountData.apiSecret) {
+      toast.error("Fill in API Key and API Secret to test");
+      return;
+    }
+
+    setTesting(true);
+    setTestResult(null);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke("test-binance-connection", {
+        body: {
+          api_key: accountData.apiKey,
+          api_secret: accountData.apiSecret,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        setTestResult({ success: true, message: data.message });
+        toast.success("Connection successful! ✓");
+      } else {
+        setTestResult({ success: false, message: data.error });
+        toast.error(data.error || "Connection failed");
+      }
+    } catch (error: any) {
+      setTestResult({ success: false, message: "Failed to test connection" });
+      toast.error("Failed to test connection");
+    } finally {
+      setTesting(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!accountData.name || !accountData.apiKey || !accountData.apiSecret) {
       toast.error("Fill in all fields");
+      return;
+    }
+
+    if (testResult && !testResult.success) {
+      toast.error("Please test and fix your connection first");
       return;
     }
 
@@ -179,7 +220,31 @@ const SetupBinance = () => {
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
+              {testResult && (
+                <div className={`flex items-center gap-2 p-3 rounded-md ${
+                  testResult.success ? 'bg-green-500/10 text-green-500' : 'bg-destructive/10 text-destructive'
+                }`}>
+                  {testResult.success ? (
+                    <CheckCircle2 className="h-4 w-4" />
+                  ) : (
+                    <XCircle className="h-4 w-4" />
+                  )}
+                  <span className="text-sm">{testResult.message}</span>
+                </div>
+              )}
+
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full" 
+                onClick={handleTestConnection}
+                disabled={testing || loading}
+              >
+                {testing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Test Connection
+              </Button>
+
+              <Button type="submit" className="w-full" disabled={loading || testing}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Conectar Binance
               </Button>
