@@ -199,11 +199,19 @@ const Dashboard = () => {
                   triggeredLevel={lossStatus.triggeredLevel}
                   isInLoss={lossStatus.isInLoss}
                 />
-                <Link to="/alert-history">
-                  <Button variant="outline" className="w-full">
-                    Ver Histórico de Alertas
-                  </Button>
-                </Link>
+                <div className="grid grid-cols-2 gap-2">
+                  <Link to="/alert-history">
+                    <Button variant="outline" className="w-full">
+                      Ver Histórico
+                    </Button>
+                  </Link>
+                  <Link to="/settings">
+                    <Button variant="secondary" className="w-full">
+                      <Settings className="mr-2 h-4 w-4" />
+                      Configurar Alertas
+                    </Button>
+                  </Link>
+                </div>
               </div>
             )}
             <BalanceCards />
