@@ -18,7 +18,13 @@ serve(async (req) => {
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
     );
 
     // PHASE 1: Email/Password verification (no challengeToken yet)
@@ -116,14 +122,38 @@ serve(async (req) => {
       const challenge = crypto.randomUUID();
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-      await supabaseClient.from('pending_2fa_verifications').insert({
-        user_id: authData.user.id,
-        email: authData.user.email!,
-        challenge_token: challenge,
-        expires_at: expiresAt.toISOString()
-      });
+      // Delete any old pending verifications for this user
+      await supabaseClient
+        .from('pending_2fa_verifications')
+        .delete()
+        .eq('user_id', authData.user.id);
 
-      // Immediately sign out the user - they don't get a session until 2FA passes
+      console.log('[2FA Phase 1] Creating verification for user:', authData.user.id, 'challenge:', challenge);
+
+      // Insert new pending verification
+      const { error: insertError } = await supabaseClient
+        .from('pending_2fa_verifications')
+        .insert({
+          user_id: authData.user.id,
+          email: authData.user.email!,
+          challenge_token: challenge,
+          expires_at: expiresAt.toISOString()
+        });
+
+      if (insertError) {
+        console.error('[2FA Phase 1] Error creating pending verification:', insertError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to create verification challenge', details: insertError.message }),
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 500 
+          }
+        );
+      }
+
+      console.log('[2FA Phase 1] Successfully created pending verification');
+
+      // Sign out the user session
       await supabaseClient.auth.admin.signOut(authData.session.access_token);
 
       return new Response(
@@ -150,6 +180,8 @@ serve(async (req) => {
       );
     }
 
+    console.log('[2FA Phase 2] Looking for challenge token:', challengeToken);
+
     // Retrieve pending verification
     const { data: pending, error: pendingError } = await supabaseClient
       .from('pending_2fa_verifications')
@@ -158,7 +190,20 @@ serve(async (req) => {
       .eq('verified', false)
       .maybeSingle();
 
-    if (pendingError || !pending) {
+    console.log('[2FA Phase 2] Pending verification:', pending ? 'FOUND' : 'NOT FOUND', 'Error:', pendingError);
+
+    if (pendingError) {
+      console.error('[2FA Phase 2] Database error:', pendingError);
+      return new Response(
+        JSON.stringify({ error: 'Database error', details: pendingError.message }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500 
+        }
+      );
+    }
+
+    if (!pending) {
       return new Response(
         JSON.stringify({ error: 'Invalid or expired challenge token' }),
         { 
@@ -170,6 +215,7 @@ serve(async (req) => {
 
     // Check if token expired
     if (new Date(pending.expires_at) < new Date()) {
+      console.log('[2FA Phase 2] Token expired');
       await supabaseClient
         .from('pending_2fa_verifications')
         .delete()
@@ -248,52 +294,29 @@ serve(async (req) => {
         .eq('is_used', false)
         .maybeSingle();
 
-      if (backupData) {
+      if (!backupError && backupData) {
         isValid = true;
-        
         // Mark backup code as used
         await supabaseClient
           .from('backup_codes')
-          .update({ 
-            is_used: true,
-            used_at: new Date().toISOString()
-          })
+          .update({ is_used: true, used_at: new Date().toISOString() })
           .eq('id', backupData.id);
       }
     }
 
-    // Increment attempts
-    await supabaseClient
-      .from('pending_2fa_verifications')
-      .update({ attempts: pending.attempts + 1 })
-      .eq('id', pending.id);
-
-    // Log attempt
-    await supabaseClient.from('auth_attempts').insert({
-      identifier: pending.email,
-      attempt_type: '2fa',
-      success: isValid
-    });
-
     if (!isValid) {
-      // Delete challenge after 3 failed attempts
-      if (pending.attempts >= 2) {
-        await supabaseClient
-          .from('pending_2fa_verifications')
-          .delete()
-          .eq('id', pending.id);
+      console.log('[2FA Phase 2] Invalid code provided');
+      await supabaseClient.from('auth_attempts').insert({
+        identifier: pending.email,
+        attempt_type: '2fa',
+        success: false
+      });
 
-        return new Response(
-          JSON.stringify({ 
-            error: 'Too many failed attempts',
-            message: 'Please login again'
-          }),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 401 
-          }
-        );
-      }
+      // Increment attempts counter
+      await supabaseClient
+        .from('pending_2fa_verifications')
+        .update({ attempts: pending.attempts + 1 })
+        .eq('id', pending.id);
 
       return new Response(
         JSON.stringify({ error: 'Invalid 2FA code' }),
@@ -304,20 +327,28 @@ serve(async (req) => {
       );
     }
 
-    // 2FA passed! Mark as verified and create session
+    console.log('[2FA Phase 2] Code verified successfully');
+
+    // Mark as verified
     await supabaseClient
       .from('pending_2fa_verifications')
       .update({ verified: true })
       .eq('id', pending.id);
 
-    // Create a new session for the user
-    const { data: sessionData, error: sessionError } = await supabaseClient.auth.admin.generateLink({
-      type: 'magiclink',
-      email: pending.email
+    await supabaseClient.from('auth_attempts').insert({
+      identifier: pending.email,
+      attempt_type: '2fa',
+      success: true
     });
 
-    if (sessionError || !sessionData) {
-      console.error('Failed to create session:', sessionError);
+    // Create a new session for the user
+    const { data: { session }, error: sessionError } = await supabaseClient.auth.signInWithPassword({
+      email: pending.email,
+      password: password || ''
+    });
+
+    if (sessionError || !session) {
+      console.error('[2FA Phase 2] Error creating session:', sessionError);
       return new Response(
         JSON.stringify({ error: 'Failed to create session' }),
         { 
@@ -327,17 +358,19 @@ serve(async (req) => {
       );
     }
 
-    // Clean up old pending verifications
+    // Clean up pending verification
     await supabaseClient
       .from('pending_2fa_verifications')
       .delete()
-      .eq('user_id', pending.user_id)
-      .lt('expires_at', new Date().toISOString());
+      .eq('id', pending.id);
+
+    console.log('[2FA Phase 2] Session created successfully');
 
     return new Response(
       JSON.stringify({
-        success: true,
-        magicLink: sessionData.properties.action_link
+        requires2FA: false,
+        session: session,
+        user: session.user
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -345,10 +378,11 @@ serve(async (req) => {
       }
     );
 
-  } catch (error: any) {
-    console.error('Error in secure-2fa-login:', error);
+  } catch (error) {
+    console.error('[Error] Unexpected error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500 
