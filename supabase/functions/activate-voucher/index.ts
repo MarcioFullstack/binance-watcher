@@ -116,26 +116,87 @@ serve(async (req) => {
       );
     }
 
-    if (voucher.is_used) {
-      console.error('Voucher already used:', trimmedCode);
+    // Verificar se é voucher reutilizável ou uso único
+    const isReusable = voucher.max_uses !== null && voucher.max_uses > 1;
+    
+    if (isReusable) {
+      // Voucher reutilizável: verificar se ainda tem usos disponíveis
+      if (voucher.current_uses >= voucher.max_uses) {
+        console.error('Voucher max uses reached:', trimmedCode);
+        return new Response(
+          JSON.stringify({ error_code: 'VOUCHER_MAX_USES_REACHED' }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      // Verificar se este usuário já ativou este voucher
+      const { data: existingActivation } = await supabaseAdmin
+        .from('voucher_activations')
+        .select('id')
+        .eq('voucher_id', voucher.id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existingActivation) {
+        console.error('User already activated this voucher:', user.id, trimmedCode);
+        return new Response(
+          JSON.stringify({ error_code: 'VOUCHER_ALREADY_ACTIVATED_BY_USER' }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+    } else {
+      // Voucher de uso único: verificar se já foi usado
+      if (voucher.is_used) {
+        console.error('Voucher already used:', trimmedCode);
+        return new Response(
+          JSON.stringify({ error_code: 'VOUCHER_ALREADY_USED' }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+    }
+
+    console.log('Voucher found and valid, processing activation...');
+
+    // Registrar ativação na tabela de histórico
+    const { error: activationError } = await supabaseAdmin
+      .from('voucher_activations')
+      .insert({
+        voucher_id: voucher.id,
+        user_id: user.id,
+        days_granted: voucher.days,
+      });
+
+    if (activationError) {
+      console.error('Error recording voucher activation:', activationError);
       return new Response(
-        JSON.stringify({ error_code: 'VOUCHER_ALREADY_USED' }),
+        JSON.stringify({ error_code: 'ACTIVATION_RECORD_ERROR' }),
         {
-          status: 400,
+          status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       );
     }
 
-    console.log('Voucher found and valid, marking as used...');
+    // Atualizar contador de usos do voucher
+    const newCurrentUses = voucher.current_uses + 1;
+    const shouldMarkAsUsed = !isReusable || newCurrentUses >= voucher.max_uses;
 
-    // Marcar voucher como usado (usar service role)
     const { error: updateVoucherError } = await supabaseAdmin
       .from('vouchers')
       .update({
-        is_used: true,
-        used_by: user.id,
-        used_at: new Date().toISOString(),
+        current_uses: newCurrentUses,
+        is_used: shouldMarkAsUsed,
+        used_by: shouldMarkAsUsed ? user.id : voucher.used_by,
+        used_at: shouldMarkAsUsed ? new Date().toISOString() : voucher.used_at,
       })
       .eq('code', trimmedCode);
 

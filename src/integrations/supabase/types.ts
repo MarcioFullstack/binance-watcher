@@ -652,31 +652,69 @@ export type Database = {
         }
         Relationships: []
       }
+      voucher_activations: {
+        Row: {
+          activated_at: string
+          days_granted: number
+          id: string
+          user_id: string
+          voucher_id: string
+        }
+        Insert: {
+          activated_at?: string
+          days_granted: number
+          id?: string
+          user_id: string
+          voucher_id: string
+        }
+        Update: {
+          activated_at?: string
+          days_granted?: number
+          id?: string
+          user_id?: string
+          voucher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voucher_activations_voucher_id_fkey"
+            columns: ["voucher_id"]
+            isOneToOne: false
+            referencedRelation: "vouchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vouchers: {
         Row: {
           code: string
           created_at: string | null
+          current_uses: number
           days: number | null
           id: string
           is_used: boolean | null
+          max_uses: number | null
           used_at: string | null
           used_by: string | null
         }
         Insert: {
           code: string
           created_at?: string | null
+          current_uses?: number
           days?: number | null
           id?: string
           is_used?: boolean | null
+          max_uses?: number | null
           used_at?: string | null
           used_by?: string | null
         }
         Update: {
           code?: string
           created_at?: string | null
+          current_uses?: number
           days?: number | null
           id?: string
           is_used?: boolean | null
+          max_uses?: number | null
           used_at?: string | null
           used_by?: string | null
         }

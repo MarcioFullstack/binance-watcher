@@ -82,6 +82,11 @@
       "CODE_REQUIRED": "Voucher code is required",
       "VOUCHER_NOT_FOUND": "Voucher not found or invalid",
       "VOUCHER_ALREADY_USED": "This voucher has already been used",
+      "VOUCHER_MAX_USES_REACHED": "This voucher has reached its maximum number of uses",
+      "VOUCHER_ALREADY_ACTIVATED_BY_USER": "You have already activated this voucher",
+      "ACTIVATION_RECORD_ERROR": "Error recording voucher activation. Please try again.",
+      "INVALID_CODE_LENGTH": "Voucher code must be between 10-30 characters",
+      "INVALID_CHARACTERS": "Voucher code contains invalid characters",
       "UPDATE_VOUCHER_ERROR": "Error processing voucher. Please try again.",
       "SUBSCRIPTION_ERROR": "Error activating subscription. Contact support.",
       "UNEXPECTED_ERROR": "Unexpected error. Please try again later."

@@ -53,11 +53,20 @@ serve(async (req) => {
       );
     }
 
-    const { code, days } = await req.json();
+    const { code, days, maxUses } = await req.json();
 
     // Validações
     if (!code || !days) {
       throw new Error('Código e dias são obrigatórios');
+    }
+
+    // Validar maxUses se fornecido
+    let maxUsesNumber = null;
+    if (maxUses !== undefined && maxUses !== null) {
+      maxUsesNumber = parseInt(maxUses);
+      if (isNaN(maxUsesNumber) || maxUsesNumber < 2 || maxUsesNumber > 10000) {
+        throw new Error('Número máximo de usos deve ser entre 2 e 10000');
+      }
     }
 
     // Validar formato do código: aceita XXXX-XXXX-XXXX-XXXX ou códigos personalizados (10-30 caracteres)
@@ -96,7 +105,9 @@ serve(async (req) => {
       .insert({
         code: code.toUpperCase(),
         days: daysNumber,
-        is_used: false
+        is_used: false,
+        max_uses: maxUsesNumber,
+        current_uses: 0
       })
       .select()
       .single();
