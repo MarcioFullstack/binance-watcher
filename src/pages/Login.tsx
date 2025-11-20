@@ -104,51 +104,10 @@ const Login = () => {
         setStep(2);
         toast.info("Enter your authentication code");
       } else {
-        // No 2FA - session created, check subscription and Binance configuration
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user) {
-          // First check if has active subscription
-          const { data: subscription } = await supabase
-            .from('subscriptions')
-            .select('*')
-            .eq('user_id', user.id)
-            .eq('status', 'active')
-            .maybeSingle();
-
-          // Verify subscription exists and is not expired
-          if (!subscription) {
-            toast.success("Login realizado! Complete o pagamento para continuar");
-            navigate("/payment");
-            return;
-          }
-
-          const expiresAt = new Date(subscription.expires_at);
-          const now = new Date();
-          
-          if (expiresAt < now) {
-            toast.error("Sua assinatura expirou");
-            navigate("/payment");
-            return;
-          }
-
-          // Check if user has Binance account configured
-          const { data: accounts } = await supabase
-            .from('binance_accounts')
-            .select('id, is_active')
-            .eq('user_id', user.id)
-            .eq('is_active', true);
-
-          if (accounts && accounts.length > 0) {
-            toast.success("Login realizado com sucesso!");
-            navigate("/dashboard");
-          } else {
-            toast.success("Login realizado! Configure sua conta Binance");
-            navigate("/setup-binance");
-          }
-        } else {
-          navigate("/payment");
-        }
+        // 2FA is mandatory - user must have it enabled
+        await supabase.auth.signOut();
+        toast.error("Autenticação de dois fatores é obrigatória. Por favor, entre em contato com o suporte para configurar.");
+        return;
       }
     } catch (error: any) {
       toast.error(error.message || "Error logging in");
