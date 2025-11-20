@@ -1,8 +1,24 @@
 import { useBinanceData } from "@/hooks/useBinanceData";
-import { Loader2 } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
+import { useState, useEffect } from "react";
 
 export const BalanceCards = () => {
-  const { data: binanceData, isLoading } = useBinanceData();
+  const { data: binanceData, isLoading, isFetching, dataUpdatedAt } = useBinanceData();
+  const [lastUpdate, setLastUpdate] = useState<string>("");
+
+  useEffect(() => {
+    if (dataUpdatedAt) {
+      const now = new Date();
+      const updated = new Date(dataUpdatedAt);
+      const diffSeconds = Math.floor((now.getTime() - updated.getTime()) / 1000);
+      
+      if (diffSeconds < 60) {
+        setLastUpdate(`há ${diffSeconds}s`);
+      } else {
+        setLastUpdate(`há ${Math.floor(diffSeconds / 60)}m`);
+      }
+    }
+  }, [dataUpdatedAt, isFetching]);
 
   if (isLoading || !binanceData) {
     return (
@@ -25,7 +41,24 @@ export const BalanceCards = () => {
   const isPnLPositive = unrealizedPnL >= 0;
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-card rounded-lg border">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-card rounded-lg border relative">
+      {/* Sync Indicator */}
+      <div className="absolute top-2 right-2 flex items-center gap-2 text-xs text-muted-foreground">
+        {isFetching && !isLoading ? (
+          <>
+            <RefreshCw className="h-3 w-3 animate-spin text-primary" />
+            <span className="text-primary font-medium">Sincronizando...</span>
+          </>
+        ) : (
+          lastUpdate && (
+            <>
+              <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+              <span>Atualizado {lastUpdate}</span>
+            </>
+          )
+        )}
+      </div>
+
       {/* Total Balance */}
       <div className="flex flex-col gap-1">
         <span className="text-xs text-muted-foreground">Saldo Total</span>

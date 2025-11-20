@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { useBinanceData } from "@/hooks/useBinanceData";
-import { Loader2, Calendar as CalendarIcon } from "lucide-react";
+import { Loader2, Calendar as CalendarIcon, RefreshCw } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -11,7 +11,7 @@ import { TradingStats } from "./TradingStats";
 type PeriodFilter = "7days" | "1month" | "3months" | "1year" | "custom";
 
 export const PnLDashboard = () => {
-  const { data: binanceData, isLoading, error } = useBinanceData();
+  const { data: binanceData, isLoading, error, isFetching } = useBinanceData();
   const [marketType, setMarketType] = useState<"USD-M" | "COIN-M">("USD-M");
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("7days");
   const [activeTab, setActiveTab] = useState("overview");
@@ -51,6 +51,12 @@ export const PnLDashboard = () => {
       {/* Header com Market Type */}
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold">Análise de Ganhos e Perdas de Futuros</h1>
+        {isFetching && !isLoading && (
+          <div className="flex items-center gap-1.5 text-xs text-primary font-medium">
+            <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+            <span>Atualizando dados...</span>
+          </div>
+        )}
       </div>
 
       {/* Market Type Toggle */}
