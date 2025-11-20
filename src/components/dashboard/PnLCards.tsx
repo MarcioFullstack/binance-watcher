@@ -5,11 +5,24 @@ import { Loader2 } from "lucide-react";
 export const PnLCards = () => {
   const { data: binanceData, isLoading, error } = useBinanceData();
 
-  // Don't render anything if there's a keys error - it will be shown in the main alert
+  console.log('PnLCards render:', { hasData: !!binanceData, isLoading, error: error?.message });
+
+  // Don't render placeholder if there's a keys error - let the main alert handle it
   const isKeysError = error instanceof Error && error.message === 'BINANCE_KEYS_INVALID';
   
-  if (isKeysError) {
-    return null;
+  if (isKeysError && !binanceData) {
+    return (
+      <div className="space-y-4">
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="p-4 border-border bg-card opacity-50">
+              <p className="text-xs text-muted-foreground mb-2">Loading...</p>
+              <p className="text-2xl font-bold">--</p>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   if (isLoading || !binanceData) {
