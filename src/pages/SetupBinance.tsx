@@ -65,7 +65,6 @@ const SetupBinance = () => {
         navigate("/payment");
         return;
       }
-
     } catch (error) {
       console.error("Error checking access:", error);
       navigate("/login");
