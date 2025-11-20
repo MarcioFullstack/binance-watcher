@@ -244,16 +244,33 @@ const Signup = () => {
     setLoadingMessage("Verifying your 2FA code...");
 
     try {
+      // Buscar o secret do usuário
+      const { data: user2FAData, error: user2FAError } = await supabase
+        .from("user_2fa")
+        .select("totp_secret")
+        .eq("user_id", userId)
+        .single();
+
+      if (user2FAError || !user2FAData) {
+        throw new Error("2FA configuration not found");
+      }
+
+      // Descriptografar o secret
+      const { decrypt } = await import("@/utils/encryption");
+      const decryptedSecret = await decrypt(user2FAData.totp_secret);
+
+      // Verificar o código TOTP
       const { data, error } = await supabase.functions.invoke("verify-totp", {
         body: {
-          userId,
-          code: totpCode,
+          token: totpCode,
+          secret: decryptedSecret,
+          identifier: email,
         },
       });
 
       if (error) throw error;
 
-      if (data.valid) {
+      if (data.isValid) {
         await supabase.from("user_2fa").update({ is_enabled: true }).eq("user_id", userId);
 
         toast.success("2FA configured successfully!");
