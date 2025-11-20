@@ -10,7 +10,7 @@ import { Loader2 } from "lucide-react";
 import { OnboardingProgress } from "@/components/OnboardingProgress";
 import { SubscriptionTimer } from "@/components/SubscriptionTimer";
 import nottifyLogo from "@/assets/nottify-logo.png";
-import { encrypt } from "@/utils/encryption";
+
 
 const SetupBinance = () => {
   const [loading, setLoading] = useState(false);
@@ -66,16 +66,6 @@ const SetupBinance = () => {
         return;
       }
 
-      // Check if already has Binance account configured
-      const { data: accounts } = await supabase
-        .from("binance_accounts")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("is_active", true);
-
-      if (accounts && accounts.length > 0) {
-        navigate("/dashboard");
-      }
     } catch (error) {
       console.error("Error checking access:", error);
       navigate("/login");
@@ -97,20 +87,18 @@ const SetupBinance = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Encrypt sensitive data before storing
-      const encryptedApiKey = await encrypt(accountData.apiKey);
-      const encryptedApiSecret = await encrypt(accountData.apiSecret);
-
-      // Add Binance account
-      const { error } = await supabase.from("binance_accounts").insert([
-        {
-          user_id: user.id,
+      const { data, error } = await supabase.functions.invoke("save-binance-account", {
+        body: {
           account_name: accountData.name,
-          api_key: encryptedApiKey,
-          api_secret: encryptedApiSecret,
-          is_active: true,
+          api_key: accountData.apiKey,
+          api_secret: accountData.apiSecret,
         },
-      ]);
+      });
+
+      if (error) throw error;
+      if ((data as any)?.error) {
+        throw new Error((data as any).error);
+      }
 
       if (error) throw error;
 
