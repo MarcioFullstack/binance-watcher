@@ -427,68 +427,119 @@ const Signup = () => {
                     </AccordionTrigger>
                     <AccordionContent>
                       <div className="space-y-4 text-sm text-muted-foreground">
-                        <div className="flex gap-3 items-start">
-                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs">
-                            1
+                        {/* Video Tutorial */}
+                        <div className="rounded-lg overflow-hidden border border-border bg-muted/50 animate-fade-in">
+                          <div className="aspect-video w-full">
+                            <iframe
+                              width="100%"
+                              height="100%"
+                              src="https://www.youtube.com/embed/lzIoAhR32AQ"
+                              title="Tutorial Google Authenticator"
+                              frameBorder="0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                              className="w-full h-full"
+                            />
                           </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-foreground mb-1">Baixe o aplicativo</p>
-                            <p>Instale o Google Authenticator na sua loja de aplicativos:</p>
-                            <div className="flex gap-2 mt-2">
-                              <a 
-                                href="https://apps.apple.com/app/google-authenticator/id388497605" 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-xs px-2 py-1 bg-muted rounded hover:bg-muted/80 transition-colors"
-                              >
-                                📱 iOS
-                              </a>
-                              <a 
-                                href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-xs px-2 py-1 bg-muted rounded hover:bg-muted/80 transition-colors"
-                              >
-                                🤖 Android
-                              </a>
+                          <div className="p-3 bg-background/50">
+                            <p className="text-xs text-center">
+                              🎥 Vídeo tutorial: Como usar o Google Authenticator
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="h-px bg-border my-4" />
+
+                        <div className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
+                          <div className="flex gap-3 items-start">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-primary-foreground font-semibold text-sm shadow-sm">
+                              1
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Download className="h-4 w-4 text-primary" />
+                                <p className="font-semibold text-foreground">Baixe o aplicativo</p>
+                              </div>
+                              <p className="mb-2">Instale o Google Authenticator na sua loja de aplicativos:</p>
+                              <div className="flex gap-2 flex-wrap">
+                                <a 
+                                  href="https://apps.apple.com/app/google-authenticator/id388497605" 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-xs px-3 py-2 bg-gradient-to-r from-blue-500/10 to-blue-600/10 border border-blue-500/20 rounded-lg hover:from-blue-500/20 hover:to-blue-600/20 transition-all hover-scale"
+                                >
+                                  📱 App Store (iOS)
+                                </a>
+                                <a 
+                                  href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-xs px-3 py-2 bg-gradient-to-r from-green-500/10 to-green-600/10 border border-green-500/20 rounded-lg hover:from-green-500/20 hover:to-green-600/20 transition-all hover-scale"
+                                >
+                                  🤖 Play Store (Android)
+                                </a>
+                              </div>
                             </div>
                           </div>
                         </div>
 
-                        <div className="flex gap-3 items-start">
-                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs">
-                            2
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-foreground mb-1">Abra o aplicativo</p>
-                            <p>No Google Authenticator, toque no botão <strong>+</strong> para adicionar uma nova conta.</p>
-                          </div>
-                        </div>
-
-                        <div className="flex gap-3 items-start">
-                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs">
-                            3
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-foreground mb-1">Escaneie o QR Code</p>
-                            <p>Escolha <strong>"Escanear código QR"</strong> e aponte a câmera para o código abaixo, ou insira a chave manualmente.</p>
+                        <div className="animate-fade-in" style={{ animationDelay: "0.2s" }}>
+                          <div className="flex gap-3 items-start">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-primary-foreground font-semibold text-sm shadow-sm">
+                              2
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Smartphone className="h-4 w-4 text-primary" />
+                                <p className="font-semibold text-foreground">Abra o aplicativo</p>
+                              </div>
+                              <p>No Google Authenticator, toque no botão <span className="inline-flex items-center justify-center w-5 h-5 bg-primary/20 rounded text-primary font-bold text-xs">+</span> para adicionar uma nova conta.</p>
+                            </div>
                           </div>
                         </div>
 
-                        <div className="flex gap-3 items-start">
-                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs">
-                            4
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-foreground mb-1">Digite o código</p>
-                            <p>O aplicativo mostrará um código de 6 dígitos. Digite-o no campo abaixo para concluir a configuração.</p>
+                        <div className="animate-fade-in" style={{ animationDelay: "0.3s" }}>
+                          <div className="flex gap-3 items-start">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-primary-foreground font-semibold text-sm shadow-sm">
+                              3
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <QrCode className="h-4 w-4 text-primary" />
+                                <p className="font-semibold text-foreground">Escaneie o QR Code</p>
+                              </div>
+                              <p>Escolha <strong>"Escanear código QR"</strong> e aponte a câmera para o código abaixo, ou escolha <strong>"Inserir chave de configuração"</strong> para digitar manualmente.</p>
+                            </div>
                           </div>
                         </div>
 
-                        <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                          <p className="text-xs text-blue-600 dark:text-blue-400">
-                            💡 <strong>Dica:</strong> O código muda a cada 30 segundos. Guarde seu telefone em um local seguro, pois você precisará dele para fazer login.
-                          </p>
+                        <div className="animate-fade-in" style={{ animationDelay: "0.4s" }}>
+                          <div className="flex gap-3 items-start">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-primary-foreground font-semibold text-sm shadow-sm">
+                              4
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Shield className="h-4 w-4 text-primary" />
+                                <p className="font-semibold text-foreground">Digite o código</p>
+                              </div>
+                              <p>O aplicativo mostrará um código de 6 dígitos. Digite-o no campo abaixo para concluir a configuração.</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="p-4 bg-gradient-to-r from-blue-500/10 via-blue-500/5 to-transparent border border-blue-500/20 rounded-lg animate-fade-in" style={{ animationDelay: "0.5s" }}>
+                          <div className="flex gap-3">
+                            <div className="text-2xl">💡</div>
+                            <div>
+                              <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">
+                                Dica importante:
+                              </p>
+                              <p className="text-xs text-blue-600/80 dark:text-blue-400/80">
+                                O código muda a cada 30 segundos. Guarde seu telefone em um local seguro, pois você precisará dele para fazer login sempre.
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </AccordionContent>
