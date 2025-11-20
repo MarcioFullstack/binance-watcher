@@ -165,19 +165,49 @@ serve(async (req) => {
       return marginRatio > 80;
     });
 
-    // Se atingiu limite de risco, notificar
-    if (hasReachedRiskLimit) {
-      console.log(`⚠️ RISK LIMIT REACHED for user ${user.id}: ${riskLimitPercent.toFixed(2)}% loss`);
-      
-      // Criar notificação
-      await supabaseClient
+    // Sistema de alertas progressivos de risco
+    const checkAndSendRiskAlert = async (thresholdPercent: number, title: string, emoji: string) => {
+      // Verificar se já enviou alerta deste tipo recentemente (última hora)
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const { data: recentAlert } = await supabaseClient
         .from('notification_history')
-        .insert({
-          user_id: user.id,
-          type: 'critical_loss',
-          title: '🚨 LIMITE DE RISCO ATINGIDO',
-          description: `Você atingiu ${riskLimitPercent.toFixed(2)}% de perda do saldo inicial (${initialBalance.toFixed(2)} USDT). Saldo atual: ${totalBalance.toFixed(2)} USDT. Considere fechar suas posições.`,
-        });
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('type', 'risk_warning')
+        .eq('title', title)
+        .gte('created_at', oneHourAgo)
+        .maybeSingle();
+
+      // Se não há alerta recente, criar novo
+      if (!recentAlert && riskLimitPercent >= thresholdPercent) {
+        console.log(`${emoji} Risk alert ${thresholdPercent}% for user ${user.id}: ${riskLimitPercent.toFixed(2)}% loss`);
+        
+        await supabaseClient
+          .from('notification_history')
+          .insert({
+            user_id: user.id,
+            type: 'risk_warning',
+            title,
+            description: `Você atingiu ${riskLimitPercent.toFixed(2)}% de perda do saldo inicial (${initialBalance.toFixed(2)} USDT). Limite configurado: ${riskPercent}%. Saldo atual: ${totalBalance.toFixed(2)} USDT. ${thresholdPercent >= 100 ? 'Considere fechar suas posições imediatamente!' : 'Monitore suas posições de perto.'}`,
+          });
+      }
+    };
+
+    // Enviar alertas progressivos baseados no limite configurado
+    if (riskLimitPercent >= 70) {
+      await checkAndSendRiskAlert(70, '⚠️ ALERTA: 70% do Limite de Risco', '⚠️');
+    }
+    
+    if (riskLimitPercent >= 85) {
+      await checkAndSendRiskAlert(85, '🔴 ATENÇÃO: 85% do Limite de Risco', '🔴');
+    }
+    
+    if (riskLimitPercent >= 95) {
+      await checkAndSendRiskAlert(95, '🚨 CRÍTICO: 95% do Limite de Risco', '🚨');
+    }
+    
+    if (hasReachedRiskLimit) {
+      await checkAndSendRiskAlert(100, '🚨 LIMITE DE RISCO ATINGIDO', '🚨');
     }
 
     // Verificar alertas de PnL configurados pelo usuário

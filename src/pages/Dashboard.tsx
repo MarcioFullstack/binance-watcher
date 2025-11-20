@@ -8,6 +8,7 @@ import { PnLCards } from "@/components/dashboard/PnLCards";
 import { AlertsConfig } from "@/components/dashboard/AlertsConfig";
 import { PnLAlertsConfig } from "@/components/dashboard/PnLAlertsConfig";
 import { PnLCalendar } from "@/components/dashboard/PnLCalendar";
+import { RiskAlertsInfo } from "@/components/dashboard/RiskAlertsInfo";
 import { SubscriptionTimer } from "@/components/SubscriptionTimer";
 import { Loader2, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -145,6 +146,7 @@ const Dashboard = () => {
       <BalanceCards />
       <PnLCards />
       <PnLCalendar />
+      <RiskAlertsInfo />
       <AlertsConfig />
       <PnLAlertsConfig />
     </div>
