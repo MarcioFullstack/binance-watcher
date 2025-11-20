@@ -271,6 +271,87 @@ export type Database = {
         }
         Relationships: []
       }
+      loss_alert_history: {
+        Row: {
+          acknowledged: boolean | null
+          acknowledged_at: string | null
+          alert_message: string
+          balance_at_alert: number
+          id: string
+          initial_balance: number
+          level_name: string
+          loss_amount: number
+          loss_percentage: number
+          triggered_at: string | null
+          user_id: string
+        }
+        Insert: {
+          acknowledged?: boolean | null
+          acknowledged_at?: string | null
+          alert_message: string
+          balance_at_alert: number
+          id?: string
+          initial_balance: number
+          level_name: string
+          loss_amount: number
+          loss_percentage: number
+          triggered_at?: string | null
+          user_id: string
+        }
+        Update: {
+          acknowledged?: boolean | null
+          acknowledged_at?: string | null
+          alert_message?: string
+          balance_at_alert?: number
+          id?: string
+          initial_balance?: number
+          level_name?: string
+          loss_amount?: number
+          loss_percentage?: number
+          triggered_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      loss_alert_levels: {
+        Row: {
+          created_at: string | null
+          enabled: boolean | null
+          id: string
+          level_name: string
+          loss_percentage: number
+          push_notification: boolean | null
+          sound_enabled: boolean | null
+          updated_at: string | null
+          user_id: string
+          visual_alert: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          level_name: string
+          loss_percentage: number
+          push_notification?: boolean | null
+          sound_enabled?: boolean | null
+          updated_at?: string | null
+          user_id: string
+          visual_alert?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          level_name?: string
+          loss_percentage?: number
+          push_notification?: boolean | null
+          sound_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+          visual_alert?: boolean | null
+        }
+        Relationships: []
+      }
       notification_history: {
         Row: {
           created_at: string
