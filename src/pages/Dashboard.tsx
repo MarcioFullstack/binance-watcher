@@ -132,15 +132,20 @@ const Dashboard = () => {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar isAdmin={isAdmin} />
         <div className="flex-1 flex flex-col">
-          <header className="h-14 flex items-center justify-between border-b border-border px-4 bg-card">
-            <SidebarTrigger />
-            <SubscriptionTimer 
-              userId={user?.id} 
-              onExpired={() => {
-                toast.error("Sua assinatura expirou");
-                navigate("/payment");
-              }} 
-            />
+          <header className="h-16 flex items-center justify-between border-b border-border px-4 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+            <div className="flex items-center gap-3">
+              <SidebarTrigger />
+              <h1 className="text-lg font-semibold text-foreground hidden sm:block">Dashboard</h1>
+            </div>
+            <div className="flex-1 flex justify-end px-4">
+              <SubscriptionTimer 
+                userId={user?.id} 
+                onExpired={() => {
+                  toast.error("Sua assinatura expirou");
+                  navigate("/payment");
+                }} 
+              />
+            </div>
           </header>
           
           <main className="flex-1 p-4 md:p-6 space-y-4 overflow-auto relative">

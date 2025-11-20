@@ -1,5 +1,4 @@
 import { useSubscriptionTimer } from "@/hooks/useSubscriptionTimer";
-import { Card, CardContent } from "@/components/ui/card";
 import { Clock, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
@@ -29,19 +28,10 @@ export const SubscriptionTimer = ({ userId, onExpired }: SubscriptionTimerProps)
 
   if (timeRemaining.isExpired) {
     return (
-      <Card className="border-destructive bg-destructive/10">
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="h-5 w-5 text-destructive" />
-            <div className="flex-1">
-              <p className="font-semibold text-destructive">Subscription Expired</p>
-              <p className="text-sm text-muted-foreground">
-                Please renew your subscription to continue using the service
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-destructive bg-destructive/10">
+        <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />
+        <span className="text-sm font-medium text-destructive">Assinatura Expirada</span>
+      </div>
     );
   }
 
@@ -53,56 +43,32 @@ export const SubscriptionTimer = ({ userId, onExpired }: SubscriptionTimerProps)
   if (!showWarning) return null;
 
   return (
-    <Card className={`${showWarning ? 'border-amber-500 bg-amber-500/10' : ''} ${isUrgent ? 'border-destructive bg-destructive/10' : ''}`}>
-      <CardContent className="pt-6">
-        <div className="flex items-center gap-3">
-          {isUrgent ? (
-            <AlertTriangle className="h-5 w-5 text-destructive" />
-          ) : (
-            <Clock className={`h-5 w-5 ${showWarning ? 'text-amber-600' : 'text-primary'}`} />
-          )}
-          <div className="flex-1">
-            <p className={`text-sm font-medium ${isUrgent ? 'text-destructive' : showWarning ? 'text-amber-600 dark:text-amber-500' : 'text-muted-foreground'}`}>
-              {isUrgent ? 'Subscription expiring soon!' : showWarning ? 'Subscription expiring soon' : 'Subscription active'}
-            </p>
-            <div className="flex items-baseline gap-2 mt-1">
-              {timeRemaining.days > 0 && (
-                <div className="flex items-baseline gap-1">
-                  <span className={`text-2xl font-bold ${isUrgent ? 'text-destructive' : showWarning ? 'text-amber-600 dark:text-amber-500' : 'text-foreground'}`}>
-                    {timeRemaining.days}
-                  </span>
-                  <span className="text-sm text-muted-foreground">days</span>
-                </div>
-              )}
-              <div className="flex items-baseline gap-1">
-                <span className={`text-2xl font-bold ${isUrgent ? 'text-destructive' : showWarning ? 'text-amber-600 dark:text-amber-500' : 'text-foreground'}`}>
-                  {String(timeRemaining.hours).padStart(2, '0')}
-                </span>
-                <span className="text-sm text-muted-foreground">h</span>
-              </div>
-              <div className="flex items-baseline gap-1">
-                <span className={`text-2xl font-bold ${isUrgent ? 'text-destructive' : showWarning ? 'text-amber-600 dark:text-amber-500' : 'text-foreground'}`}>
-                  {String(timeRemaining.minutes).padStart(2, '0')}
-                </span>
-                <span className="text-sm text-muted-foreground">m</span>
-              </div>
-              <div className="flex items-baseline gap-1">
-                <span className={`text-xl font-bold ${isUrgent ? 'text-destructive' : showWarning ? 'text-amber-600 dark:text-amber-500' : 'text-foreground'}`}>
-                  {String(timeRemaining.seconds).padStart(2, '0')}
-                </span>
-                <span className="text-sm text-muted-foreground">s</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        {showWarning && (
-          <p className="text-xs text-muted-foreground mt-2">
-            {isUrgent 
-              ? 'Renew now to avoid service interruption!' 
-              : 'Consider renewing your subscription to avoid interruption'}
-          </p>
+    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md border ${showWarning ? 'border-amber-500 bg-amber-500/10' : ''} ${isUrgent ? 'border-destructive bg-destructive/10' : ''}`}>
+      {isUrgent ? (
+        <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />
+      ) : (
+        <Clock className={`h-4 w-4 ${showWarning ? 'text-amber-600' : 'text-primary'} flex-shrink-0`} />
+      )}
+      <div className="flex items-center gap-1.5">
+        {timeRemaining.days > 0 && (
+          <>
+            <span className={`text-lg font-bold ${isUrgent ? 'text-destructive' : showWarning ? 'text-amber-600 dark:text-amber-500' : 'text-foreground'}`}>
+              {timeRemaining.days}
+            </span>
+            <span className="text-xs text-muted-foreground">d</span>
+            <span className="text-muted-foreground">:</span>
+          </>
         )}
-      </CardContent>
-    </Card>
+        <span className={`text-lg font-bold ${isUrgent ? 'text-destructive' : showWarning ? 'text-amber-600 dark:text-amber-500' : 'text-foreground'}`}>
+          {String(timeRemaining.hours).padStart(2, '0')}
+        </span>
+        <span className="text-xs text-muted-foreground">h</span>
+        <span className="text-muted-foreground">:</span>
+        <span className={`text-lg font-bold ${isUrgent ? 'text-destructive' : showWarning ? 'text-amber-600 dark:text-amber-500' : 'text-foreground'}`}>
+          {String(timeRemaining.minutes).padStart(2, '0')}
+        </span>
+        <span className="text-xs text-muted-foreground">m</span>
+      </div>
+    </div>
   );
 };
