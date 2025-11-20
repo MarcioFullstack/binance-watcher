@@ -6,6 +6,7 @@ export type SirenType = 'police' | 'ambulance' | 'fire' | 'air_raid' | 'car_alar
 
 export const useAlertSounds = (userId: string | undefined) => {
   const lastNotificationId = useRef<string | null>(null);
+  const activeAlarmRef = useRef<number | null>(null);
   const [activeAlarm, setActiveAlarm] = useState<{
     type: 'loss' | 'gain';
     intervalId: number | null;
@@ -276,12 +277,14 @@ export const useAlertSounds = (userId: string | undefined) => {
     const interval = type === 'loss' ? 3500 : 2500;
     const intervalId = window.setInterval(playSound, interval);
 
+    activeAlarmRef.current = intervalId;
     setActiveAlarm({ type, intervalId });
   };
 
   const stopAlarm = () => {
-    if (activeAlarm?.intervalId) {
-      clearInterval(activeAlarm.intervalId);
+    if (activeAlarmRef.current) {
+      clearInterval(activeAlarmRef.current);
+      activeAlarmRef.current = null;
       setActiveAlarm(null);
     }
   };
