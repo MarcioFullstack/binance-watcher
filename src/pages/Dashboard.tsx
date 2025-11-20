@@ -19,6 +19,7 @@ import { BalanceCards } from "@/components/dashboard/BalanceCards";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AlarmStopButton } from "@/components/AlarmStopButton";
+import { AlarmBanner } from "@/components/AlarmBanner";
 import { useAlertSounds } from "@/hooks/useAlertSounds";
 
 const Dashboard = () => {
@@ -135,6 +136,12 @@ const Dashboard = () => {
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-background">
+        {/* Alarm Banner */}
+        <AlarmBanner
+          isActive={!!activeAlarm}
+          type={activeAlarm?.type}
+          onStop={stopAlarmSound}
+        />
         <AppSidebar isAdmin={isAdmin} />
         <div className="flex-1 flex flex-col">
           <header className="h-16 flex items-center justify-between border-b border-border px-4 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
