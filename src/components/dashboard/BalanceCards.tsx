@@ -1,5 +1,5 @@
 import { useBinanceData } from "@/hooks/useBinanceData";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export const BalanceCards = () => {
@@ -42,22 +42,13 @@ export const BalanceCards = () => {
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-card rounded-lg border relative">
-      {/* Sync Indicator */}
-      <div className="absolute top-2 right-2 flex items-center gap-2 text-xs text-muted-foreground">
-        {isFetching && !isLoading ? (
-          <>
-            <RefreshCw className="h-3 w-3 animate-spin text-primary" />
-            <span className="text-primary font-medium">Sincronizando...</span>
-          </>
-        ) : (
-          lastUpdate && (
-            <>
-              <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-              <span>Atualizado {lastUpdate}</span>
-            </>
-          )
-        )}
-      </div>
+      {/* Sync Indicator - apenas quando sincronizado */}
+      {!isLoading && (
+        <div className="absolute top-2 right-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <div className="h-2 w-2 rounded-full bg-green-500" />
+          <span>Sincronizado</span>
+        </div>
+      )}
 
       {/* Total Balance */}
       <div className="flex flex-col gap-1">
