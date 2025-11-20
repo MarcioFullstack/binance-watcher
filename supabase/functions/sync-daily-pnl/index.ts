@@ -61,8 +61,25 @@ serve(async (req) => {
     console.log(`Using Binance account: ${binanceAccount.account_name}`);
 
     // Decrypt API credentials
-    const apiKey = await decrypt(binanceAccount.api_key);
-    const apiSecret = await decrypt(binanceAccount.api_secret);
+    let apiKey: string;
+    let apiSecret: string;
+    
+    try {
+      apiKey = await decrypt(binanceAccount.api_key);
+      apiSecret = await decrypt(binanceAccount.api_secret);
+    } catch (decryptError) {
+      console.error("Decryption failed for Binance credentials:", decryptError);
+      return new Response(
+        JSON.stringify({ 
+          error: "BINANCE_KEYS_INVALID",
+          message: "Failed to decrypt Binance API keys. Please reconfigure your Binance account."
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
 
     const { date, market_type = "USDT" } = await req.json();
 
