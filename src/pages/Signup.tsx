@@ -247,6 +247,15 @@ const Signup = () => {
       <div className="flex min-h-screen items-center justify-center bg-background px-4 py-8">
         <div className="w-full max-w-4xl space-y-6">
           <OnboardingProgress currentStep={1} />
+          <div className="space-y-4 text-center mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full">
+              <Shield className="h-5 w-5 text-primary" />
+              <span className="text-sm font-medium">Configuração Obrigatória</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              A autenticação de dois fatores é obrigatória para sua segurança. Complete a configuração para continuar.
+            </p>
+          </div>
           <div className="flex justify-center">
             <Card className="w-full max-w-md border-border">
             <CardHeader className="space-y-2">
