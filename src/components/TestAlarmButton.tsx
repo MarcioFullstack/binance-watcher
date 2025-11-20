@@ -11,9 +11,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const TestAlarmButton = () => {
   const [loading, setLoading] = useState(false);
+  const [showClearDialog, setShowClearDialog] = useState(false);
 
   const testAlarm = async (type: 'critical_loss' | 'gain') => {
     setLoading(true);
@@ -64,6 +75,7 @@ export const TestAlarmButton = () => {
         description: `${data.count} notificação(ões) removida(s) do histórico.`,
         duration: 3000,
       });
+      setShowClearDialog(false);
     } catch (error: any) {
       console.error('Error clearing test notifications:', error);
       toast.error('Erro ao limpar notificações: ' + error.message);
@@ -73,7 +85,8 @@ export const TestAlarmButton = () => {
   };
 
   return (
-    <DropdownMenu>
+    <>
+      <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
@@ -97,11 +110,34 @@ export const TestAlarmButton = () => {
           Alarme de Ganho
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={clearTestNotifications} className="text-destructive focus:text-destructive">
+        <DropdownMenuItem onClick={() => setShowClearDialog(true)} className="text-destructive focus:text-destructive">
           <Trash2 className="mr-2 h-4 w-4" />
           Limpar Notificações de Teste
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+
+    <AlertDialog open={showClearDialog} onOpenChange={setShowClearDialog}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Confirmar Limpeza</AlertDialogTitle>
+          <AlertDialogDescription>
+            Tem certeza que deseja limpar todas as notificações de teste do histórico? 
+            Esta ação não pode ser desfeita.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={loading}>Cancelar</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={clearTestNotifications}
+            disabled={loading}
+            className="bg-destructive hover:bg-destructive/90"
+          >
+            {loading ? 'Limpando...' : 'Sim, Limpar'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  </>
   );
 };
