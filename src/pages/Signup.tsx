@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff, Shield, Copy, Check, Sparkles } from "lucide-react";
+import { Loader2, Eye, EyeOff, Shield, Copy, Check, Sparkles, RefreshCw } from "lucide-react";
 import nottifyLogo from "@/assets/nottify-logo.png";
 import PasswordStrengthIndicator from "@/components/PasswordStrengthIndicator";
 import { z } from "zod";
@@ -294,6 +294,55 @@ const Signup = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleRegenerate2FA = async () => {
+    if (!userId) {
+      toast.error("Erro ao regenerar código");
+      return;
+    }
+
+    setLoading(true);
+    setLoadingMessage("Gerando novo código 2FA...");
+
+    try {
+      // Generate new TOTP secret
+      const { data: totpData, error: totpError } = await supabase.functions.invoke(
+        "generate-totp-secret",
+        {
+          body: { userId, email },
+        }
+      );
+
+      if (totpError) throw totpError;
+
+      const encryptedSecret = await encrypt(totpData.secret);
+
+      // Update the existing 2FA record with new secret
+      const { error: updateError } = await supabase
+        .from("user_2fa")
+        .update({
+          totp_secret: encryptedSecret,
+          is_enabled: false,
+        })
+        .eq("user_id", userId);
+
+      if (updateError) throw updateError;
+
+      // Update state with new secret and QR code
+      setTotpSecret(totpData.secret);
+      const issuer = "ChartGuard Pro";
+      const totpUri = `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(email)}?secret=${totpData.secret}&issuer=${encodeURIComponent(issuer)}`;
+      setQrCodeUrl(totpUri);
+      setTotpCode(""); // Clear any entered code
+
+      toast.success("Novo código 2FA gerado! Escaneie o novo QR code.");
+    } catch (error: any) {
+      console.error("Error regenerating 2FA:", error);
+      toast.error(error.message || "Erro ao regenerar código 2FA");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const generateStrongPassword = () => {
     const lowercase = 'abcdefghijklmnopqrstuvwxyz';
     const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -393,6 +442,19 @@ const Signup = () => {
                           ) : (
                             <Copy className="h-4 w-4" />
                           )}
+                        </Button>
+                      </div>
+                      <div className="flex justify-center pt-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleRegenerate2FA}
+                          disabled={loading}
+                          className="gap-2"
+                        >
+                          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                          Gerar Novo Código
                         </Button>
                       </div>
                     </div>
