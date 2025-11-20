@@ -213,16 +213,38 @@ serve(async (req) => {
 
     console.log('Voucher marked as used, creating/updating subscription...');
 
-    // Calcular data de expiração
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + voucher.days);
-
     // Verificar se já existe assinatura
     const { data: existingSub } = await supabaseClient
       .from('subscriptions')
-      .select('id')
+      .select('expires_at')
       .eq('user_id', user.id)
       .maybeSingle();
+
+    // Calcular nova data de expiração
+    let expiresAt: Date;
+    
+    if (existingSub && existingSub.expires_at) {
+      // Se já tem assinatura válida, adicionar dias à data existente
+      const currentExpiration = new Date(existingSub.expires_at);
+      const now = new Date();
+      
+      // Se a assinatura ainda está válida, adicionar à data de expiração
+      // Se já expirou, adicionar à data atual
+      if (currentExpiration > now) {
+        expiresAt = new Date(currentExpiration);
+        expiresAt.setDate(expiresAt.getDate() + voucher.days);
+        console.log(`Adding ${voucher.days} days to existing valid subscription`);
+      } else {
+        expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + voucher.days);
+        console.log(`Starting new ${voucher.days}-day subscription (previous expired)`);
+      }
+    } else {
+      // Nova assinatura
+      expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + voucher.days);
+      console.log(`Creating new ${voucher.days}-day subscription`);
+    }
 
     let subError;
     

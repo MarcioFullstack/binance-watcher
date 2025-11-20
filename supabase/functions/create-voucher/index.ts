@@ -77,10 +77,10 @@ serve(async (req) => {
       throw new Error('Formato inválido. Use XXXX-XXXX-XXXX-XXXX ou código personalizado (10-30 caracteres alfanuméricos)');
     }
 
-    // Validar dias
+    // Validar dias - aceitar 1 a 3650 (10 anos)
     const daysNumber = parseInt(days);
-    if (isNaN(daysNumber) || daysNumber < 1 || daysNumber > 365) {
-      throw new Error('Dias deve ser entre 1 e 365');
+    if (isNaN(daysNumber) || daysNumber < 1 || daysNumber > 3650) {
+      throw new Error('Dias deve ser entre 1 e 3650');
     }
 
     // Verificar se código já existe

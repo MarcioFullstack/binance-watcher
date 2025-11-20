@@ -254,25 +254,54 @@ const Settings = () => {
     const trimmedCode = voucherCode.trim().toUpperCase();
     
     if (!trimmedCode) {
-      toast.error("Enter the voucher code");
+      toast.error("Digite o código do voucher");
       return;
     }
 
-    // Validation of format: XXXX-XXXX-XXXX-XXXX
-    const voucherRegex = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
-    if (!voucherRegex.test(trimmedCode)) {
-      toast.error("Invalid format. Use: XXXX-XXXX-XXXX-XXXX");
+    // Validação: aceita formato XXXX-XXXX-XXXX-XXXX ou códigos personalizados (10-30 caracteres)
+    if (trimmedCode.length < 10 || trimmedCode.length > 30) {
+      toast.error("Código inválido. Deve ter entre 10 e 30 caracteres");
+      return;
+    }
+
+    if (!/^[A-Z0-9-]+$/.test(trimmedCode)) {
+      toast.error("Código inválido. Use apenas letras, números e hífens");
       return;
     }
 
     setLoading(true);
     try {
       const result = await activateVoucher(trimmedCode);
-      toast.success(result.message);
+      
+      if (result.error_code) {
+        // Traduzir códigos de erro
+        const errorMessages: Record<string, string> = {
+          'VOUCHER_NOT_FOUND': 'Voucher não encontrado',
+          'VOUCHER_ALREADY_USED': 'Este voucher já foi utilizado',
+          'VOUCHER_ALREADY_ACTIVATED_BY_USER': 'Você já ativou este voucher',
+          'VOUCHER_MAX_USES_REACHED': 'Voucher atingiu o limite de usos',
+          'CODE_REQUIRED': 'Código do voucher é obrigatório',
+          'INVALID_CODE_LENGTH': 'Tamanho do código inválido',
+          'INVALID_CHARACTERS': 'Código contém caracteres inválidos',
+          'NOT_AUTHENTICATED': 'Você precisa estar autenticado',
+          'INVALID_SESSION': 'Sessão inválida. Faça login novamente',
+        };
+        
+        const errorMsg = errorMessages[result.error_code] || 'Erro ao ativar voucher';
+        toast.error(errorMsg);
+        return;
+      }
+
+      toast.success(`✅ Voucher ativado! ${result.days_granted} dias adicionados à sua assinatura.`, {
+        description: `Nova data de expiração: ${new Date(result.expires_at).toLocaleDateString('pt-BR')}`,
+        duration: 5000,
+      });
+      
       setVoucherCode("");
       loadSubscription();
     } catch (error: any) {
-      toast.error(error.message || "Error activating voucher");
+      console.error('Error activating voucher:', error);
+      toast.error(error.message || "Erro ao ativar voucher. Tente novamente.");
     } finally {
       setLoading(false);
     }
