@@ -4,10 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { BalanceCards } from "@/components/dashboard/BalanceCards";
-import { PnLCards } from "@/components/dashboard/PnLCards";
+import { PnLDashboard } from "@/components/dashboard/PnLDashboard";
 import { AlertsConfig } from "@/components/dashboard/AlertsConfig";
 import { PnLAlertsConfig } from "@/components/dashboard/PnLAlertsConfig";
-import { PnLCalendar } from "@/components/dashboard/PnLCalendar";
 import { RiskAlertsInfo } from "@/components/dashboard/RiskAlertsInfo";
 import { BinanceKeysAlert } from "@/components/dashboard/BinanceKeysAlert";
 import { BinanceSetupPrompt } from "@/components/dashboard/BinanceSetupPrompt";
@@ -180,8 +179,7 @@ const Dashboard = () => {
       {hasBinanceKeysError && <BinanceKeysAlert />}
       
       <BalanceCards />
-      <PnLCards />
-      <PnLCalendar />
+      <PnLDashboard />
       <RiskAlertsInfo />
       <AlertsConfig />
       <PnLAlertsConfig />

@@ -9,20 +9,20 @@ export const BinanceKeysAlert = () => {
   return (
     <Alert variant="destructive" className="mb-6">
       <AlertCircle className="h-4 w-4" />
-      <AlertTitle>Binance Keys Invalid</AlertTitle>
+      <AlertTitle>Erro nas Chaves da Binance</AlertTitle>
       <AlertDescription className="mt-2">
         <p className="mb-3">
-          Your Binance API keys could not be decrypted. This usually happens after a security update or encryption key change.
+          As chaves da API da Binance não puderam ser descriptografadas. Isso geralmente acontece após uma atualização de segurança ou mudança na chave de criptografia.
         </p>
         <p className="mb-4">
-          Please reconfigure your Binance account to continue using the dashboard features.
+          <strong>Solução:</strong> Você precisa reconfigurar sua conta Binance com novas chaves de API para continuar usando o dashboard.
         </p>
         <Button 
           onClick={() => navigate("/setup-binance")}
           variant="outline"
           size="sm"
         >
-          Reconfigure Binance Account
+          Reconfigurar Conta Binance
         </Button>
       </AlertDescription>
     </Alert>
