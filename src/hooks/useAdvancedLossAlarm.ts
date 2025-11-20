@@ -98,6 +98,15 @@ export const useAdvancedLossAlarm = (
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    // Buscar configurações de sirene
+    const { data: riskSettings } = await supabase
+      .from('risk_settings')
+      .select('siren_type')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    const sirenType = riskSettings?.siren_type || 'police';
+
     // Alertas visuais
     if (level.visual_alert) {
       const messages = {
@@ -112,19 +121,13 @@ export const useAdvancedLossAlarm = (
       });
     }
 
-    // Som de alarme
+    // Som de alarme com tipo de sirene configurado
     if (level.sound_enabled) {
-      await playAlarmForLevel(level.level_name);
+      await playAlarmForLevel(level.level_name, sirenType);
     }
 
     // Registrar no histórico
     try {
-      const { data: riskSettings } = await supabase
-        .from('risk_settings')
-        .select('siren_type')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
       await supabase.from('loss_alert_history').insert({
         user_id: user.id,
         level_name: level.level_name,
@@ -139,60 +142,104 @@ export const useAdvancedLossAlarm = (
     }
   };
 
-  const playAlarmForLevel = async (level: 'warning' | 'danger' | 'critical' | 'emergency') => {
+  const playAlarmForLevel = async (
+    level: 'warning' | 'danger' | 'critical' | 'emergency',
+    sirenType: string = 'police'
+  ) => {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
 
     const audioContext = audioContextRef.current;
-    const duration = level === 'emergency' ? 5 : level === 'critical' ? 4 : 3;
     const startTime = audioContext.currentTime;
+    
+    // Duração baseada no nível de severidade
+    const baseDuration = level === 'emergency' ? 5 : level === 'critical' ? 4 : 3;
+    const duration = baseDuration;
 
-    // Intensidade aumenta com o nível
-    const frequencies = {
-      warning: [600, 800],
-      danger: [700, 1000],
-      critical: [800, 1200],
-      emergency: [900, 1400],
-    };
-
-    const [freq1, freq2] = frequencies[level];
-
-    const oscillator1 = audioContext.createOscillator();
-    const oscillator2 = audioContext.createOscillator();
+    const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
-
-    oscillator1.connect(gainNode);
-    oscillator2.connect(gainNode);
+    
+    oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
 
-    oscillator1.frequency.setValueAtTime(freq1, startTime);
-    oscillator2.frequency.setValueAtTime(freq2, startTime);
-
-    const volume = level === 'emergency' ? 0.9 : level === 'critical' ? 0.8 : level === 'danger' ? 0.7 : 0.5;
+    // Volume baseado na severidade
+    const volume = level === 'emergency' ? 0.5 : level === 'critical' ? 0.4 : level === 'danger' ? 0.35 : 0.3;
     gainNode.gain.setValueAtTime(volume, startTime);
 
-    // Padrão de alternância mais rápido para níveis mais graves
-    const switchSpeed = level === 'emergency' ? 0.2 : level === 'critical' ? 0.3 : 0.5;
-    const cycles = duration / switchSpeed;
+    // Padrões de sirene diferentes baseados no tipo selecionado
+    switch(sirenType) {
+      case 'police': // Sirene de polícia - padrão europeu
+        oscillator.frequency.setValueAtTime(800, startTime);
+        for (let i = 0; i < duration * 2; i++) {
+          const time = startTime + (i * 0.5);
+          oscillator.frequency.exponentialRampToValueAtTime(
+            i % 2 === 0 ? 1200 : 800, 
+            time + 0.5
+          );
+        }
+        break;
 
-    for (let i = 0; i < cycles; i++) {
-      const time = startTime + (i * switchSpeed);
-      if (i % 2 === 0) {
-        oscillator1.frequency.linearRampToValueAtTime(freq1, time);
-        oscillator2.frequency.linearRampToValueAtTime(freq2, time);
-      } else {
-        oscillator1.frequency.linearRampToValueAtTime(freq2, time);
-        oscillator2.frequency.linearRampToValueAtTime(freq1, time);
-      }
+      case 'ambulance': // Sirene de ambulância - Hi-Lo
+        oscillator.frequency.setValueAtTime(600, startTime);
+        for (let i = 0; i < duration * 3; i++) {
+          const time = startTime + (i * 0.33);
+          oscillator.frequency.exponentialRampToValueAtTime(
+            i % 2 === 0 ? 900 : 600, 
+            time + 0.33
+          );
+        }
+        break;
+
+      case 'fire': // Sirene de bombeiros - Wail rápido
+        oscillator.frequency.setValueAtTime(500, startTime);
+        for (let i = 0; i < duration * 2.5; i++) {
+          const time = startTime + (i * 0.4);
+          oscillator.frequency.exponentialRampToValueAtTime(
+            i % 2 === 0 ? 1500 : 500, 
+            time + 0.4
+          );
+        }
+        break;
+
+      case 'alarm': // Alarme de prédio - Pulsante rápido
+        oscillator.frequency.setValueAtTime(1000, startTime);
+        for (let i = 0; i < duration * 5; i++) {
+          const time = startTime + (i * 0.2);
+          oscillator.frequency.exponentialRampToValueAtTime(
+            i % 2 === 0 ? 1500 : 1000, 
+            time + 0.2
+          );
+        }
+        break;
+
+      case 'alert': // Alerta agudo - Tom contínuo agudo
+        oscillator.frequency.setValueAtTime(1500, startTime);
+        for (let i = 0; i < duration * 6; i++) {
+          const time = startTime + (i * 0.15);
+          oscillator.frequency.exponentialRampToValueAtTime(
+            i % 2 === 0 ? 2000 : 1500, 
+            time + 0.15
+          );
+        }
+        break;
+
+      default: // Fallback para police
+        oscillator.frequency.setValueAtTime(800, startTime);
+        for (let i = 0; i < duration * 2; i++) {
+          const time = startTime + (i * 0.5);
+          oscillator.frequency.exponentialRampToValueAtTime(
+            i % 2 === 0 ? 1200 : 800, 
+            time + 0.5
+          );
+        }
     }
 
-    gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
+    // Fade out no final
+    gainNode.gain.linearRampToValueAtTime(0.01, startTime + duration);
 
-    oscillator1.start(startTime);
-    oscillator2.start(startTime);
-    oscillator1.stop(startTime + duration);
-    oscillator2.stop(startTime + duration);
+    oscillator.start(startTime);
+    oscillator.stop(startTime + duration);
   };
 
   // Limpar audioContext ao desmontar
