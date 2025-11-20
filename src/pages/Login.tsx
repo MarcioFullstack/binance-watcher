@@ -104,10 +104,45 @@ const Login = () => {
         setStep(2);
         toast.info("Enter your authentication code");
       } else {
-        // 2FA is mandatory - user must have it enabled
-        await supabase.auth.signOut();
-        toast.error("Autenticação de dois fatores é obrigatória. Por favor, entre em contato com o suporte para configurar.");
-        return;
+        // No 2FA required – complete login directly with returned session
+        if (!data.session) {
+          throw new Error(data.error || "Login failed");
+        }
+
+        await supabase.auth.setSession(data.session);
+        toast.success("Login successful!");
+
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (user) {
+          const { data: subscription } = await supabase
+            .from('subscriptions')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('status', 'active')
+            .maybeSingle();
+
+          let redirectUrl = '/payment';
+
+          if (subscription) {
+            const expiresAt = new Date(subscription.expires_at);
+            const now = new Date();
+
+            if (expiresAt >= now) {
+              const { data: accounts } = await supabase
+                .from('binance_accounts')
+                .select('id, is_active')
+                .eq('user_id', user.id)
+                .eq('is_active', true);
+
+              redirectUrl = (accounts && accounts.length > 0)
+                ? '/dashboard'
+                : '/setup-binance';
+            }
+          }
+
+          navigate(redirectUrl);
+        }
       }
     } catch (error: any) {
       toast.error(error.message || "Error logging in");

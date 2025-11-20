@@ -27,6 +27,9 @@ serve(async (req) => {
       }
     );
 
+    console.log('[2FA] Supabase client initialized with service role key:', !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'));
+
+
     // PHASE 1: Email/Password verification (no challengeToken yet)
     if (!challengeToken) {
       if (!email || !password) {
@@ -47,6 +50,8 @@ serve(async (req) => {
           p_max_attempts: 5,
           p_window_minutes: 15
         });
+
+      console.log('[2FA Phase 1] Rate limit check for', email, '=>', canProceed);
 
       if (!canProceed) {
         await supabaseClient.from('auth_attempts').insert({
@@ -258,7 +263,7 @@ serve(async (req) => {
       );
     }
 
-    // Get user's 2FA secret (encrypted)
+    // Get user's 2FA secret (may be encrypted or plain)
     const { data: twoFA } = await supabaseClient
       .from('user_2fa')
       .select('totp_secret')
@@ -275,8 +280,13 @@ serve(async (req) => {
       );
     }
 
-    // Decrypt TOTP secret
-    const decryptedSecret = await decrypt(twoFA.totp_secret);
+    // Decrypt TOTP secret if it's encrypted. If decryption fails, fall back to raw value
+    let decryptedSecret = twoFA.totp_secret;
+    try {
+      decryptedSecret = await decrypt(twoFA.totp_secret);
+    } catch (e) {
+      console.warn('[2FA Phase 2] TOTP secret not encrypted, using raw value');
+    }
 
     // First try TOTP verification
     let isValid = authenticator.verify({
