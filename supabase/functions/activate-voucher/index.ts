@@ -92,8 +92,14 @@ serve(async (req) => {
 
     console.log('Attempting to activate voucher:', trimmedCode);
 
-    // Buscar voucher
-    const { data: voucher, error: voucherError } = await supabaseClient
+    // Usar service role para buscar voucher (bypass RLS)
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Buscar voucher com service role
+    const { data: voucher, error: voucherError } = await supabaseAdmin
       .from('vouchers')
       .select('*')
       .eq('code', trimmedCode)
@@ -123,8 +129,8 @@ serve(async (req) => {
 
     console.log('Voucher found and valid, marking as used...');
 
-    // Marcar voucher como usado
-    const { error: updateVoucherError } = await supabaseClient
+    // Marcar voucher como usado (usar service role)
+    const { error: updateVoucherError } = await supabaseAdmin
       .from('vouchers')
       .update({
         is_used: true,
