@@ -1,23 +1,17 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wallet, DollarSign, TrendingUp, TrendingDown } from "lucide-react";
 import { useBinanceData } from "@/hooks/useBinanceData";
+import { Loader2 } from "lucide-react";
 
 export const BalanceCards = () => {
   const { data: binanceData, isLoading } = useBinanceData();
 
   if (isLoading || !binanceData) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 p-4 bg-card rounded-lg border">
         {[1, 2, 3, 4].map((i) => (
-          <Card key={i} className="animate-pulse">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div className="h-4 w-24 bg-muted rounded"></div>
-              <div className="h-4 w-4 bg-muted rounded"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-8 w-32 bg-muted rounded"></div>
-            </CardContent>
-          </Card>
+          <div key={i} className="flex flex-col gap-1">
+            <div className="h-3 w-20 bg-muted rounded animate-pulse"></div>
+            <div className="h-6 w-24 bg-muted rounded animate-pulse"></div>
+          </div>
         ))}
       </div>
     );
@@ -31,82 +25,32 @@ export const BalanceCards = () => {
   const isPnLPositive = unrealizedPnL >= 0;
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-card rounded-lg border">
       {/* Total Balance */}
-      <Card className="border-primary/20">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">
-            Saldo Total
-          </CardTitle>
-          <Wallet className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            ${totalBalance.toFixed(2)}
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Carteira completa
-          </p>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col gap-1">
+        <span className="text-xs text-muted-foreground">Saldo Total</span>
+        <span className="text-lg font-semibold">${totalBalance.toFixed(2)}</span>
+      </div>
 
       {/* Available Balance */}
-      <Card className="border-green-500/20">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">
-            Saldo Disponível
-          </CardTitle>
-          <DollarSign className="h-4 w-4 text-green-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-green-500">
-            ${availableBalance.toFixed(2)}
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Livre para trading
-          </p>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col gap-1">
+        <span className="text-xs text-muted-foreground">Disponível</span>
+        <span className="text-lg font-semibold">${availableBalance.toFixed(2)}</span>
+      </div>
 
       {/* Used Margin */}
-      <Card className="border-orange-500/20">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">
-            Margem Usada
-          </CardTitle>
-          <TrendingUp className="h-4 w-4 text-orange-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-orange-500">
-            ${usedMargin.toFixed(2)}
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Em posições abertas
-          </p>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col gap-1">
+        <span className="text-xs text-muted-foreground">Margem Usada</span>
+        <span className="text-lg font-semibold">${usedMargin.toFixed(2)}</span>
+      </div>
 
       {/* Unrealized PnL */}
-      <Card className={`border-${isPnLPositive ? 'green' : 'red'}-500/20`}>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">
-            PnL Não Realizado
-          </CardTitle>
-          {isPnLPositive ? (
-            <TrendingUp className="h-4 w-4 text-green-500" />
-          ) : (
-            <TrendingDown className="h-4 w-4 text-red-500" />
-          )}
-        </CardHeader>
-        <CardContent>
-          <div className={`text-2xl font-bold ${isPnLPositive ? 'text-green-500' : 'text-red-500'}`}>
-            {isPnLPositive ? '+' : ''}${unrealizedPnL.toFixed(2)}
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Lucro/perda aberto
-          </p>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col gap-1">
+        <span className="text-xs text-muted-foreground">PnL Não Realizado</span>
+        <span className={`text-lg font-semibold ${isPnLPositive ? 'text-green-500' : 'text-red-500'}`}>
+          {isPnLPositive ? '+' : ''}${unrealizedPnL.toFixed(2)}
+        </span>
+      </div>
     </div>
   );
 };
