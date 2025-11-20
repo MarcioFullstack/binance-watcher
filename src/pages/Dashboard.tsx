@@ -9,6 +9,7 @@ import { useSubscriptionRealtime } from "@/hooks/useSubscriptionRealtime";
 import { useBinanceData } from "@/hooks/useBinanceData";
 import { useAdvancedLossAlarm } from "@/hooks/useAdvancedLossAlarm";
 import { LossRiskIndicator } from "@/components/dashboard/LossRiskIndicator";
+import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -191,12 +192,19 @@ const Dashboard = () => {
           
           <main className="flex-1 p-4 md:p-6 space-y-4 overflow-auto">
             {lossStatus.isInLoss && (
-              <LossRiskIndicator
-                currentLossPercent={lossStatus.currentLossPercent}
-                currentLossAmount={lossStatus.currentLossAmount}
-                triggeredLevel={lossStatus.triggeredLevel}
-                isInLoss={lossStatus.isInLoss}
-              />
+              <div className="space-y-3">
+                <LossRiskIndicator
+                  currentLossPercent={lossStatus.currentLossPercent}
+                  currentLossAmount={lossStatus.currentLossAmount}
+                  triggeredLevel={lossStatus.triggeredLevel}
+                  isInLoss={lossStatus.isInLoss}
+                />
+                <Link to="/alert-history">
+                  <Button variant="outline" className="w-full">
+                    Ver Histórico de Alertas
+                  </Button>
+                </Link>
+              </div>
             )}
             <BalanceCards />
             <PnLDashboard />
