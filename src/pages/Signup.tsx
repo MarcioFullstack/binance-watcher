@@ -17,7 +17,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { OnboardingProgress } from "@/components/OnboardingProgress";
-import { encrypt } from "@/utils/encryption";
 
 const passwordSchema = z.string()
   .min(8, "Password must be at least 8 characters")
@@ -126,13 +125,18 @@ const Signup = () => {
 
         if (totpError) throw totpError;
 
-        const encryptedSecret = await encrypt(totpData.secret);
+        // Save 2FA secret securely via edge function (handles encryption)
+        const { error: save2FAError } = await supabase.functions.invoke(
+          "save-2fa-secret",
+          {
+            body: { 
+              totp_secret: totpData.secret,
+              user_id: data.user.id 
+            },
+          }
+        );
 
-        await supabase.from("user_2fa").insert({
-          user_id: data.user.id,
-          totp_secret: encryptedSecret,
-          is_enabled: false,
-        });
+        if (save2FAError) throw save2FAError;
 
         setTotpSecret(totpData.secret);
         // Generate proper TOTP URI for QR code
@@ -189,24 +193,18 @@ const Signup = () => {
 
               if (totpError) throw totpError;
 
-              const encryptedSecret = await encrypt(totpData.secret);
+              // Save 2FA secret securely via edge function (handles encryption)
+              const { error: save2FAError } = await supabase.functions.invoke(
+                "save-2fa-secret",
+                {
+                  body: { 
+                    totp_secret: totpData.secret,
+                    user_id: signInData.user.id 
+                  },
+                }
+              );
 
-              // Update or insert 2FA record
-              if (twoFAData) {
-                await supabase
-                  .from("user_2fa")
-                  .update({
-                    totp_secret: encryptedSecret,
-                    is_enabled: false,
-                  })
-                  .eq("user_id", signInData.user.id);
-              } else {
-                await supabase.from("user_2fa").insert({
-                  user_id: signInData.user.id,
-                  totp_secret: encryptedSecret,
-                  is_enabled: false,
-                });
-              }
+              if (save2FAError) throw save2FAError;
 
               setTotpSecret(totpData.secret);
               const issuer = "ChartGuard Pro";
@@ -246,25 +244,23 @@ const Signup = () => {
 
     try {
       // Buscar o secret do usuário
-      const { data: user2FAData, error: user2FAError } = await supabase
-        .from("user_2fa")
-        .select("totp_secret")
-        .eq("user_id", userId)
-        .single();
+      // Get decrypted secret from backend
+      const { data: secretData, error: secretError } = await supabase.functions.invoke(
+        "get-2fa-secret",
+        {
+          body: { user_id: userId },
+        }
+      );
 
-      if (user2FAError || !user2FAData) {
-        throw new Error("2FA configuration not found");
+      if (secretError || !secretData) {
+        throw new Error("Failed to get 2FA configuration");
       }
-
-      // Descriptografar o secret
-      const { decrypt } = await import("@/utils/encryption");
-      const decryptedSecret = await decrypt(user2FAData.totp_secret);
 
       // Verificar o código TOTP
       const { data, error } = await supabase.functions.invoke("verify-totp", {
         body: {
           token: totpCode,
-          secret: decryptedSecret,
+          secret: secretData.secret,
           identifier: email,
         },
       });
@@ -315,18 +311,18 @@ const Signup = () => {
 
       if (totpError) throw totpError;
 
-      const encryptedSecret = await encrypt(totpData.secret);
+      // Save 2FA secret securely via edge function (handles encryption)
+      const { error: save2FAError } = await supabase.functions.invoke(
+        "save-2fa-secret",
+        {
+          body: { 
+            totp_secret: totpData.secret,
+            user_id: userId 
+          },
+        }
+      );
 
-      // Update the existing 2FA record with new secret
-      const { error: updateError } = await supabase
-        .from("user_2fa")
-        .update({
-          totp_secret: encryptedSecret,
-          is_enabled: false,
-        })
-        .eq("user_id", userId);
-
-      if (updateError) throw updateError;
+      if (save2FAError) throw save2FAError;
 
       // Update state with new secret and QR code
       setTotpSecret(totpData.secret);
