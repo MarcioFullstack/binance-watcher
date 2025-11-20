@@ -1,4 +1,3 @@
-import React, { useMemo } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,8 +19,9 @@ import Install from "./pages/Install";
 import ForceLogout from "./pages/ForceLogout";
 import NotFound from "./pages/NotFound";
 
+const queryClient = new QueryClient();
+
 const App = () => {
-  const queryClient = useMemo(() => new QueryClient(), []);
 
   return (
     <QueryClientProvider client={queryClient}>
