@@ -71,10 +71,10 @@ export const PnLDashboard = () => {
       </Tabs>
 
       {/* Main P&L Card - Ganhos e Perdas de hoje */}
-      <Card className="p-4 border-border">
+      <Card className="p-4 border-border hover:border-glow transition-all">
         <p className="text-xs text-muted-foreground mb-1">Ganhos e Perdas de hoje</p>
         <div className="flex items-baseline gap-2">
-          <h2 className={`text-3xl font-bold ${todayPercent >= 0 ? 'text-success' : 'text-destructive'}`}>
+          <h2 className={`text-3xl font-bold ${todayPercent >= 0 ? 'text-success text-glow' : 'text-destructive'}`}>
             {todayPercent >= 0 ? '+' : ''}{todayPercent.toFixed(2)}%
           </h2>
           <span className={`text-base font-medium ${todayPnL >= 0 ? 'text-success' : 'text-destructive'}`}>

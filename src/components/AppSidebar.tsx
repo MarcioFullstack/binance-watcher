@@ -49,7 +49,7 @@ export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
         {/* Logo */}
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-3">
-            <img src={nottifyLogo} alt="Nottify" className="w-10 h-10" />
+            <img src={nottifyLogo} alt="Nottify" className="w-10 h-10 glow-primary-hover" />
             {!isCollapsed && <span className="font-bold text-xl text-foreground">Nottify</span>}
           </div>
         </div>
@@ -62,12 +62,12 @@ export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
               {mainItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      end
-                      className="hover:bg-muted/50 transition-colors"
-                      activeClassName="bg-muted text-primary font-medium"
-                    >
+                  <NavLink
+                    to={item.url}
+                    end
+                    className="hover:bg-muted/50 transition-all hover:glow-primary-hover"
+                    activeClassName="bg-muted text-primary font-medium border-glow"
+                  >
                       <item.icon className="h-5 w-5" />
                       {!isCollapsed && <span className="ml-3">{item.title}</span>}
                     </NavLink>
@@ -78,12 +78,12 @@ export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
               {isAdmin && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
-                    <NavLink
-                      to="/admin"
-                      end
-                      className="hover:bg-muted/50 transition-colors"
-                      activeClassName="bg-muted text-primary font-medium"
-                    >
+                  <NavLink
+                    to="/admin"
+                    end
+                    className="hover:bg-muted/50 transition-all hover:glow-primary-hover"
+                    activeClassName="bg-muted text-primary font-medium border-glow"
+                  >
                       <User className="h-5 w-5" />
                       {!isCollapsed && <span className="ml-3">Admin</span>}
                     </NavLink>
