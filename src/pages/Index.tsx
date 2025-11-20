@@ -49,6 +49,7 @@ const Index = () => {
   const [user, setUser] = useState<any>(null);
   const [subscription, setSubscription] = useState<any>(null);
   const [showBanner, setShowBanner] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Enable realtime subscription notifications
   useSubscriptionRealtime(user?.id);
@@ -69,6 +70,16 @@ const Index = () => {
         .maybeSingle();
       
       setSubscription(sub);
+
+      // Verificar se é admin
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+
+      setIsAdmin(!!roleData);
     }
   };
 
@@ -269,6 +280,17 @@ const Index = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {isAdmin && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => navigate('/admin')}
+                  className="hidden sm:flex"
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  Admin
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
