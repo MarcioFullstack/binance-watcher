@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { AuthLayout } from "@/components/AuthLayout";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -35,15 +36,15 @@ const App = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/payment" element={<Payment />} />
-            <Route path="/setup-binance" element={<SetupBinance />} />
+            <Route path="/payment" element={<AuthLayout><Payment /></AuthLayout>} />
+            <Route path="/setup-binance" element={<AuthLayout><SetupBinance /></AuthLayout>} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/security" element={<Dashboard />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/notifications" element={<NotificationHistory />} />
-            <Route path="/alert-history" element={<AlertHistory />} />
-            <Route path="/install" element={<Install />} />
+            <Route path="/settings" element={<AuthLayout><Settings /></AuthLayout>} />
+            <Route path="/security" element={<AuthLayout><Dashboard /></AuthLayout>} />
+            <Route path="/admin" element={<AuthLayout><Admin /></AuthLayout>} />
+            <Route path="/notifications" element={<AuthLayout><NotificationHistory /></AuthLayout>} />
+            <Route path="/alert-history" element={<AuthLayout><AlertHistory /></AuthLayout>} />
+            <Route path="/install" element={<AuthLayout showTimer={false}><Install /></AuthLayout>} />
             <Route path="/force-logout" element={<ForceLogout />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
