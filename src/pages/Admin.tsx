@@ -280,24 +280,25 @@ const Admin = () => {
     e.preventDefault();
     
     if (!password.trim()) {
-      toast.error("Digite sua senha");
+      toast.error("Digite a senha do painel admin");
       return;
     }
 
     setVerifyingPassword(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.email) {
-        throw new Error("Usuário não encontrado");
-      }
-
-      // Verify password by attempting to sign in
-      const { error } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: password,
+      // Call edge function to verify admin password
+      const { data, error } = await supabase.functions.invoke("verify-admin-password", {
+        body: { password },
       });
 
       if (error) {
+        console.error("Error verifying admin password:", error);
+        toast.error("Senha incorreta");
+        setPassword("");
+        return;
+      }
+
+      if (!data?.success) {
         toast.error("Senha incorreta");
         setPassword("");
         return;
@@ -307,7 +308,7 @@ const Admin = () => {
       setIsAuthenticated(true);
       setShowPasswordDialog(false);
       setPassword("");
-      toast.success("Acesso autorizado");
+      toast.success("Acesso autorizado ao painel admin");
       
       // Now load all admin data
       loadPayments();
@@ -1105,19 +1106,19 @@ const Admin = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5 text-primary" />
-              Autenticação de Administrador
+              Senha do Painel Administrativo
             </DialogTitle>
             <DialogDescription>
-              Por segurança, digite sua senha para acessar o painel administrativo.
+              Digite a senha exclusiva do painel admin para acessar.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handlePasswordVerification} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="admin-password">Senha</Label>
+              <Label htmlFor="admin-password">Senha do Painel Admin</Label>
               <Input
                 id="admin-password"
                 type="password"
-                placeholder="Digite sua senha"
+                placeholder="Digite a senha do painel"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={verifyingPassword}
