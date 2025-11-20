@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle, AlertTriangle, AlertOctagon, Siren, TrendingDown, Shield } from "lucide-react";
+import { AlertCircle, AlertTriangle, AlertOctagon, Siren, TrendingDown, Shield, Volume2, VolumeX } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 
 interface LossRiskIndicatorProps {
   currentLossPercent: number;
@@ -10,6 +11,8 @@ interface LossRiskIndicatorProps {
     loss_percentage: number;
   } | null;
   isInLoss: boolean;
+  alarmActive?: boolean;
+  onStopAlarm?: () => void;
 }
 
 const levelStyles = {
@@ -48,6 +51,8 @@ export const LossRiskIndicator = ({
   currentLossAmount,
   triggeredLevel,
   isInLoss,
+  alarmActive = false,
+  onStopAlarm,
 }: LossRiskIndicatorProps) => {
   if (!isInLoss) {
     return (
@@ -104,11 +109,27 @@ export const LossRiskIndicator = ({
           </div>
         </div>
 
+        {/* Botão de desligar alarme */}
+        {alarmActive && onStopAlarm && (
+          <div className="flex justify-center">
+            <Button
+              onClick={onStopAlarm}
+              size="lg"
+              variant="destructive"
+              className="w-full max-w-md animate-pulse"
+            >
+              <VolumeX className="mr-2 h-5 w-5" />
+              DESLIGAR ALARME SONORO
+            </Button>
+          </div>
+        )}
+
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span>Nível de Risco</span>
             <span className={style.color}>
               {levelName.toUpperCase()}
+              {alarmActive && <Volume2 className="inline ml-2 h-4 w-4 animate-pulse" />}
             </span>
           </div>
           <Progress 
