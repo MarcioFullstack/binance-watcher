@@ -143,7 +143,90 @@ const Signup = () => {
       }
     } catch (error: any) {
       console.error("Signup error:", error);
-      toast.error(error.message || "Error creating account");
+      
+      // Check if user already exists
+      if (error.message?.includes("User already registered") || error.message?.includes("already registered")) {
+        try {
+          setLoadingMessage("Verificando autenticação de dois fatores...");
+          
+          // Try to sign in to get user ID
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+
+          if (signInError) {
+            toast.error("Email já cadastrado. Por favor, faça login.");
+            setLoading(false);
+            return;
+          }
+
+          if (signInData.user) {
+            // Check if user has 2FA configured
+            const { data: twoFAData, error: twoFAError } = await supabase
+              .from("user_2fa")
+              .select("is_enabled, totp_secret")
+              .eq("user_id", signInData.user.id)
+              .maybeSingle();
+
+            if (twoFAError) {
+              console.error("Error checking 2FA:", twoFAError);
+            }
+
+            // If user doesn't have 2FA configured, set it up
+            if (!twoFAData || !twoFAData.is_enabled) {
+              setUserId(signInData.user.id);
+              setLoadingMessage("Configurando autenticação de dois fatores...");
+
+              // Generate new TOTP secret
+              const { data: totpData, error: totpError } = await supabase.functions.invoke(
+                "generate-totp-secret",
+                {
+                  body: { userId: signInData.user.id, email },
+                }
+              );
+
+              if (totpError) throw totpError;
+
+              const encryptedSecret = await encrypt(totpData.secret);
+
+              // Update or insert 2FA record
+              if (twoFAData) {
+                await supabase
+                  .from("user_2fa")
+                  .update({
+                    totp_secret: encryptedSecret,
+                    is_enabled: false,
+                  })
+                  .eq("user_id", signInData.user.id);
+              } else {
+                await supabase.from("user_2fa").insert({
+                  user_id: signInData.user.id,
+                  totp_secret: encryptedSecret,
+                  is_enabled: false,
+                });
+              }
+
+              setTotpSecret(totpData.secret);
+              const issuer = "ChartGuard Pro";
+              const totpUri = `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(email)}?secret=${totpData.secret}&issuer=${encodeURIComponent(issuer)}`;
+              setQrCodeUrl(totpUri);
+              setStep(2);
+              toast.success("Configure o Google Authenticator para continuar");
+              return;
+            } else {
+              // User already has 2FA configured
+              await supabase.auth.signOut();
+              toast.error("Email já cadastrado com 2FA configurado. Por favor, faça login.");
+            }
+          }
+        } catch (verifyError: any) {
+          console.error("Error verifying user:", verifyError);
+          toast.error("Email já cadastrado. Por favor, faça login.");
+        }
+      } else {
+        toast.error(error.message || "Error creating account");
+      }
     } finally {
       setLoading(false);
     }
