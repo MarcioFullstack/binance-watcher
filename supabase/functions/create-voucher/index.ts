@@ -69,12 +69,15 @@ serve(async (req) => {
       }
     }
 
-    // Validar formato do código: aceita XXXX-XXXX-XXXX-XXXX ou códigos personalizados (10-30 caracteres)
-    const standardFormat = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
-    const customFormat = /^[A-Z0-9-]{10,30}$/;
+    // Validar formato do código: aceita códigos alfanuméricos com hífens (5-30 caracteres)
+    const codeUpper = code.toUpperCase();
     
-    if (!standardFormat.test(code) && !customFormat.test(code)) {
-      throw new Error('Formato inválido. Use XXXX-XXXX-XXXX-XXXX ou código personalizado (10-30 caracteres alfanuméricos)');
+    if (codeUpper.length < 5 || codeUpper.length > 30) {
+      throw new Error('Código deve ter entre 5 e 30 caracteres');
+    }
+    
+    if (!/^[A-Z0-9-]+$/.test(codeUpper)) {
+      throw new Error('Código deve conter apenas letras maiúsculas, números e hífens');
     }
 
     // Validar dias - aceitar 1 a 3650 (10 anos)
@@ -87,7 +90,7 @@ serve(async (req) => {
     const { data: existingVoucher } = await supabase
       .from('vouchers')
       .select('code')
-      .eq('code', code.toUpperCase())
+      .eq('code', codeUpper)
       .maybeSingle();
 
     if (existingVoucher) {
@@ -103,7 +106,7 @@ serve(async (req) => {
     const { data: newVoucher, error: insertError } = await supabaseServiceRole
       .from('vouchers')
       .insert({
-        code: code.toUpperCase(),
+        code: codeUpper,
         days: daysNumber,
         is_used: false,
         max_uses: maxUsesNumber,
