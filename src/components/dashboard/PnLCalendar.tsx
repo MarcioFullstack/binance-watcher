@@ -45,7 +45,7 @@ export const PnLCalendar = () => {
 
       return data as DailyPnL[];
     },
-    refetchInterval: 30000, // Refetch every 30 seconds for real-time sync
+    refetchInterval: 120000, // Refetch every 2 minutes to avoid rate limits
   });
 
   // Auto-sync when component mounts or user comes back to tab

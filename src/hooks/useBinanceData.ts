@@ -50,7 +50,7 @@ export const useBinanceData = () => {
 
       return data as BinanceData;
     },
-    refetchInterval: 5000, // Refetch every 5 seconds
+    refetchInterval: 10000, // Refetch every 10 seconds to avoid rate limits
     retry: (failureCount, error) => {
       // Don't retry if it's a keys validation error
       if (error instanceof Error && error.message === 'BINANCE_KEYS_INVALID') {

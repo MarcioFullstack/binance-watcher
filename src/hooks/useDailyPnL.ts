@@ -57,6 +57,6 @@ export const useDailyPnL = () => {
         dailyData: data || [],
       };
     },
-    refetchInterval: 60000, // Refetch every minute
+    refetchInterval: 300000, // Refetch every 5 minutes (daily data doesn't change frequently)
   });
 };

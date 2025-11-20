@@ -7,6 +7,20 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Simple cache to reduce Binance API calls
+const cache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL = 8000; // 8 seconds cache to avoid rate limits
+
+// Clean expired cache entries every 30 seconds
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of cache.entries()) {
+    if (now - value.timestamp > CACHE_TTL) {
+      cache.delete(key);
+    }
+  }
+}, 30000);
+
 // Função para criar assinatura HMAC SHA256
 async function createSignature(secret: string, queryString: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -46,6 +60,21 @@ serve(async (req) => {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) {
       throw new Error('Unauthorized');
+    }
+
+    // Check cache first to avoid rate limits
+    const cacheKey = `binance_data_${user.id}`;
+    const cached = cache.get(cacheKey);
+    
+    if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) {
+      console.log('Returning cached data for user:', user.id);
+      return new Response(
+        JSON.stringify(cached.data),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
     // Buscar conta Binance ativa do usuário
@@ -290,6 +319,10 @@ serve(async (req) => {
         riskLimitPercent: riskLimitPercent.toFixed(2),
       },
     };
+
+    // Update cache before returning
+    cache.set(cacheKey, { data: response, timestamp: Date.now() });
+    console.log('Updated cache for user:', user.id);
 
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
