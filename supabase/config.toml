@@ -60,6 +60,9 @@ verify_jwt = false
 [functions.sync-daily-pnl]
 verify_jwt = true
 
+[functions.test-binance-connection]
+verify_jwt = false
+
 [functions.verify-totp]
 verify_jwt = true
 
