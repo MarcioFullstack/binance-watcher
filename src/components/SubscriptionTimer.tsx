@@ -18,6 +18,29 @@ export const SubscriptionTimer = ({ userId, onExpired }: SubscriptionTimerProps)
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
+  // Alerta sonoro quando faltar menos de 1 hora
+  useEffect(() => {
+    if (!loading && !timeRemaining.isExpired && timeRemaining.total > 0) {
+      const oneHourInMs = 60 * 60 * 1000;
+      
+      if (timeRemaining.total <= oneHourInMs && timeRemaining.total > oneHourInMs - 60000) {
+        // Toca alerta sonoro apenas uma vez quando atingir 1 hora
+        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZRA0PVKzn8a1hGAg+ltry0H0pBSh+zPHaizsIGGS56+mbTA0OTqXh8bllHQc2jdXzzn4qBSh9y/DblTsKF2O56+aaTQwNTKPh8bllHQg2jdT0z4AqBSh9yvDblDsKF2O46+aaTAwOTKPh8bllHQg2jdX0z38qBSh9yfDblDsKGGO46+aaTAwOTKPg8rllHQg2jdX0z38qBSh9yfDblDwKF2O46+aaTAwOTKPh8bllHQg2jdXzzn8qBSh9yfDblDwKGGO46+aaTAwOTKPh8rllHQg2jdX0z38qBSh9yfDblDwKGGO46+aaTAwOTKPh8rllHQg2jdX0z38pBSh9yfDblDwKGGO46+aaTAwOTKPh8rllHQg2jdX0z38pBSh9yfDblTwKGGO46+aaTAwOTKPh8rllHQg2jdX0z38pBSh9yfDblTwKGGO46+aaTQwOTKPh8rllHQg2jdX0z38pBSh9yfDblTwKGGO46+aaTQwOTKPh8rllHQg2jdX0z38pBSh9yfDblTwKGGO46+aaTQwOTKPh8rllHQg2jdX0z38pBSh9yfDblTwKGGO46+aaTQwOTKPh8rllHQg2jdX0z38pBSh9yfDblTwKGGO46+aaTQwOTKPh8rllHQg2jdX0z38pBSh9yfDblTwKGGO46+aaTQwOTKPh8rllHQg2jdX0z38pBSh9yfDblTwKGGO46+aaTQwOTKPh8rllHQg2jdX0z38pBSh9yfDblTwKGGO46+aaTQwOTKPh8rllHQg2jdX0z38pBSh9yfDblTwKGGO46+aaTQwOTKPh8rllHQg2jdX0z38pBSh9yfDblTwKGGO46+aaTQwOTKPh8rllHQg2jdX0z38pBSh9yfDblTwKGGO46+aaTQwOTKPh8rllHQg2jdX0z38pBQ==');
+        audio.volume = 0.5;
+        audio.play().catch(err => console.log('Erro ao tocar alerta:', err));
+        
+        toast.warning('⚠️ URGENTE: Menos de 1 hora para sua assinatura expirar!', {
+          description: 'Renove agora para evitar interrupção do serviço.',
+          duration: 10000,
+        });
+      }
+    }
+  }, [timeRemaining.total, loading, timeRemaining.isExpired]);
+
+  const handleClick = () => {
+    navigate('/payment');
+  };
+
   useEffect(() => {
     if (timeRemaining.isExpired && !loading) {
       toast.error("Your subscription has expired! Please renew to continue.");
@@ -33,7 +56,10 @@ export const SubscriptionTimer = ({ userId, onExpired }: SubscriptionTimerProps)
 
   if (timeRemaining.isExpired) {
     return (
-      <div className={`flex items-center gap-1.5 ${isMobile ? 'px-2 py-1' : 'px-3 py-1.5'} rounded-md border border-destructive bg-destructive/10`}>
+      <div 
+        onClick={handleClick}
+        className={`flex items-center gap-1.5 ${isMobile ? 'px-2 py-1' : 'px-3 py-1.5'} rounded-md border border-destructive bg-destructive/10 cursor-pointer hover:bg-destructive/20 transition-colors`}
+      >
         <AlertTriangle className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} text-destructive flex-shrink-0`} />
         <span className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-destructive`}>
           {isMobile ? 'Expirado' : 'Assinatura Expirada'}
@@ -53,7 +79,10 @@ export const SubscriptionTimer = ({ userId, onExpired }: SubscriptionTimerProps)
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className={`flex items-center ${isMobile ? 'gap-1' : 'gap-2'} ${isMobile ? 'px-2 py-1' : 'px-3 py-1.5'} rounded-md border cursor-pointer transition-colors hover:bg-accent/50 ${showWarning ? 'border-amber-500 bg-amber-500/10' : ''} ${isUrgent ? 'border-destructive bg-destructive/10' : ''}`}>
+          <div 
+            onClick={handleClick}
+            className={`flex items-center ${isMobile ? 'gap-1' : 'gap-2'} ${isMobile ? 'px-2 py-1' : 'px-3 py-1.5'} rounded-md border cursor-pointer transition-all hover:bg-accent/50 hover:scale-105 ${showWarning ? 'border-amber-500 bg-amber-500/10' : ''} ${isUrgent ? 'border-destructive bg-destructive/10 animate-pulse' : ''}`}
+          >
             {isUrgent ? (
               <AlertTriangle className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} text-destructive flex-shrink-0`} />
             ) : (
@@ -91,6 +120,7 @@ export const SubscriptionTimer = ({ userId, onExpired }: SubscriptionTimerProps)
             <p className="text-sm text-muted-foreground mt-1">
               {timeRemaining.expiresAt && format(timeRemaining.expiresAt, "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
             </p>
+            <p className="text-xs text-primary mt-2 font-medium">Clique para renovar agora</p>
           </div>
         </TooltipContent>
       </Tooltip>
