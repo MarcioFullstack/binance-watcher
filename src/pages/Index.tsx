@@ -935,7 +935,7 @@ const Index = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 border-t border-border">
+      <footer className="py-12 px-4 border-t border-border relative">
         <div className="max-w-6xl mx-auto text-center space-y-4">
           <div className="flex items-center justify-center gap-3">
             <img src={nottifyLogo} alt="NOTTIFY" className="w-8 h-8" />
@@ -947,6 +947,12 @@ const Index = () => {
           <div className="text-sm text-muted-foreground">
             © 2025 NOTTIFY. Todos os direitos reservados.
           </div>
+        </div>
+        
+        {/* Developer Info */}
+        <div className="absolute bottom-4 right-4 text-xs text-muted-foreground text-right">
+          <p>Developer: Marcio Oliveira</p>
+          <p>+55 (85) 99687-3503</p>
         </div>
       </footer>
     </div>
