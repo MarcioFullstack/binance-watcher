@@ -280,19 +280,33 @@ serve(async (req) => {
       );
     }
 
+    console.log('[2FA Phase 2] Raw secret from DB (first 10 chars):', twoFA.totp_secret.substring(0, 10));
+    console.log('[2FA Phase 2] Secret length:', twoFA.totp_secret.length);
+    console.log('[2FA Phase 2] TOTP code received:', totpCode, 'length:', totpCode.length);
+
     // Decrypt TOTP secret if it's encrypted. If decryption fails, fall back to raw value
     let decryptedSecret = twoFA.totp_secret;
     try {
       decryptedSecret = await decrypt(twoFA.totp_secret);
+      console.log('[2FA Phase 2] Secret was encrypted, decrypted successfully');
     } catch (e) {
-      console.warn('[2FA Phase 2] TOTP secret not encrypted, using raw value');
+      console.log('[2FA Phase 2] Secret not encrypted, using raw value');
     }
+
+    console.log('[2FA Phase 2] Final secret (first 10 chars):', decryptedSecret.substring(0, 10));
+
+    // Configure authenticator with window for clock skew (allow 1 step before/after = 30s each way)
+    authenticator.options = {
+      window: 2  // Allow 2 time steps (1 minute) of drift
+    };
 
     // First try TOTP verification
     let isValid = authenticator.verify({
       token: totpCode,
       secret: decryptedSecret
     });
+
+    console.log('[2FA Phase 2] TOTP verification result:', isValid);
 
     // If TOTP fails, try backup code
     if (!isValid) {
