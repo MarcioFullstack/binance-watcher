@@ -10,6 +10,7 @@ export interface BinanceData {
   pnl: {
     today: string;
     todayPercent: string;
+    realized: string;
     unrealized: string;
     totalFromInitial: string;
     totalPercent: string;
