@@ -13,37 +13,56 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      {
-        global: {
-          headers: { Authorization: req.headers.get("Authorization")! },
-        },
+    const { date, market_type = "USDT", userId: requestUserId } = await req.json();
+
+    // If userId is provided in request, use service role client (admin call)
+    // Otherwise, use authenticated user client (user call)
+    let supabaseClient;
+    let userId;
+
+    if (requestUserId) {
+      // Admin call - use service role
+      console.log('Admin call detected, using service role for user:', requestUserId);
+      supabaseClient = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      );
+      userId = requestUserId;
+    } else {
+      // User call - use authenticated user
+      supabaseClient = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+        {
+          global: {
+            headers: { Authorization: req.headers.get("Authorization")! },
+          },
+        }
+      );
+
+      const {
+        data: { user },
+        error: userError,
+      } = await supabaseClient.auth.getUser();
+
+      if (userError || !user) {
+        console.error("Authentication error:", userError);
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
-    );
-
-    // Get authenticated user
-    const {
-      data: { user },
-      error: userError,
-    } = await supabaseClient.auth.getUser();
-
-    if (userError || !user) {
-      console.error("Authentication error:", userError);
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      
+      userId = user.id;
     }
 
-    console.log(`Syncing PnL for user: ${user.id}`);
+    console.log(`Syncing PnL for user: ${userId}`);
 
     // Get active Binance account
     const { data: binanceAccount, error: accountError } = await supabaseClient
       .from("binance_accounts")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .eq("is_active", true)
       .maybeSingle();
 
@@ -80,8 +99,6 @@ serve(async (req) => {
         }
       );
     }
-
-    const { date, market_type = "USDT" } = await req.json();
 
     console.log(`Syncing data for date: ${date}, market: ${market_type}`);
 
@@ -151,7 +168,7 @@ serve(async (req) => {
     const { data: riskSettings } = await supabaseClient
       .from('risk_settings')
       .select('initial_balance')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .maybeSingle();
 
     // Calculate percentage based on account balance
@@ -212,7 +229,7 @@ serve(async (req) => {
       .from("daily_pnl")
       .upsert(
         {
-          user_id: user.id,
+          user_id: userId,
           date: date,
           pnl_usd: pnlUsd,
           pnl_percentage: pnlPercentage,
