@@ -38,6 +38,7 @@ const App = () => {
             <Route path="/setup-binance" element={<SetupBinance />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/security" element={<Dashboard />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/notifications" element={<NotificationHistory />} />
             <Route path="/install" element={<Install />} />
