@@ -144,6 +144,19 @@
     "connected": "Connected",
     "disconnected": "Disconnected"
   },
+  "riskAlerts": {
+    "title": "Progressive Risk Alerts",
+    "description": "You will receive automatic notifications as you approach your configured loss limit",
+    "level70": "⚠️ Warning at 70%",
+    "level70Desc": "First alert when reaching 70% of your configured limit",
+    "level85": "🔴 Attention at 85%",
+    "level85Desc": "Second alert at 85% - review your positions",
+    "level95": "🚨 Critical at 95%",
+    "level95Desc": "Critical alert at 95% - consider reducing exposure",
+    "level100": "🚨 Limit Reached",
+    "level100Desc": "Final alert when limit is reached - immediate action recommended",
+    "info": "Alerts are sent once per hour to avoid spam. Monitor your risk level on the dashboard in real-time."
+  },
   "subscription": {
     "active": "Active",
     "inactive": "Inactive",

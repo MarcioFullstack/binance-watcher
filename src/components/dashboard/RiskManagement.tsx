@@ -100,14 +100,44 @@ export const RiskManagement = ({ data }: RiskManagementProps) => {
             <p className="text-xs text-center text-muted-foreground">
               {isCriticalRisk ? (
                 <span className="text-destructive font-bold">🚨 LIMITE ATINGIDO - Considere fechar posições!</span>
+              ) : riskLimitPercent >= 95 ? (
+                <span className="text-destructive font-bold">🚨 CRÍTICO - 95% do limite atingido</span>
+              ) : riskLimitPercent >= 85 ? (
+                <span className="text-warning font-bold">🔴 ATENÇÃO - 85% do limite atingido</span>
+              ) : riskLimitPercent >= 70 ? (
+                <span className="text-warning font-medium">⚠️ ALERTA - 70% do limite atingido</span>
               ) : isHighRisk ? (
-                <span className="text-warning font-medium">⚠️ Próximo ao limite de risco</span>
+                <span className="text-warning font-medium">⚠️ Aproximando-se do limite de risco</span>
               ) : (
                 <span>Operando dentro do limite de risco</span>
               )}
             </p>
           </div>
         </div>
+
+        {/* Alertas de Risco Progressivos */}
+        {riskLimitPercent >= 70 && !isCriticalRisk && (
+          <div className={`${
+            riskLimitPercent >= 95 ? 'bg-destructive/10 border-destructive/20' :
+            riskLimitPercent >= 85 ? 'bg-warning/10 border-warning/20' :
+            'bg-warning/5 border-warning/10'
+          } border rounded-lg p-3`}>
+            <p className={`text-sm font-medium ${
+              riskLimitPercent >= 95 ? 'text-destructive' :
+              riskLimitPercent >= 85 ? 'text-warning' :
+              'text-warning'
+            }`}>
+              {riskLimitPercent >= 95 ? '🚨 Nível Crítico de Risco!' :
+               riskLimitPercent >= 85 ? '🔴 Atenção ao Nível de Risco' :
+               '⚠️ Alerta de Risco'}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {riskLimitPercent >= 95 ? 'Você está a apenas 5% do limite configurado. Considere reduzir exposição.' :
+               riskLimitPercent >= 85 ? 'Você atingiu 85% do seu limite de perda. Revise suas posições.' :
+               'Você atingiu 70% do seu limite de perda. Mantenha atenção às suas posições.'}
+            </p>
+          </div>
+        )}
 
         {/* Alerta de Posições Críticas */}
         {data.risk.hasCritical && (
