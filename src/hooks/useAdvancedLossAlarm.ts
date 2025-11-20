@@ -179,40 +179,46 @@ export const useAdvancedLossAlarm = (
       gainNodeRef.current = gainNode;
 
       const startTime = audioContextRef.current.currentTime;
-      const cycleDuration = 2; // 2 segundos por ciclo
+      const cycleDuration = 5; // 5 segundos por ciclo - alarme mais longo
 
       gainNode.gain.setValueAtTime(volume, startTime);
 
-      // Padrões de sirene diferentes baseados no tipo selecionado
+      // Padrões de sirene diferentes baseados no tipo selecionado - duração estendida para 5 segundos
       switch(sirenType) {
-        case 'police': // Sirene de polícia
+        case 'police': // Sirene de polícia - mais ciclos
           oscillator.frequency.setValueAtTime(800, startTime);
-          oscillator.frequency.exponentialRampToValueAtTime(1200, startTime + 0.5);
-          oscillator.frequency.exponentialRampToValueAtTime(800, startTime + 1);
-          oscillator.frequency.exponentialRampToValueAtTime(1200, startTime + 1.5);
-          oscillator.frequency.exponentialRampToValueAtTime(800, startTime + 2);
+          oscillator.frequency.exponentialRampToValueAtTime(1200, startTime + 0.6);
+          oscillator.frequency.exponentialRampToValueAtTime(800, startTime + 1.2);
+          oscillator.frequency.exponentialRampToValueAtTime(1200, startTime + 1.8);
+          oscillator.frequency.exponentialRampToValueAtTime(800, startTime + 2.4);
+          oscillator.frequency.exponentialRampToValueAtTime(1200, startTime + 3);
+          oscillator.frequency.exponentialRampToValueAtTime(800, startTime + 3.6);
+          oscillator.frequency.exponentialRampToValueAtTime(1200, startTime + 4.2);
+          oscillator.frequency.exponentialRampToValueAtTime(800, startTime + 5);
           break;
 
-        case 'ambulance': // Sirene de ambulância
+        case 'ambulance': // Sirene de ambulância - mais ciclos
           oscillator.frequency.setValueAtTime(600, startTime);
-          oscillator.frequency.exponentialRampToValueAtTime(900, startTime + 0.4);
-          oscillator.frequency.exponentialRampToValueAtTime(600, startTime + 0.8);
-          oscillator.frequency.exponentialRampToValueAtTime(900, startTime + 1.2);
-          oscillator.frequency.exponentialRampToValueAtTime(600, startTime + 1.6);
-          oscillator.frequency.exponentialRampToValueAtTime(900, startTime + 2);
+          for (let i = 0; i < 12; i++) {
+            const time = startTime + (i * 0.42);
+            oscillator.frequency.exponentialRampToValueAtTime(
+              i % 2 === 0 ? 900 : 600,
+              time + 0.42
+            );
+          }
           break;
 
-        case 'fire': // Sirene de bombeiros
+        case 'fire': // Sirene de bombeiros - mais lento e longo
           oscillator.frequency.setValueAtTime(500, startTime);
-          oscillator.frequency.exponentialRampToValueAtTime(1500, startTime + 0.5);
-          oscillator.frequency.exponentialRampToValueAtTime(500, startTime + 1);
-          oscillator.frequency.exponentialRampToValueAtTime(1500, startTime + 1.5);
-          oscillator.frequency.exponentialRampToValueAtTime(500, startTime + 2);
+          oscillator.frequency.exponentialRampToValueAtTime(1500, startTime + 1.25);
+          oscillator.frequency.exponentialRampToValueAtTime(500, startTime + 2.5);
+          oscillator.frequency.exponentialRampToValueAtTime(1500, startTime + 3.75);
+          oscillator.frequency.exponentialRampToValueAtTime(500, startTime + 5);
           break;
 
-        case 'alarm': // Alarme de prédio
+        case 'alarm': // Alarme de prédio - mais repetições
           oscillator.frequency.setValueAtTime(1000, startTime);
-          for (let i = 0; i < 10; i++) {
+          for (let i = 0; i < 25; i++) {
             const time = startTime + (i * 0.2);
             oscillator.frequency.exponentialRampToValueAtTime(
               i % 2 === 0 ? 1500 : 1000, 
@@ -221,9 +227,9 @@ export const useAdvancedLossAlarm = (
           }
           break;
 
-        case 'alert': // Alerta agudo
+        case 'alert': // Alerta agudo - mais repetições
           oscillator.frequency.setValueAtTime(1500, startTime);
-          for (let i = 0; i < 13; i++) {
+          for (let i = 0; i < 33; i++) {
             const time = startTime + (i * 0.15);
             oscillator.frequency.exponentialRampToValueAtTime(
               i % 2 === 0 ? 2000 : 1500, 
@@ -234,8 +240,8 @@ export const useAdvancedLossAlarm = (
 
         default:
           oscillator.frequency.setValueAtTime(800, startTime);
-          oscillator.frequency.exponentialRampToValueAtTime(1200, startTime + 1);
-          oscillator.frequency.exponentialRampToValueAtTime(800, startTime + 2);
+          oscillator.frequency.exponentialRampToValueAtTime(1200, startTime + 2.5);
+          oscillator.frequency.exponentialRampToValueAtTime(800, startTime + 5);
       }
 
       oscillator.start(startTime);
@@ -245,10 +251,10 @@ export const useAdvancedLossAlarm = (
     // Toca o primeiro ciclo imediatamente
     playCycle();
 
-    // Configura loop contínuo a cada 2 segundos
+    // Configura loop contínuo a cada 5.5 segundos (um pouco mais que o ciclo)
     alarmIntervalRef.current = window.setInterval(() => {
       playCycle();
-    }, 2000);
+    }, 5500);
   };
 
   const stopAlarm = () => {
