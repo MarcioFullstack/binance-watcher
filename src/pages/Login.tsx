@@ -104,10 +104,34 @@ const Login = () => {
         setStep(2);
         toast.info("Enter your authentication code");
       } else {
-        // No 2FA - session created, check Binance configuration
+        // No 2FA - session created, check subscription and Binance configuration
         const { data: { user } } = await supabase.auth.getUser();
         
         if (user) {
+          // First check if has active subscription
+          const { data: subscription } = await supabase
+            .from('subscriptions')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('status', 'active')
+            .maybeSingle();
+
+          // Verify subscription exists and is not expired
+          if (!subscription) {
+            toast.success("Login realizado! Complete o pagamento para continuar");
+            navigate("/payment");
+            return;
+          }
+
+          const expiresAt = new Date(subscription.expires_at);
+          const now = new Date();
+          
+          if (expiresAt < now) {
+            toast.error("Sua assinatura expirou");
+            navigate("/payment");
+            return;
+          }
+
           // Check if user has Binance account configured
           const { data: accounts } = await supabase
             .from('binance_accounts')
@@ -123,7 +147,7 @@ const Login = () => {
             navigate("/setup-binance");
           }
         } else {
-          navigate("/dashboard");
+          navigate("/payment");
         }
       }
     } catch (error: any) {
@@ -161,19 +185,37 @@ const Login = () => {
         throw new Error("Invalid code. Try again.");
       }
 
-      // Check Binance configuration before redirecting
+      // Check subscription and Binance configuration before redirecting
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
-        const { data: accounts } = await supabase
-          .from('binance_accounts')
-          .select('id, is_active')
+        // First check if has active subscription
+        const { data: subscription } = await supabase
+          .from('subscriptions')
+          .select('*')
           .eq('user_id', user.id)
-          .eq('is_active', true);
+          .eq('status', 'active')
+          .maybeSingle();
 
-        const redirectUrl = (accounts && accounts.length > 0) 
-          ? '/dashboard' 
-          : '/setup-binance';
+        let redirectUrl = '/payment'; // Default to payment if no subscription
+
+        if (subscription) {
+          const expiresAt = new Date(subscription.expires_at);
+          const now = new Date();
+          
+          // If subscription is valid, check Binance configuration
+          if (expiresAt >= now) {
+            const { data: accounts } = await supabase
+              .from('binance_accounts')
+              .select('id, is_active')
+              .eq('user_id', user.id)
+              .eq('is_active', true);
+
+            redirectUrl = (accounts && accounts.length > 0) 
+              ? '/dashboard' 
+              : '/setup-binance';
+          }
+        }
 
         // Add redirect parameter to magic link
         const urlWithRedirect = `${data.magicLink}&redirect_to=${encodeURIComponent(redirectUrl)}`;

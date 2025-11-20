@@ -53,7 +53,7 @@
     "addressCopied": "¡Dirección copiada!",
     "amount": "Cantidad",
     "oneTimePayment": "Pago único en USD o criptomonedas",
-    "sendPayment": "Envía $15 en USD o equivalente en criptomonedas a esta dirección",
+    "sendPayment": "Envía $10 en USD o equivalente en criptomonedas a esta dirección",
     "registerPayment": "Registrar Pago",
     "pendingPayment": "¡Pago pendiente detectado! Esperando confirmación en blockchain (mínimo 3 confirmaciones).",
     "createdAt": "Creado el:",

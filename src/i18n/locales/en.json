@@ -53,7 +53,7 @@
     "addressCopied": "Address copied!",
     "amount": "Amount",
     "oneTimePayment": "One-time payment in USD or cryptocurrencies",
-    "sendPayment": "Send $15 in USD or equivalent in cryptocurrencies to this address",
+    "sendPayment": "Send $10 in USD or equivalent in cryptocurrencies to this address",
     "registerPayment": "Register Payment",
     "pendingPayment": "Pending payment detected! Waiting for blockchain confirmation (minimum 3 confirmations).",
     "createdAt": "Created at:",
