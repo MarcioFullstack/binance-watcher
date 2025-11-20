@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Siren, Coins } from 'lucide-react';
+import { Siren, Coins, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useState } from 'react';
@@ -46,6 +46,32 @@ export const TestAlarmButton = () => {
     }
   };
 
+  const clearTestNotifications = async () => {
+    setLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error('Você precisa estar logado');
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('clear-test-notifications');
+
+      if (error) throw error;
+
+      toast.success('Notificações de teste limpas!', {
+        description: `${data.count} notificação(ões) removida(s) do histórico.`,
+        duration: 3000,
+      });
+    } catch (error: any) {
+      console.error('Error clearing test notifications:', error);
+      toast.error('Erro ao limpar notificações: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -69,6 +95,11 @@ export const TestAlarmButton = () => {
         <DropdownMenuItem onClick={() => testAlarm('gain')}>
           <Coins className="mr-2 h-4 w-4 text-green-500" />
           Alarme de Ganho
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={clearTestNotifications} className="text-destructive focus:text-destructive">
+          <Trash2 className="mr-2 h-4 w-4" />
+          Limpar Notificações de Teste
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
