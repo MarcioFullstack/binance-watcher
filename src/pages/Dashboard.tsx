@@ -190,7 +190,7 @@ const Dashboard = () => {
             />
           </header>
           
-          <main className="flex-1 p-4 md:p-6 space-y-4 overflow-auto">
+          <main className="flex-1 p-4 md:p-6 space-y-4 overflow-auto relative">
             {lossStatus.isInLoss && (
               <div className="space-y-3">
                 <LossRiskIndicator
@@ -216,6 +216,17 @@ const Dashboard = () => {
             )}
             <BalanceCards />
             <PnLDashboard />
+            
+            {/* Floating Action Button */}
+            <Link to="/settings">
+              <Button
+                size="lg"
+                className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 z-50"
+                title="Configurar Alertas de Perda"
+              >
+                <Settings className="h-6 w-6" />
+              </Button>
+            </Link>
           </main>
         </div>
       </div>
