@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import { Loader2, ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { activateVoucher } from "@/hooks/useBinanceData";
+import { activateVoucher } from "@/utils/voucher";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "react-i18next";
 import { encrypt } from "@/utils/encryption";

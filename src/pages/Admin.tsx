@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAlertsRealtime } from "@/hooks/useAlertsRealtime";
 import { VoucherGenerator } from "@/components/admin/VoucherGenerator";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -137,9 +136,6 @@ const Admin = () => {
   const [configHistoryLoading, setConfigHistoryLoading] = useState(false);
   const [historyDateRange, setHistoryDateRange] = useState<"week" | "month" | "3months" | "all">("week");
   const navigate = useNavigate();
-  
-  // Enable realtime alerts notifications for admins
-  useAlertsRealtime(userId, isAdmin);
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
