@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, AlertTriangle, AlertCircle, AlertOctagon, Siren, Plus, Trash2, Volume2 } from "lucide-react";
+import { Loader2, AlertTriangle, AlertCircle, AlertOctagon, Siren, Plus, Trash2, Volume2, DollarSign } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
@@ -63,6 +64,8 @@ export const AdvancedLossAlertSettings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [alertLevels, setAlertLevels] = useState<AlertLevel[]>([]);
+  const [initialBalance, setInitialBalance] = useState<string>("1000");
+  const [sirenType, setSirenType] = useState<string>("police");
   const [showNewAlertDialog, setShowNewAlertDialog] = useState(false);
   const [newAlert, setNewAlert] = useState({
     level_name: "",
@@ -82,6 +85,7 @@ export const AdvancedLossAlertSettings = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Load alert levels
       const { data, error } = await supabase
         .from("loss_alert_levels")
         .select("*")
@@ -93,6 +97,22 @@ export const AdvancedLossAlertSettings = () => {
       if (data && data.length > 0) {
         setAlertLevels(data);
       }
+
+      // Load risk settings for initial balance and siren type
+      const { data: riskData, error: riskError } = await supabase
+        .from("risk_settings")
+        .select("initial_balance, siren_type")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (riskError) throw riskError;
+      
+      if (riskData?.initial_balance) {
+        setInitialBalance(riskData.initial_balance.toString());
+      }
+      if (riskData?.siren_type) {
+        setSirenType(riskData.siren_type);
+      }
     } catch (error) {
       console.error("Error loading settings:", error);
       toast.error("Erro ao carregar configurações");
@@ -102,6 +122,13 @@ export const AdvancedLossAlertSettings = () => {
   };
 
   const handleSave = async () => {
+    const balanceValue = parseFloat(initialBalance);
+    
+    if (isNaN(balanceValue) || balanceValue <= 0) {
+      toast.error("Digite um saldo inicial válido");
+      return;
+    }
+
     setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -119,19 +146,34 @@ export const AdvancedLossAlertSettings = () => {
         }
       }
 
+      // Save alert levels
       const updates = alertLevels.map(level => ({
         ...level,
         user_id: user.id,
         updated_at: new Date().toISOString(),
       }));
 
-      const { error } = await supabase
+      const { error: alertError } = await supabase
         .from("loss_alert_levels")
         .upsert(updates, { onConflict: 'user_id,level_name' });
 
-      if (error) throw error;
+      if (alertError) throw alertError;
 
-      toast.success("Configurações de alarme salvas com sucesso!");
+      // Save risk settings (initial balance and siren type)
+      const { error: riskError } = await supabase
+        .from("risk_settings")
+        .upsert({
+          user_id: user.id,
+          initial_balance: balanceValue,
+          siren_type: sirenType,
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: "user_id"
+        });
+
+      if (riskError) throw riskError;
+
+      toast.success("Configurações salvas com sucesso!");
     } catch (error: any) {
       console.error("Error saving settings:", error);
       toast.error("Erro ao salvar configurações");
@@ -380,6 +422,52 @@ export const AdvancedLossAlertSettings = () => {
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Configurações Globais */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-lg border bg-muted/30">
+          <div className="space-y-2">
+            <Label htmlFor="initial-balance" className="text-base font-medium flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />
+              Saldo Inicial (USD)
+            </Label>
+            <Input
+              id="initial-balance"
+              type="number"
+              step="0.01"
+              min="0"
+              value={initialBalance}
+              onChange={(e) => setInitialBalance(e.target.value)}
+              placeholder="Ex: 1000"
+            />
+            <p className="text-xs text-muted-foreground">
+              Base de cálculo para os alarmes de perda percentual
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="siren-type" className="text-base font-medium flex items-center gap-2">
+              <Volume2 className="h-4 w-4" />
+              Tipo de Sirene
+            </Label>
+            <Select value={sirenType} onValueChange={setSirenType}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o tipo de sirene" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="police">🚓 Sirene de Polícia</SelectItem>
+                <SelectItem value="ambulance">🚑 Sirene de Ambulância</SelectItem>
+                <SelectItem value="fire">🚒 Sirene de Bombeiros</SelectItem>
+                <SelectItem value="alarm">🔔 Alarme de Prédio</SelectItem>
+                <SelectItem value="alert">⚠️ Alerta Agudo</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Som padrão para todos os alarmes
+            </p>
+          </div>
+        </div>
+
+        <Separator />
+
         {alertLevels.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Siren className="h-12 w-12 mx-auto mb-3 opacity-50" />
