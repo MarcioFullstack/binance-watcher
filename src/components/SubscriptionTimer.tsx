@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SubscriptionTimerProps {
   userId: string | undefined;
@@ -15,6 +16,7 @@ interface SubscriptionTimerProps {
 export const SubscriptionTimer = ({ userId, onExpired }: SubscriptionTimerProps) => {
   const { timeRemaining, loading } = useSubscriptionTimer(userId);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (timeRemaining.isExpired && !loading) {
@@ -31,9 +33,11 @@ export const SubscriptionTimer = ({ userId, onExpired }: SubscriptionTimerProps)
 
   if (timeRemaining.isExpired) {
     return (
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-destructive bg-destructive/10">
-        <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />
-        <span className="text-sm font-medium text-destructive">Assinatura Expirada</span>
+      <div className={`flex items-center gap-1.5 ${isMobile ? 'px-2 py-1' : 'px-3 py-1.5'} rounded-md border border-destructive bg-destructive/10`}>
+        <AlertTriangle className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} text-destructive flex-shrink-0`} />
+        <span className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-destructive`}>
+          {isMobile ? 'Expirado' : 'Assinatura Expirada'}
+        </span>
       </div>
     );
   }
@@ -49,31 +53,35 @@ export const SubscriptionTimer = ({ userId, onExpired }: SubscriptionTimerProps)
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md border cursor-pointer transition-colors hover:bg-accent/50 ${showWarning ? 'border-amber-500 bg-amber-500/10' : ''} ${isUrgent ? 'border-destructive bg-destructive/10' : ''}`}>
+          <div className={`flex items-center ${isMobile ? 'gap-1' : 'gap-2'} ${isMobile ? 'px-2 py-1' : 'px-3 py-1.5'} rounded-md border cursor-pointer transition-colors hover:bg-accent/50 ${showWarning ? 'border-amber-500 bg-amber-500/10' : ''} ${isUrgent ? 'border-destructive bg-destructive/10' : ''}`}>
             {isUrgent ? (
-              <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />
+              <AlertTriangle className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} text-destructive flex-shrink-0`} />
             ) : (
-              <Clock className={`h-4 w-4 ${showWarning ? 'text-amber-600' : 'text-primary'} flex-shrink-0`} />
+              <Clock className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${showWarning ? 'text-amber-600' : 'text-primary'} flex-shrink-0`} />
             )}
-            <div className="flex items-center gap-1.5">
+            <div className={`flex items-center ${isMobile ? 'gap-0.5' : 'gap-1.5'}`}>
               {timeRemaining.days > 0 && (
                 <>
-                  <span className={`text-lg font-bold ${isUrgent ? 'text-destructive' : showWarning ? 'text-amber-600 dark:text-amber-500' : 'text-foreground'}`}>
+                  <span className={`${isMobile ? 'text-sm' : 'text-lg'} font-bold ${isUrgent ? 'text-destructive' : showWarning ? 'text-amber-600 dark:text-amber-500' : 'text-foreground'}`}>
                     {timeRemaining.days}
                   </span>
-                  <span className="text-xs text-muted-foreground">d</span>
-                  <span className="text-muted-foreground">:</span>
+                  <span className="text-[10px] text-muted-foreground">d</span>
+                  {!isMobile && <span className="text-muted-foreground">:</span>}
                 </>
               )}
-              <span className={`text-lg font-bold ${isUrgent ? 'text-destructive' : showWarning ? 'text-amber-600 dark:text-amber-500' : 'text-foreground'}`}>
+              <span className={`${isMobile ? 'text-sm' : 'text-lg'} font-bold ${isUrgent ? 'text-destructive' : showWarning ? 'text-amber-600 dark:text-amber-500' : 'text-foreground'}`}>
                 {String(timeRemaining.hours).padStart(2, '0')}
               </span>
-              <span className="text-xs text-muted-foreground">h</span>
-              <span className="text-muted-foreground">:</span>
-              <span className={`text-lg font-bold ${isUrgent ? 'text-destructive' : showWarning ? 'text-amber-600 dark:text-amber-500' : 'text-foreground'}`}>
-                {String(timeRemaining.minutes).padStart(2, '0')}
-              </span>
-              <span className="text-xs text-muted-foreground">m</span>
+              <span className="text-[10px] text-muted-foreground">h</span>
+              {!isMobile && (
+                <>
+                  <span className="text-muted-foreground">:</span>
+                  <span className={`text-lg font-bold ${isUrgent ? 'text-destructive' : showWarning ? 'text-amber-600 dark:text-amber-500' : 'text-foreground'}`}>
+                    {String(timeRemaining.minutes).padStart(2, '0')}
+                  </span>
+                  <span className="text-xs text-muted-foreground">m</span>
+                </>
+              )}
             </div>
           </div>
         </TooltipTrigger>
