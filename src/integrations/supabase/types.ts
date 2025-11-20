@@ -616,6 +616,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      cleanup_expired_2fa_tokens: { Args: never; Returns: undefined }
       cleanup_old_auth_attempts: { Args: never; Returns: undefined }
       has_role: {
         Args: {
