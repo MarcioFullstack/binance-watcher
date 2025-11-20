@@ -33,7 +33,7 @@ const Dashboard = () => {
   // Monitor loss alarm with advanced system
   const currentBalance = binanceData ? parseFloat(binanceData.balance.total) : 0;
   const initialBalance = binanceData ? parseFloat(binanceData.balance.initial) : 0;
-  const { lossStatus } = useAdvancedLossAlarm(currentBalance, initialBalance, !!binanceData);
+  const { lossStatus, stopAlarm } = useAdvancedLossAlarm(currentBalance, initialBalance, !!binanceData);
 
   // Enable realtime subscription notifications
   useSubscriptionRealtime(user?.id);
@@ -173,6 +173,8 @@ const Dashboard = () => {
                   currentLossAmount={lossStatus.currentLossAmount}
                   triggeredLevel={lossStatus.triggeredLevel}
                   isInLoss={lossStatus.isInLoss}
+                  alarmActive={lossStatus.alarmActive}
+                  onStopAlarm={stopAlarm}
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <Link to="/alert-history">
