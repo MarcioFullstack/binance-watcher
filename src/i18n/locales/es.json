@@ -158,7 +158,7 @@
   "landing": {
     "hero": {
       "title": "Protege Tu Cuenta con Inteligencia",
-      "subtitle": "Monitorea tus operaciones en Binance Futures en tiempo real con alertas personalizadas y kill-switch automático",
+      "subtitle": "Monitorea tus operaciones en Binance Futures en tiempo real con alertas personalizadas y gestión de riesgo avanzada",
       "cta": "Comenzar Ahora",
       "secondaryCta": "Ver Cómo Funciona"
     },
@@ -172,10 +172,6 @@
       "alerts": {
         "title": "Alertas Inteligentes",
         "description": "Configura notificaciones personalizadas para ganancias, pérdidas y límites de riesgo"
-      },
-      "killswitch": {
-        "title": "Kill-Switch Automático",
-        "description": "Protege tu cuenta con cierre automático de posiciones en caso de pérdidas"
       },
       "security": {
         "title": "Seguridad Total",
@@ -209,7 +205,7 @@
       },
       "step3": {
         "title": "Configura Alertas",
-        "description": "Define límites de riesgo, alertas personalizadas y activa el kill-switch"
+        "description": "Define límites de riesgo y alertas personalizadas para tus operaciones"
       },
       "step4": {
         "title": "Monitorea en Tiempo Real",
@@ -245,7 +241,7 @@
           "Hasta 3 cuentas Binance",
           "Actualización cada 5s",
           "Alertas ilimitadas",
-          "Kill-switch automático",
+          "Gestión de riesgo avanzada",
           "Panel avanzado",
           "Soporte prioritario"
         ]
@@ -265,10 +261,6 @@
     },
     "faq": {
       "title": "Preguntas Frecuentes",
-      "q1": {
-        "question": "¿Cómo funciona el kill-switch?",
-        "answer": "El kill-switch monitorea tu P&L en tiempo real y cierra automáticamente todas las posiciones cuando alcanzas tu límite de pérdida configurado, protegiendo tu cuenta de grandes pérdidas."
-      },
       "q2": {
         "question": "¿Necesito pagar por la API de Binance?",
         "answer": "¡No! La API de Binance es gratuita. Solo necesitas crear tus claves API en la configuración de tu cuenta Binance y agregarlas a NOTTIFY."

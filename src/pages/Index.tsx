@@ -104,11 +104,6 @@ const Index = () => {
       description: t('landing.features.alerts.description')
     },
     {
-      icon: Shield,
-      title: t('landing.features.killswitch.title'),
-      description: t('landing.features.killswitch.description')
-    },
-    {
       icon: Lock,
       title: t('landing.features.security.title'),
       description: t('landing.features.security.description')
@@ -183,7 +178,7 @@ const Index = () => {
       avatar: "",
       initials: "CS",
       rating: 5,
-      text: "O NOTTIFY mudou completamente minha forma de operar. Agora tenho controle total sobre minhas posições e o kill-switch já me salvou várias vezes. Melhor investimento que fiz!"
+      text: "O NOTTIFY mudou completamente minha forma de operar. Agora tenho controle total sobre minhas posições e os alertas personalizados me protegem. Melhor investimento que fiz!"
     },
     {
       name: "Marina Costa",
@@ -223,7 +218,7 @@ const Index = () => {
       avatar: "",
       initials: "AO",
       rating: 5,
-      text: "Como iniciante, o NOTTIFY me ajudou muito a aprender gerenciamento de risco. Os alertas me ensinam quando estou ultrapassando limites e o kill-switch me protege."
+      text: "Como iniciante, o NOTTIFY me ajudou muito a aprender gerenciamento de risco. Os alertas me ensinam quando estou ultrapassando limites e me protegem de perdas."
     }
   ];
 
@@ -341,7 +336,7 @@ const Index = () => {
             transition={{ delay: 0.6 }}
           >
             Monitore seus lucros e perdas em tempo real, configure alertas inteligentes 
-            e proteja sua banca com kill-switch automático. Tudo em um dashboard profissional.
+            e proteja sua banca com notificações personalizadas. Tudo em um dashboard profissional.
           </motion.p>
 
           <motion.div 
@@ -737,24 +732,6 @@ const Index = () => {
                 </AccordionItem>
               </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.3 }}
-              >
-                <AccordionItem value="item-3" className="bg-card/50 backdrop-blur-sm border-2 border-border rounded-lg px-6">
-                  <AccordionTrigger className="text-lg font-semibold hover:text-primary">
-                    Como funciona o Kill-Switch automático?
-                  </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground">
-                    O Kill-Switch é uma proteção automática que fecha todas as suas posições abertas quando sua perda 
-                    atinge o limite configurado. Você define a porcentagem máxima de perda aceitável e o saldo inicial. 
-                    Quando o limite é atingido, o sistema fecha todas as posições instantaneamente para proteger sua banca. 
-                    Você pode ativar/desativar e configurar o reset diário nas configurações.
-                  </AccordionContent>
-                </AccordionItem>
-              </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -869,7 +846,7 @@ const Index = () => {
                   {[
                     "Monitoramento em tempo real (5s)",
                     "Alertas ilimitados personalizáveis",
-                    "Kill-switch automático",
+                    "Gestão de risco avançada",
                     "Autenticação 2FA",
                     "Dashboard profissional",
                     "Múltiplas contas Binance",

@@ -61,14 +61,7 @@ export const useBinanceData = () => {
   });
 };
 
-export const executeKillSwitch = async () => {
-  const { data, error } = await supabase.functions.invoke('binance-kill-switch', {
-    method: 'POST',
-  });
-  
-  if (error) throw error;
-  return data;
-};
+// Kill-switch functionality removed
 
 export const activateVoucher = async (code: string) => {
   const { data, error } = await supabase.functions.invoke('activate-voucher', {

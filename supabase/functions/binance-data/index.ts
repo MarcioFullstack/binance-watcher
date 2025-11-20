@@ -165,8 +165,8 @@ serve(async (req) => {
       return marginRatio > 80;
     });
 
-    // Se atingiu limite de risco e kill switch está ativo, notificar
-    if (hasReachedRiskLimit && riskSettings?.kill_switch_enabled) {
+    // Se atingiu limite de risco, notificar
+    if (hasReachedRiskLimit) {
       console.log(`⚠️ RISK LIMIT REACHED for user ${user.id}: ${riskLimitPercent.toFixed(2)}% loss`);
       
       // Criar notificação

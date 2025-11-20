@@ -158,7 +158,7 @@
   "landing": {
     "hero": {
       "title": "Protect Your Account with Intelligence",
-      "subtitle": "Monitor your Binance Futures trades in real-time with custom alerts and automatic kill-switch",
+      "subtitle": "Monitor your Binance Futures trades in real-time with custom alerts and advanced risk management",
       "cta": "Get Started",
       "secondaryCta": "See How It Works"
     },
@@ -172,10 +172,6 @@
       "alerts": {
         "title": "Smart Alerts",
         "description": "Set up custom notifications for profits, losses and risk limits"
-      },
-      "killswitch": {
-        "title": "Automatic Kill-Switch",
-        "description": "Protect your account with automatic position closure in case of losses"
       },
       "security": {
         "title": "Total Security",
@@ -209,7 +205,7 @@
       },
       "step3": {
         "title": "Configure Alerts",
-        "description": "Set risk limits, custom alerts and activate the kill-switch"
+        "description": "Set risk limits and custom alerts for your trades"
       },
       "step4": {
         "title": "Monitor in Real-Time",
@@ -245,7 +241,7 @@
           "Up to 3 Binance accounts",
           "5s update interval",
           "Unlimited alerts",
-          "Automatic kill-switch",
+          "Advanced risk management",
           "Advanced dashboard",
           "Priority support"
         ]
@@ -265,10 +261,6 @@
     },
     "faq": {
       "title": "Frequently Asked Questions",
-      "q1": {
-        "question": "How does the kill-switch work?",
-        "answer": "The kill-switch monitors your P&L in real-time and automatically closes all positions when you reach your configured loss limit, protecting your account from large losses."
-      },
       "q2": {
         "question": "Do I need to pay for Binance API?",
         "answer": "No! Binance API is free. You just need to create your API keys in your Binance account settings and add them to NOTTIFY."

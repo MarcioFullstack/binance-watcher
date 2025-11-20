@@ -158,7 +158,7 @@
   "landing": {
     "hero": {
       "title": "Proteja Sua Banca com Inteligência",
-      "subtitle": "Monitore suas operações na Binance Futures em tempo real com alertas personalizados e kill-switch automático",
+      "subtitle": "Monitore suas operações na Binance Futures em tempo real com alertas personalizados e gestão de risco avançada",
       "cta": "Começar Agora",
       "secondaryCta": "Ver Como Funciona"
     },
@@ -172,10 +172,6 @@
       "alerts": {
         "title": "Alertas Inteligentes",
         "description": "Configure notificações personalizadas para lucros, perdas e limites de risco"
-      },
-      "killswitch": {
-        "title": "Kill-Switch Automático",
-        "description": "Proteja sua banca com fechamento automático de posições em caso de perdas"
       },
       "security": {
         "title": "Segurança Total",
@@ -209,7 +205,7 @@
       },
       "step3": {
         "title": "Configure Alertas",
-        "description": "Defina limites de risco, alertas personalizados e ative o kill-switch"
+        "description": "Defina limites de risco e alertas personalizados para suas operações"
       },
       "step4": {
         "title": "Monitore em Tempo Real",
@@ -245,7 +241,7 @@
           "Até 3 contas Binance",
           "Atualização a cada 5s",
           "Alertas ilimitados",
-          "Kill-switch automático",
+          "Gestão de risco avançada",
           "Dashboard avançado",
           "Suporte prioritário"
         ]
@@ -265,10 +261,6 @@
     },
     "faq": {
       "title": "Perguntas Frequentes",
-      "q1": {
-        "question": "Como funciona o kill-switch?",
-        "answer": "O kill-switch monitora seu P&L em tempo real e fecha automaticamente todas as posições quando você atinge seu limite de perda configurado, protegendo sua banca de grandes prejuízos."
-      },
       "q2": {
         "question": "Preciso pagar pela Binance API?",
         "answer": "Não! A API da Binance é gratuita. Você só precisa criar suas chaves de API nas configurações da sua conta Binance e adicionar no NOTTIFY."
