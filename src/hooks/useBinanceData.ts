@@ -6,6 +6,7 @@ export interface BinanceData {
     total: string;
     available: string;
     used: string;
+    initial: string;
   };
   pnl: {
     today: string;

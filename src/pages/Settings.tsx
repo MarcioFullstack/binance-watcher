@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { activateVoucher } from "@/utils/voucher";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "react-i18next";
-import { LossAlarmSettings } from "@/components/settings/LossAlarmSettings";
+import { AdvancedLossAlertSettings } from "@/components/settings/AdvancedLossAlertSettings";
 
 
 const Settings = () => {
@@ -230,8 +230,8 @@ const Settings = () => {
           </CardContent>
         </Card>
 
-        {/* Loss Alarm Settings */}
-        <LossAlarmSettings />
+        {/* Advanced Loss Alarm Settings */}
+        <AdvancedLossAlertSettings />
 
         {/* Binance Accounts */}
         <Card>

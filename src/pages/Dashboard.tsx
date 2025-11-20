@@ -7,7 +7,8 @@ import { SubscriptionTimer } from "@/components/SubscriptionTimer";
 import { Loader2, Settings as SettingsIcon } from "lucide-react";
 import { useSubscriptionRealtime } from "@/hooks/useSubscriptionRealtime";
 import { useBinanceData } from "@/hooks/useBinanceData";
-import { useLossAlarm } from "@/hooks/useLossAlarm";
+import { useAdvancedLossAlarm } from "@/hooks/useAdvancedLossAlarm";
+import { LossRiskIndicator } from "@/components/dashboard/LossRiskIndicator";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -28,9 +29,10 @@ const Dashboard = () => {
   const hasBinanceKeysError = binanceError instanceof Error && 
     binanceError.message === 'BINANCE_KEYS_INVALID';
   
-  // Monitor loss alarm
-  const currentBalance = binanceData ? parseFloat(binanceData.balance.available) : 0;
-  useLossAlarm(currentBalance, !!binanceData);
+  // Monitor loss alarm with advanced system
+  const currentBalance = binanceData ? parseFloat(binanceData.balance.total) : 0;
+  const initialBalance = binanceData ? parseFloat(binanceData.balance.initial) : 0;
+  const { lossStatus } = useAdvancedLossAlarm(currentBalance, initialBalance, !!binanceData);
 
   // Enable realtime subscription notifications
   useSubscriptionRealtime(user?.id);
@@ -188,6 +190,14 @@ const Dashboard = () => {
           </header>
           
           <main className="flex-1 p-4 md:p-6 space-y-4 overflow-auto">
+            {lossStatus.isInLoss && (
+              <LossRiskIndicator
+                currentLossPercent={lossStatus.currentLossPercent}
+                currentLossAmount={lossStatus.currentLossAmount}
+                triggeredLevel={lossStatus.triggeredLevel}
+                isInLoss={lossStatus.isInLoss}
+              />
+            )}
             <BalanceCards />
             <PnLDashboard />
           </main>
