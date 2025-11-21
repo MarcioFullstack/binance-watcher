@@ -108,6 +108,9 @@ interface UserProfile {
   id: string;
   email: string;
   created_at: string;
+  country: string | null;
+  state: string | null;
+  city: string | null;
   subscription: {
     status: string;
     expires_at: string | null;
@@ -208,7 +211,7 @@ const Admin = () => {
       // Get all profiles
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, email, created_at")
+        .select("id, email, created_at, country, state, city")
         .order("created_at", { ascending: false });
 
       if (profilesError) throw profilesError;
@@ -1946,6 +1949,131 @@ const Admin = () => {
           </CardContent>
         </Card>
 
+        {/* Geographic Distribution Card */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              <CardTitle>Distribuição Geográfica dos Usuários</CardTitle>
+            </div>
+            <CardDescription>
+              Análise da localização dos usuários cadastrados
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Stats */}
+            <div className="grid gap-4 md:grid-cols-3">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-xs">Países Únicos</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {new Set(allUsers.filter(u => u.country).map(u => u.country)).size}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-xs">Estados Únicos</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {new Set(allUsers.filter(u => u.state).map(u => u.state)).size}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-xs">Cidades Únicas</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {new Set(allUsers.filter(u => u.city).map(u => u.city)).size}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Distribution by Country */}
+            <Card className="bg-card/50">
+              <CardHeader>
+                <CardTitle className="text-base">Usuários por País</CardTitle>
+                <CardDescription>Top 10 países com mais usuários</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {Object.entries(
+                    allUsers
+                      .filter(u => u.country)
+                      .reduce((acc, user) => {
+                        acc[user.country!] = (acc[user.country!] || 0) + 1;
+                        return acc;
+                      }, {} as Record<string, number>)
+                  )
+                    .sort(([, a], [, b]) => b - a)
+                    .slice(0, 10)
+                    .map(([country, count]) => {
+                      const percentage = ((count / allUsers.length) * 100).toFixed(1);
+                      return (
+                        <div key={country} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">{country}</span>
+                            <span className="text-sm text-muted-foreground">
+                              {count} ({percentage}%)
+                            </span>
+                          </div>
+                          <div className="h-2 rounded-full bg-secondary">
+                            <div
+                              className="h-2 rounded-full bg-primary"
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  {allUsers.filter(u => u.country).length === 0 && (
+                    <p className="text-center text-muted-foreground py-4">
+                      Nenhum dado de localização disponível
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Distribution by State */}
+            <Card className="bg-card/50">
+              <CardHeader>
+                <CardTitle className="text-base">Usuários por Estado</CardTitle>
+                <CardDescription>Top 10 estados com mais usuários</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart
+                    data={Object.entries(
+                      allUsers
+                        .filter(u => u.state)
+                        .reduce((acc, user) => {
+                          acc[user.state!] = (acc[user.state!] || 0) + 1;
+                          return acc;
+                        }, {} as Record<string, number>)
+                    )
+                      .sort(([, a], [, b]) => b - a)
+                      .slice(0, 10)
+                      .map(([state, count]) => ({ state, count }))}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="state" angle={-45} textAnchor="end" height={80} />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="count" fill="hsl(var(--primary))" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </CardContent>
+        </Card>
+
         {/* Users Management */}
         <Card>
           <CardHeader>
@@ -2065,6 +2193,7 @@ const Admin = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Email</TableHead>
+                      <TableHead>Localização</TableHead>
                       <TableHead>Data Cadastro</TableHead>
                       <TableHead>Status Assinatura</TableHead>
                       <TableHead>Expira em</TableHead>
@@ -2075,7 +2204,7 @@ const Admin = () => {
                   <TableBody>
                     {getFilteredUsers().length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center text-muted-foreground">
+                        <TableCell colSpan={7} className="text-center text-muted-foreground">
                           Nenhum usuário encontrado
                         </TableCell>
                       </TableRow>
@@ -2090,6 +2219,16 @@ const Admin = () => {
                           <TableRow key={user.id}>
                             <TableCell className="font-medium">
                               {user.email}
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {user.city && user.state && user.country ? (
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{user.city}, {user.state}</span>
+                                  <span className="text-xs text-muted-foreground">{user.country}</span>
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
                             </TableCell>
                             <TableCell className="text-sm text-muted-foreground">
                               {new Date(user.created_at).toLocaleDateString("pt-BR")}

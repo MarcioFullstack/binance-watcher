@@ -501,21 +501,33 @@ export type Database = {
       }
       profiles: {
         Row: {
+          city: string | null
+          country: string | null
           created_at: string | null
           email: string
           id: string
+          ip_address: string | null
+          state: string | null
           updated_at: string | null
         }
         Insert: {
+          city?: string | null
+          country?: string | null
           created_at?: string | null
           email: string
           id: string
+          ip_address?: string | null
+          state?: string | null
           updated_at?: string | null
         }
         Update: {
+          city?: string | null
+          country?: string | null
           created_at?: string | null
           email?: string
           id?: string
+          ip_address?: string | null
+          state?: string | null
           updated_at?: string | null
         }
         Relationships: []

@@ -114,6 +114,21 @@ const Signup = () => {
 
       if (data.user) {
         setUserId(data.user.id);
+        
+        // Capture user location
+        try {
+          // Get user IP using a free service
+          const ipResponse = await fetch('https://api.ipify.org?format=json');
+          const ipData = await ipResponse.json();
+          
+          await supabase.functions.invoke("capture-user-location", {
+            body: { ipAddress: ipData.ip },
+          });
+        } catch (locationError) {
+          console.error("Error capturing location:", locationError);
+          // Don't block signup if location capture fails
+        }
+        
         setLoadingMessage("Generating your 2FA secret...");
 
         const { data: totpData, error: totpError } = await supabase.functions.invoke(
