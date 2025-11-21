@@ -61,9 +61,9 @@ export const LossRiskIndicator = ({
           <div className="flex items-center gap-3">
             <Shield className="h-8 w-8 text-green-500" />
             <div>
-              <h3 className="font-semibold text-green-500">Conta Segura</h3>
+              <h3 className="font-semibold text-green-500">Secure Account</h3>
               <p className="text-sm text-muted-foreground">
-                Nenhum alerta de perda ativo
+                No active loss alerts
               </p>
             </div>
           </div>
@@ -77,10 +77,10 @@ export const LossRiskIndicator = ({
   const Icon = style.icon;
 
   const levelTitles = {
-    warning: "⚠️ Aviso de Perda",
-    danger: "🔴 Perda Significativa",
-    critical: "🚨 Alerta Crítico",
-    emergency: "🆘 EMERGÊNCIA - Ação Imediata!",
+    warning: "⚠️ Loss Warning",
+    danger: "🔴 Significant Loss",
+    critical: "🚨 Critical Alert",
+    emergency: "🆘 EMERGENCY - Immediate Action!",
   };
 
   return (
@@ -94,7 +94,7 @@ export const LossRiskIndicator = ({
                 {levelTitles[levelName as keyof typeof levelTitles]}
               </h3>
               <p className="text-sm text-muted-foreground">
-                Alerta acionado em {triggeredLevel?.loss_percentage.toFixed(2)}%
+                Alert triggered at {triggeredLevel?.loss_percentage.toFixed(2)}%
               </p>
             </div>
           </div>
@@ -109,7 +109,7 @@ export const LossRiskIndicator = ({
           </div>
         </div>
 
-        {/* Botão de desligar alarme */}
+        {/* Stop Alarm Button */}
         {alarmActive && onStopAlarm && (
           <div className="flex justify-center">
             <Button
@@ -119,14 +119,14 @@ export const LossRiskIndicator = ({
               className="w-full max-w-md animate-pulse"
             >
               <VolumeX className="mr-2 h-5 w-5" />
-              DESLIGAR ALARME SONORO
+              TURN OFF SOUND ALARM
             </Button>
           </div>
         )}
 
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span>Nível de Risco</span>
+            <span>Risk Level</span>
             <span className={style.color}>
               {levelName.toUpperCase()}
               {alarmActive && <Volume2 className="inline ml-2 h-4 w-4 animate-pulse" />}
@@ -141,7 +141,7 @@ export const LossRiskIndicator = ({
         {levelName === 'emergency' && (
           <div className={`p-3 rounded-lg ${style.bg} border ${style.border} animate-pulse`}>
             <p className="text-sm font-semibold text-center">
-              ⚠️ ATENÇÃO: Considere fechar posições imediatamente para evitar maiores perdas!
+              ⚠️ WARNING: Consider closing positions immediately to avoid greater losses!
             </p>
           </div>
         )}

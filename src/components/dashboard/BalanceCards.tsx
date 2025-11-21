@@ -13,9 +13,9 @@ export const BalanceCards = () => {
       const diffSeconds = Math.floor((now.getTime() - updated.getTime()) / 1000);
       
       if (diffSeconds < 60) {
-        setLastUpdate(`há ${diffSeconds}s`);
+        setLastUpdate(`${diffSeconds}s ago`);
       } else {
-        setLastUpdate(`há ${Math.floor(diffSeconds / 60)}m`);
+        setLastUpdate(`${Math.floor(diffSeconds / 60)}m ago`);
       }
     }
   }, [dataUpdatedAt, isFetching]);
@@ -42,35 +42,35 @@ export const BalanceCards = () => {
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-card rounded-lg border relative">
-      {/* Sync Indicator - apenas quando sincronizado */}
+      {/* Sync Indicator - only when synced */}
       {!isLoading && (
         <div className="absolute top-2 right-2 flex items-center gap-1.5 text-xs text-muted-foreground">
           <div className="h-2 w-2 rounded-full bg-green-500" />
-          <span>Sincronizado</span>
+          <span>Synced</span>
         </div>
       )}
 
       {/* Total Balance */}
       <div className="flex flex-col gap-1">
-        <span className="text-xs text-muted-foreground">Saldo Total</span>
+        <span className="text-xs text-muted-foreground">Total Balance</span>
         <span className="text-lg font-semibold">${totalBalance.toFixed(2)}</span>
       </div>
 
       {/* Available Balance */}
       <div className="flex flex-col gap-1">
-        <span className="text-xs text-muted-foreground">Disponível</span>
+        <span className="text-xs text-muted-foreground">Available</span>
         <span className="text-lg font-semibold">${availableBalance.toFixed(2)}</span>
       </div>
 
       {/* Used Margin */}
       <div className="flex flex-col gap-1">
-        <span className="text-xs text-muted-foreground">Margem Usada</span>
+        <span className="text-xs text-muted-foreground">Used Margin</span>
         <span className="text-lg font-semibold">${usedMargin.toFixed(2)}</span>
       </div>
 
       {/* Unrealized PnL */}
       <div className="flex flex-col gap-1">
-        <span className="text-xs text-muted-foreground">PnL Não Realizado</span>
+        <span className="text-xs text-muted-foreground">Unrealized PnL</span>
         <span className={`text-lg font-semibold ${isPnLPositive ? 'text-green-500' : 'text-red-500'}`}>
           {isPnLPositive ? '+' : ''}${unrealizedPnL.toFixed(2)}
         </span>

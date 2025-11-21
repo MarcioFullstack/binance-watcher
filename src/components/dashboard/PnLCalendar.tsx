@@ -87,16 +87,16 @@ export const PnLCalendar = () => {
   const end = endOfMonth(currentDate);
   const days = eachDayOfInterval({ start, end });
   
-  // Dias da semana
-  const weekDays = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+  // Week days
+  const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   
-  // Preencher dias vazios no início
+  // Fill empty days at the beginning
   const firstDayOfWeek = getDay(start);
   const emptyDays = Array(firstDayOfWeek).fill(null);
 
   return (
     <Card className="p-0 border-border bg-card overflow-hidden">
-      {/* Header com Abas e Navegação */}
+      {/* Header with Tabs and Navigation */}
       <div className="bg-background/50 border-b border-border">
         {/* Market Type Tabs */}
         <div className="flex items-center justify-between px-6 pt-4">
@@ -135,7 +135,7 @@ export const PnLCalendar = () => {
         <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
             <h3 className="text-base font-medium text-foreground">
-              Ganhos e Perdas Diários
+              Daily Profit and Loss
             </h3>
           </div>
           <div className="flex items-center gap-2">
@@ -166,7 +166,7 @@ export const PnLCalendar = () => {
               onClick={handleToday}
               className="h-8 text-xs ml-2"
             >
-              Hoje
+              Today
             </Button>
           </div>
         </div>

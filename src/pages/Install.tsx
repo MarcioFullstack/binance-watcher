@@ -115,19 +115,19 @@ export default function Install() {
                     <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary">
                       2
                     </div>
-                    <p className="text-sm">Toque no menu (⋮) no canto superior direito</p>
+                    <p className="text-sm">Tap the menu (⋮) in the top right corner</p>
                   </div>
                   <div className="flex gap-3">
                     <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary">
                       3
                     </div>
-                    <p className="text-sm">Selecione "Adicionar à tela inicial"</p>
+                    <p className="text-sm">Select "Add to Home screen"</p>
                   </div>
                   <div className="flex gap-3">
                     <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary">
                       4
                     </div>
-                    <p className="text-sm">Confirme tocando em "Adicionar"</p>
+                    <p className="text-sm">Confirm by tapping "Add"</p>
                   </div>
                 </CardContent>
               </Card>
@@ -151,19 +151,19 @@ export default function Install() {
                     <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary">
                       2
                     </div>
-                    <p className="text-sm">Toque no botão Compartilhar (ícone com seta para cima)</p>
+                    <p className="text-sm">Tap the Share button (icon with upward arrow)</p>
                   </div>
                   <div className="flex gap-3">
                     <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary">
                       3
                     </div>
-                    <p className="text-sm">Role para baixo e toque em "Adicionar à Tela de Início"</p>
+                    <p className="text-sm">Scroll down and tap "Add to Home Screen"</p>
                   </div>
                   <div className="flex gap-3">
                     <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary">
                       4
                     </div>
-                    <p className="text-sm">Confirme tocando em "Adicionar"</p>
+                    <p className="text-sm">Confirm by tapping "Add"</p>
                   </div>
                 </CardContent>
               </Card>
@@ -206,15 +206,15 @@ export default function Install() {
               <CardContent className="space-y-2">
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                  <p className="text-sm">Acesso instantâneo sem abrir o navegador</p>
+                  <p className="text-sm">Instant access without opening browser</p>
                 </div>
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                  <p className="text-sm">Notificações push para alertas de PnL e risco</p>
+                  <p className="text-sm">Push notifications for PnL and risk alerts</p>
                 </div>
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                  <p className="text-sm">Funciona offline para consultar dados em cache</p>
+                  <p className="text-sm">Works offline to check cached data</p>
                 </div>
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />

@@ -20,9 +20,9 @@ import {
 
 const mainItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Notificações", url: "/notifications", icon: Bell },
-  { title: "Histórico de Alertas", url: "/alert-history", icon: History },
-  { title: "Configurações", url: "/settings", icon: Settings },
+  { title: "Notifications", url: "/notifications", icon: Bell },
+  { title: "Alert History", url: "/alert-history", icon: History },
+  { title: "Settings", url: "/settings", icon: Settings },
 ];
 
 export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
@@ -114,7 +114,7 @@ export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
             className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
           >
             <LogOut className="h-5 w-5" />
-            {!isCollapsed && <span>Sair</span>}
+            {!isCollapsed && <span>Logout</span>}
           </button>
         </div>
       </SidebarContent>

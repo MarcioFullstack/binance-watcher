@@ -48,18 +48,18 @@ export const PnLDashboard = () => {
   const netPnL = pnlAllTime;
 
   const periodButtons: { value: PeriodFilter; label: string }[] = [
-    { value: "7days", label: "7 Dias" },
-    { value: "1month", label: "1 Mês" },
-    { value: "3months", label: "3 Meses" },
-    { value: "1year", label: "1 Ano" },
-    { value: "custom", label: "Personalizar" },
+    { value: "7days", label: "7 Days" },
+    { value: "1month", label: "1 Month" },
+    { value: "3months", label: "3 Months" },
+    { value: "1year", label: "1 Year" },
+    { value: "custom", label: "Custom" },
   ];
 
   return (
     <div className="space-y-4">
-      {/* Header com Market Type */}
+      {/* Header with Market Type */}
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Análise de Ganhos e Perdas de Futuros</h1>
+        <h1 className="text-lg font-semibold">Futures Profit and Loss Analysis</h1>
       </div>
 
       {/* Market Type Toggle */}
@@ -70,9 +70,9 @@ export const PnLDashboard = () => {
         </TabsList>
       </Tabs>
 
-      {/* Main P&L Card - Ganhos e Perdas de hoje */}
+      {/* Main P&L Card - Today's Profit and Loss */}
       <Card className="p-4 border-border hover:border-glow transition-all">
-        <p className="text-xs text-muted-foreground mb-1">Ganhos e Perdas de hoje</p>
+        <p className="text-xs text-muted-foreground mb-1">Today's Profit and Loss</p>
         <div className="flex items-baseline gap-2">
           <h2 className={`text-3xl font-bold ${todayPercent >= 0 ? 'text-success text-glow' : 'text-destructive'}`}>
             {todayPercent >= 0 ? '+' : ''}{todayPercent.toFixed(2)}%
@@ -83,10 +83,10 @@ export const PnLDashboard = () => {
         </div>
       </Card>
 
-      {/* Cards de 7D / 30D / desde sempre */}
+      {/* 7D / 30D / All Time Cards */}
       <div className="grid gap-3 grid-cols-3">
         <Card className="p-3 border-border">
-          <p className="text-xs text-muted-foreground mb-1">Ganhos e Perdas de 7D</p>
+          <p className="text-xs text-muted-foreground mb-1">7D Profit and Loss</p>
           <p className={`text-base font-semibold ${pnl7Days >= 0 ? 'text-success' : 'text-destructive'}`}>
             {pnl7Days >= 0 ? '+' : ''}{pnl7DaysPercent.toFixed(2)}%
           </p>
@@ -96,7 +96,7 @@ export const PnLDashboard = () => {
         </Card>
 
         <Card className="p-3 border-border">
-          <p className="text-xs text-muted-foreground mb-1">Ganhos e Perdas de 30D</p>
+          <p className="text-xs text-muted-foreground mb-1">30D Profit and Loss</p>
           <p className={`text-base font-semibold ${pnl30Days >= 0 ? 'text-success' : 'text-destructive'}`}>
             {pnl30Days >= 0 ? '+' : ''}{pnl30DaysPercent.toFixed(2)}%
           </p>
@@ -106,7 +106,7 @@ export const PnLDashboard = () => {
         </Card>
 
         <Card className="p-3 border-border">
-          <p className="text-xs text-muted-foreground mb-1">Ganhos e Perdas desde sempre</p>
+          <p className="text-xs text-muted-foreground mb-1">All Time Profit and Loss</p>
           <p className={`text-base font-semibold ${pnlAllTime >= 0 ? 'text-success' : 'text-destructive'}`}>
             {pnlAllTime >= 0 ? '+' : ''}{pnlAllTimePercent.toFixed(2)}%
           </p>
@@ -132,23 +132,23 @@ export const PnLDashboard = () => {
         ))}
       </div>
 
-      {/* Lista de resumo de lucros e perdas */}
+      {/* Summary of profits and losses */}
       <Card className="p-4 border-border">
         <div className="space-y-3 text-sm">
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Lucro Total</span>
+            <span className="text-muted-foreground">Total Profit</span>
             <span className="font-medium text-foreground">
               {totalProfit.toFixed(2)} USD
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Total de Perdas</span>
+            <span className="text-muted-foreground">Total Losses</span>
             <span className="font-medium text-foreground">
               {totalLoss.toFixed(2)} USD
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Ganhos/Perdas Líquidos</span>
+            <span className="text-muted-foreground">Net Profit/Loss</span>
             <span className={`font-semibold ${netPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
               {netPnL >= 0 ? '+' : ''}{netPnL.toFixed(2)} USD
             </span>
@@ -156,20 +156,20 @@ export const PnLDashboard = () => {
         </div>
       </Card>
 
-      {/* Abas inferiores */}
+      {/* Bottom Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-          <TabsTrigger value="positions">Posições</TabsTrigger>
-          <TabsTrigger value="stats">Estatísticas</TabsTrigger>
-          <TabsTrigger value="calendar">Calendário</TabsTrigger>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="positions">Positions</TabsTrigger>
+          <TabsTrigger value="stats">Statistics</TabsTrigger>
+          <TabsTrigger value="calendar">Calendar</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4 mt-4">
-          {/* Seção de calendário de PnL diário */}
+          {/* Daily PnL calendar section */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-medium">Ganhos e Perdas Diários</h2>
+              <h2 className="text-sm font-medium">Daily Profit and Loss</h2>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <span>2025-11</span>
               </div>
@@ -180,14 +180,14 @@ export const PnLDashboard = () => {
 
         <TabsContent value="positions" className="space-y-4 mt-4">
           <div className="space-y-3">
-            <h2 className="text-sm font-medium">Posições Abertas</h2>
+            <h2 className="text-sm font-medium">Open Positions</h2>
             <PositionsTable />
           </div>
         </TabsContent>
 
         <TabsContent value="stats" className="space-y-4 mt-4">
           <div className="space-y-3">
-            <h2 className="text-sm font-medium">Estatísticas de Trading</h2>
+            <h2 className="text-sm font-medium">Trading Statistics</h2>
             <TradingStats />
           </div>
         </TabsContent>
@@ -195,7 +195,7 @@ export const PnLDashboard = () => {
         <TabsContent value="calendar" className="space-y-4 mt-4">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-medium">Calendário de PnL</h2>
+              <h2 className="text-sm font-medium">PnL Calendar</h2>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <span>2025-11</span>
               </div>

@@ -116,11 +116,11 @@ export const SubscriptionTimer = ({ userId, onExpired }: SubscriptionTimerProps)
         </TooltipTrigger>
         <TooltipContent side="bottom" className="max-w-xs">
           <div className="text-center">
-            <p className="font-semibold">Assinatura expira em:</p>
+            <p className="font-semibold">Subscription expires in:</p>
             <p className="text-sm text-muted-foreground mt-1">
-              {timeRemaining.expiresAt && format(timeRemaining.expiresAt, "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+              {timeRemaining.expiresAt && format(timeRemaining.expiresAt, "MMMM dd, yyyy 'at' HH:mm", { locale: ptBR })}
             </p>
-            <p className="text-xs text-primary mt-2 font-medium">Clique para renovar agora</p>
+            <p className="text-xs text-primary mt-2 font-medium">Click to renew now</p>
           </div>
         </TooltipContent>
       </Tooltip>

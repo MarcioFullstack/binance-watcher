@@ -201,9 +201,9 @@ const AlertHistory = () => {
             <div className="flex items-center gap-3">
               <History className="h-8 w-8 text-primary" />
               <div>
-                <h1 className="text-3xl font-bold">Histórico de Alertas</h1>
+                <h1 className="text-3xl font-bold">Alert History</h1>
                 <p className="text-muted-foreground">
-                  Visualize e gerencie todos os alertas de perda disparados
+                  View and manage all triggered loss alerts
                 </p>
               </div>
             </div>

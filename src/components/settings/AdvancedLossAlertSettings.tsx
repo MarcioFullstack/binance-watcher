@@ -350,23 +350,23 @@ export const AdvancedLossAlertSettings = () => {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Adicionar Novo Nível de Alerta</DialogTitle>
+                <DialogTitle>Add New Alert Level</DialogTitle>
                 <DialogDescription>
-                  Configure um novo nível de alerta personalizado com suas próprias configurações.
+                  Configure a new custom alert level with your own settings.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="new-level-name">Nome do Nível</Label>
+                  <Label htmlFor="new-level-name">Level Name</Label>
                   <Input
                     id="new-level-name"
-                    placeholder="Ex: Moderado, Alto, Extremo"
+                    placeholder="E.g: Moderate, High, Extreme"
                     value={newAlert.level_name}
                     onChange={(e) => setNewAlert({ ...newAlert, level_name: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="new-loss-percentage">Porcentagem de Perda (%)</Label>
+                  <Label htmlFor="new-loss-percentage">Loss Percentage (%)</Label>
                   <Input
                     id="new-loss-percentage"
                     type="number"
@@ -591,10 +591,10 @@ export const AdvancedLossAlertSettings = () => {
           {saving ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Salvando...
+              Saving...
             </>
           ) : (
-            "Salvar Configurações"
+            "Save Settings"
           )}
         </Button>
       </CardContent>

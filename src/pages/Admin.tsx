@@ -1375,8 +1375,8 @@ const Admin = () => {
           <div className="flex items-center gap-3">
             <Shield className="h-8 w-8 text-primary" />
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Painel Administrativo</h1>
-              <p className="text-sm text-muted-foreground">Gerenciar pagamentos e assinaturas</p>
+              <h1 className="text-3xl font-bold text-foreground">Admin Panel</h1>
+              <p className="text-sm text-muted-foreground">Manage payments and subscriptions</p>
             </div>
           </div>
           <Button variant="outline" onClick={() => navigate("/dashboard")}>
@@ -2644,7 +2644,7 @@ const Admin = () => {
               </Card>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription>Tempo Médio</CardDescription>
+                  <CardDescription>Average Time</CardDescription>
                   <CardTitle className="text-2xl">
                     {formatDuration(getResolutionMetrics().averageResolutionTime)}
                   </CardTitle>
@@ -2652,7 +2652,7 @@ const Admin = () => {
               </Card>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription>Mais Rápido</CardDescription>
+                  <CardDescription>Fastest</CardDescription>
                   <CardTitle className="text-2xl text-green-500">
                     {formatDuration(getResolutionMetrics().fastestResolution)}
                   </CardTitle>
@@ -2690,7 +2690,7 @@ const Admin = () => {
 
                 {/* Date Range Filter */}
                 <div className="space-y-2">
-                  <Label>Período</Label>
+                  <Label>Period</Label>
                   <Tabs value={resolvedDateRange} onValueChange={(v) => setResolvedDateRange(v as any)}>
                     <TabsList className="grid w-full grid-cols-2">
                       <TabsTrigger value="week">Semana</TabsTrigger>
@@ -2804,7 +2804,7 @@ const Admin = () => {
           <CardHeader>
             <div className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-primary" />
-              <CardTitle>Dashboard de Métricas de Alertas em Tempo Real</CardTitle>
+              <CardTitle>Real-Time Alert Metrics Dashboard</CardTitle>
             </div>
             <CardDescription>
               Análise de tendências e uso das configurações de alerta
@@ -2815,7 +2815,7 @@ const Admin = () => {
             <div className="grid gap-4 md:grid-cols-5">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription className="text-xs">Total de Mudanças</CardDescription>
+                  <CardDescription className="text-xs">Total Changes</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{alertMetrics.totalChanges}</div>
@@ -2853,7 +2853,7 @@ const Admin = () => {
 
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription className="text-xs">Mudanças de Status</CardDescription>
+                  <CardDescription className="text-xs">Status Changes</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{alertMetrics.statusChanges}</div>
@@ -2880,7 +2880,7 @@ const Admin = () => {
             {alertMetrics.trendData.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Tendência de Alterações (Últimos 14 Dias)</CardTitle>
+                  <CardTitle className="text-lg">Change Trend (Last 14 Days)</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
@@ -2924,9 +2924,9 @@ const Admin = () => {
             {alertMetrics.topUsers.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Usuários Mais Ativos em Configurações</CardTitle>
+                  <CardTitle className="text-lg">Most Active Users in Settings</CardTitle>
                   <CardDescription>
-                    Top 5 usuários que mais alteraram configurações de alerta
+                    Top 5 users who changed alert settings the most
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -3017,7 +3017,7 @@ const Admin = () => {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Settings className="h-5 w-5 text-blue-500" />
-              <CardTitle>Histórico de Configurações de Alerta</CardTitle>
+              <CardTitle>Alert Configuration History</CardTitle>
             </div>
             <CardDescription>
               Registro completo de todas as alterações nas configurações de alertas dos usuários

@@ -132,7 +132,7 @@ const NotificationHistory = () => {
       console.error("Error fetching notifications:", error);
       toast({
         title: "Error loading notifications",
-        description: "Não foi possível carregar o histórico de notificações.",
+        description: "Unable to load notification history.",
         variant: "destructive",
       });
     } else {
@@ -169,8 +169,8 @@ const NotificationHistory = () => {
     } else {
       setNotifications(notifications.filter(n => n.id !== notificationId));
       toast({
-        title: "Notificação excluída",
-        description: "A notificação foi removida do histórico.",
+        title: "Notification deleted",
+        description: "The notification was removed from history.",
       });
     }
   };
@@ -187,8 +187,8 @@ const NotificationHistory = () => {
     if (!error) {
       setNotifications(notifications.map(n => ({ ...n, is_read: true })));
       toast({
-        title: "Notificações marcadas como lidas",
-        description: "Todas as notificações foram marcadas como lidas.",
+        title: "Notifications marked as read",
+        description: "All notifications were marked as read.",
       });
     }
   };
@@ -210,8 +210,8 @@ const NotificationHistory = () => {
     } else {
       setNotifications([]);
       toast({
-        title: "Histórico limpo",
-        description: "Todas as notificações foram removidas.",
+        title: "History cleared",
+        description: "All notifications were removed.",
       });
     }
   };
