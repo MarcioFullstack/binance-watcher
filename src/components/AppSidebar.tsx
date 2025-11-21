@@ -38,10 +38,10 @@ export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      toast.success("Logout realizado com sucesso");
+      toast.success("Logout successful");
       navigate("/login");
     } catch (error: any) {
-      toast.error("Erro ao fazer logout");
+      toast.error("Error logging out");
     }
   };
 
@@ -97,7 +97,7 @@ export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
                   >
                       <div className="flex items-center gap-3 flex-1">
                         <Shield className="h-5 w-5" />
-                        {!isCollapsed && <span>Administração</span>}
+                        {!isCollapsed && <span>Administration</span>}
                       </div>
                     </NavLink>
                   </SidebarMenuButton>
