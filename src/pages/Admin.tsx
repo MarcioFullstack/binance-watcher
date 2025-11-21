@@ -155,6 +155,9 @@ const Admin = () => {
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [liberatingUser, setLiberatingUser] = useState<string | null>(null);
+  const [userSearchEmail, setUserSearchEmail] = useState("");
+  const [userStatusFilter, setUserStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [userSortBy, setUserSortBy] = useState<"newest" | "oldest">("newest");
   const navigate = useNavigate();
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
@@ -165,6 +168,38 @@ const Admin = () => {
     loadAlertConfigs();
     loadConfigHistory();
   }, []);
+
+  const getFilteredUsers = () => {
+    let filtered = [...allUsers];
+
+    // Filter by email search
+    if (userSearchEmail) {
+      filtered = filtered.filter(user =>
+        user.email.toLowerCase().includes(userSearchEmail.toLowerCase())
+      );
+    }
+
+    // Filter by status
+    if (userStatusFilter !== "all") {
+      filtered = filtered.filter(user => {
+        const hasActiveSubscription =
+          user.subscription?.status === "active" &&
+          user.subscription?.expires_at &&
+          new Date(user.subscription.expires_at) > new Date();
+        
+        return userStatusFilter === "active" ? hasActiveSubscription : !hasActiveSubscription;
+      });
+    }
+
+    // Sort by date
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      return userSortBy === "newest" ? dateB - dateA : dateA - dateB;
+    });
+
+    return filtered;
+  };
 
   const loadAllUsers = async () => {
     try {
@@ -1963,6 +1998,32 @@ const Admin = () => {
               </Card>
             </div>
 
+            {/* Filters and Search */}
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <Input
+                  placeholder="Buscar por email..."
+                  value={userSearchEmail}
+                  onChange={(e) => setUserSearchEmail(e.target.value)}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Tabs value={userStatusFilter} onValueChange={(v) => setUserStatusFilter(v as any)} className="w-auto">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="all">Todos</TabsTrigger>
+                    <TabsTrigger value="active">Ativos</TabsTrigger>
+                    <TabsTrigger value="inactive">Inativos</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                <Tabs value={userSortBy} onValueChange={(v) => setUserSortBy(v as any)} className="w-auto">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="newest">Mais Recentes</TabsTrigger>
+                    <TabsTrigger value="oldest">Mais Antigos</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+            </div>
+
             {/* Table */}
             {usersLoading ? (
               <div className="flex justify-center py-8">
@@ -1982,14 +2043,14 @@ const Admin = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {allUsers.length === 0 ? (
+                    {getFilteredUsers().length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center text-muted-foreground">
                           Nenhum usuário encontrado
                         </TableCell>
                       </TableRow>
                     ) : (
-                      allUsers.map((user) => {
+                      getFilteredUsers().map((user) => {
                         const hasActiveSubscription = 
                           user.subscription?.status === "active" && 
                           user.subscription?.expires_at && 
