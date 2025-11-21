@@ -45,12 +45,12 @@ export const TradingStats = () => {
         <CardContent>
           <div className="text-2xl font-bold">{winRate}%</div>
           <p className="text-xs text-muted-foreground mt-1">
-            {profitablePositions.length} de {totalPositions} lucrativas
+            {profitablePositions.length} of {totalPositions} profitable
           </p>
         </CardContent>
       </Card>
 
-      {/* Posições Long/Short */}
+      {/* Long/Short Positions */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Long vs Short</CardTitle>
@@ -59,15 +59,15 @@ export const TradingStats = () => {
         <CardContent>
           <div className="text-2xl font-bold">{longPositions} / {shortPositions}</div>
           <p className="text-xs text-muted-foreground mt-1">
-            Posições abertas
+            Open positions
           </p>
         </CardContent>
       </Card>
 
-      {/* Melhor Trade */}
+      {/* Best Trade */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Melhor Trade</CardTitle>
+          <CardTitle className="text-sm font-medium">Best Trade</CardTitle>
           <TrendingUp className="h-4 w-4 text-green-500" />
         </CardHeader>
         <CardContent>
@@ -80,10 +80,10 @@ export const TradingStats = () => {
         </CardContent>
       </Card>
 
-      {/* Pior Trade */}
+      {/* Worst Trade */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Pior Trade</CardTitle>
+          <CardTitle className="text-sm font-medium">Worst Trade</CardTitle>
           <TrendingDown className="h-4 w-4 text-red-500" />
         </CardHeader>
         <CardContent>

@@ -126,10 +126,10 @@ const Dashboard = () => {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      toast.success("Logout realizado com sucesso");
+      toast.success("Logout successful");
       navigate("/login");
     } catch (error: any) {
-      toast.error("Erro ao fazer logout");
+      toast.error("Error logging out");
     }
   };
 
@@ -155,9 +155,9 @@ const Dashboard = () => {
               <SubscriptionTimer 
                 userId={user?.id} 
                 onExpired={() => {
-                  toast.error("Sua assinatura expirou");
+                  toast.error("Your subscription has expired");
                   navigate("/payment");
-                }} 
+                }}
               />
             </div>
           </header>
@@ -170,15 +170,15 @@ const Dashboard = () => {
                 <AlertDescription className="flex items-center justify-between">
                   <span>
                     {hasBinanceKeysError 
-                      ? "Suas chaves da API da Binance são inválidas ou expiraram."
-                      : "Conecte sua conta Binance para visualizar seus dados de trading."}
+                      ? "Your Binance API keys are invalid or expired."
+                      : "Connect your Binance account to view your trading data."}
                   </span>
                   <Button 
                     size="sm" 
                     variant={hasBinanceKeysError ? "destructive" : "default"}
                     onClick={() => navigate("/setup-binance")}
                   >
-                    {hasBinanceKeysError ? "Reconfigurar" : "Configurar Agora"}
+                    {hasBinanceKeysError ? "Reconfigure" : "Setup Now"}
                   </Button>
                 </AlertDescription>
               </Alert>
@@ -198,13 +198,13 @@ const Dashboard = () => {
                 <div className="grid grid-cols-2 gap-2">
                   <Link to="/alert-history">
                     <Button variant="outline" className="w-full">
-                      Ver Histórico
+                      View History
                     </Button>
                   </Link>
                   <Link to="/settings">
                     <Button variant="secondary" className="w-full">
                       <Settings className="mr-2 h-4 w-4" />
-                      Configurar Alertas
+                      Configure Alerts
                     </Button>
                   </Link>
                 </div>
@@ -219,9 +219,9 @@ const Dashboard = () => {
                 <div className="text-center space-y-4">
                   <Settings className="h-12 w-12 mx-auto text-muted-foreground" />
                   <div>
-                    <h3 className="text-lg font-semibold mb-2">Aguardando Configuração</h3>
+                    <h3 className="text-lg font-semibold mb-2">Awaiting Setup</h3>
                     <p className="text-sm text-muted-foreground">
-                      Configure sua conta Binance para visualizar seu saldo e dados de trading em tempo real.
+                      Configure your Binance account to view your balance and real-time trading data.
                     </p>
                   </div>
                 </div>
@@ -235,9 +235,9 @@ const Dashboard = () => {
               <Card className="p-8 border-dashed">
                 <div className="text-center space-y-4">
                   <div>
-                    <h3 className="text-lg font-semibold mb-2">Dashboard P&L</h3>
+                    <h3 className="text-lg font-semibold mb-2">P&L Dashboard</h3>
                     <p className="text-sm text-muted-foreground">
-                      Seus gráficos de lucro e perda aparecerão aqui após conectar sua conta.
+                      Your profit and loss charts will appear here after connecting your account.
                     </p>
                   </div>
                 </div>
@@ -256,7 +256,7 @@ const Dashboard = () => {
               <Button
                 size="lg"
                 className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 z-40"
-                title="Configurar Alertas de Perda"
+                title="Configure Loss Alerts"
               >
                 <Settings className="h-6 w-6" />
               </Button>

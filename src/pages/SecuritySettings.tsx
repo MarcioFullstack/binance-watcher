@@ -279,7 +279,7 @@ const SecuritySettings = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Código de Verificação</Label>
+                    <Label>Verification Code</Label>
                     <InputOTP
                       maxLength={6}
                       value={verificationCode}
@@ -334,9 +334,9 @@ const SecuritySettings = () => {
       <AlertDialog open={showDisableDialog} onOpenChange={setShowDisableDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Desativar Autenticação de Dois Fatores?</AlertDialogTitle>
+            <AlertDialogTitle>Disable Two-Factor Authentication?</AlertDialogTitle>
             <AlertDialogDescription>
-              Isso tornará sua conta menos segura. Você terá que configurar novamente o 2FA se quiser reativá-lo.
+              This will make your account less secure. You will have to set up 2FA again if you want to reactivate it.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -348,10 +348,10 @@ const SecuritySettings = () => {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Desativando...
+                  Disabling...
                 </>
               ) : (
-                "Desativar"
+                "Disable"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

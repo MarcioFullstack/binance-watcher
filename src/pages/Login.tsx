@@ -298,7 +298,7 @@ const Login = () => {
                 <TabsContent value="totp" className="space-y-4">
                   <form onSubmit={handleVerify2FA} className="space-y-4">
                     <div className="space-y-2">
-                      <Label>Código do Google Authenticator</Label>
+                      <Label>Google Authenticator Code</Label>
                       <InputOTP
                         maxLength={6}
                         value={totpCode}
@@ -436,10 +436,10 @@ const Login = () => {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Entrando...
+                  Logging in...
                 </>
               ) : (
-                "Entrar"
+                "Login"
               )}
             </Button>
 

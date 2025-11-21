@@ -292,16 +292,16 @@ export const LossAlarmSettings = () => {
           </p>
         </div>
 
-        {/* Tipo de Sirene */}
+        {/* Alarm Sound Type */}
         <div className="space-y-2">
-          <Label>Tipo de Alarme Sonoro</Label>
+          <Label>Sound Alarm Type</Label>
           <div className="grid grid-cols-2 gap-2">
             {[
-              { value: "police", label: "🚨 Polícia" },
-              { value: "air-raid", label: "⚠️ Ataque Aéreo" },
-              { value: "alarm-clock", label: "⏰ Despertador" },
-              { value: "ambulance", label: "🚑 Ambulância" },
-              { value: "fire", label: "🔥 Bombeiro" },
+              { value: "police", label: "🚨 Police" },
+              { value: "air-raid", label: "⚠️ Air Raid" },
+              { value: "alarm-clock", label: "⏰ Alarm Clock" },
+              { value: "ambulance", label: "🚑 Ambulance" },
+              { value: "fire", label: "🔥 Fire" },
             ].map((option) => (
               <button
                 key={option.value}

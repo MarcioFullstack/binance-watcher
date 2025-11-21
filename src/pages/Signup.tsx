@@ -666,7 +666,7 @@ const Signup = () => {
               <img src={nottifyLogo} alt="NOTTIFY" className="w-12 h-12" />
               <CardTitle className="text-2xl">NOTTIFY</CardTitle>
             </div>
-            <CardDescription>Crie sua conta para começar a monitorar</CardDescription>
+            <CardDescription>Create your account to start monitoring</CardDescription>
           </CardHeader>
         <CardContent>
           <form onSubmit={handleInitialSignup} className="space-y-4">

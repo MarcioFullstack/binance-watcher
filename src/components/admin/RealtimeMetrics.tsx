@@ -167,7 +167,7 @@ export const RealtimeMetrics = () => {
         {/* Active Users Card */}
         <Card className="border-glow hover:glow-primary-hover transition-all">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Usuários Ativos</CardTitle>
+            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -247,8 +247,8 @@ export const RealtimeMetrics = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card className="border-glow">
           <CardHeader>
-            <CardTitle className="text-base">Atividade de Usuários</CardTitle>
-            <CardDescription>Últimos 10 pontos de dados</CardDescription>
+            <CardTitle className="text-base">User Activity</CardTitle>
+            <CardDescription>Last 10 data points</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>

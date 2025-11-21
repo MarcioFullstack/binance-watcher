@@ -9,7 +9,7 @@ export const PositionsTable = () => {
   if (!binanceData || !binanceData.positions || binanceData.positions.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        Nenhuma posição aberta
+        No open positions
       </div>
     );
   }
@@ -19,13 +19,13 @@ export const PositionsTable = () => {
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50">
-            <TableHead>Símbolo</TableHead>
-            <TableHead className="text-right">Quantidade</TableHead>
-            <TableHead className="text-right">Preço Entrada</TableHead>
-            <TableHead className="text-right">Preço Atual</TableHead>
-            <TableHead className="text-right">PnL Não Realizado</TableHead>
-            <TableHead className="text-right">Alavancagem</TableHead>
-            <TableHead className="text-center">Direção</TableHead>
+            <TableHead>Symbol</TableHead>
+            <TableHead className="text-right">Quantity</TableHead>
+            <TableHead className="text-right">Entry Price</TableHead>
+            <TableHead className="text-right">Current Price</TableHead>
+            <TableHead className="text-right">Unrealized PnL</TableHead>
+            <TableHead className="text-right">Leverage</TableHead>
+            <TableHead className="text-center">Direction</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

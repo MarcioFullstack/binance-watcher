@@ -99,7 +99,7 @@ export const DashboardHeader = ({ onLogout, isAdmin = false, userId }: Dashboard
           onClick={() => setAlertsOn(!alertsOn)}
         >
           <Bell className="w-3 h-3 mr-1" />
-          Alertas {alertsOn ? "ON" : "OFF"}
+          Alerts {alertsOn ? "ON" : "OFF"}
         </Badge>
         {isAdmin && (
           <Button variant="outline" onClick={() => navigate("/admin")}>
@@ -114,19 +114,19 @@ export const DashboardHeader = ({ onLogout, isAdmin = false, userId }: Dashboard
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Configurações</DropdownMenuLabel>
+            <DropdownMenuLabel>Settings</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => navigate("/install")}>
               <Download className="mr-2 h-4 w-4" />
-              Instalar App
+              Install App
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate("/settings")}>
               <Settings className="mr-2 h-4 w-4" />
-              Gerais
+              General
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate("/security")}>
               <KeyRound className="mr-2 h-4 w-4" />
-              Segurança
+              Security
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
