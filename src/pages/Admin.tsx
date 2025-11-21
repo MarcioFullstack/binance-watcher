@@ -104,6 +104,17 @@ interface AlertConfigHistory {
   changed_by: string;
 }
 
+interface UserProfile {
+  id: string;
+  email: string;
+  created_at: string;
+  subscription: {
+    status: string;
+    expires_at: string | null;
+    plan_type: string | null;
+  } | null;
+}
+
 const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -141,6 +152,9 @@ const Admin = () => {
   const [configHistory, setConfigHistory] = useState<AlertConfigHistory[]>([]);
   const [configHistoryLoading, setConfigHistoryLoading] = useState(false);
   const [historyDateRange, setHistoryDateRange] = useState<"week" | "month" | "3months" | "all">("week");
+  const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [liberatingUser, setLiberatingUser] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
@@ -151,6 +165,78 @@ const Admin = () => {
     loadAlertConfigs();
     loadConfigHistory();
   }, []);
+
+  const loadAllUsers = async () => {
+    try {
+      setUsersLoading(true);
+      
+      // Get all profiles
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, email, created_at")
+        .order("created_at", { ascending: false });
+
+      if (profilesError) throw profilesError;
+
+      // Get all subscriptions
+      const { data: subscriptions, error: subsError } = await supabase
+        .from("subscriptions")
+        .select("user_id, status, expires_at, plan_type");
+
+      if (subsError) throw subsError;
+
+      // Map subscriptions to users
+      const usersWithSubs: UserProfile[] = (profiles || []).map(profile => {
+        const subscription = subscriptions?.find(sub => sub.user_id === profile.id);
+        return {
+          ...profile,
+          subscription: subscription || null
+        };
+      });
+
+      setAllUsers(usersWithSubs);
+    } catch (error) {
+      console.error("Error loading users:", error);
+      toast.error("Erro ao carregar usuários");
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  const handleLiberateUser = async (userId: string, userEmail: string) => {
+    if (!confirm(`Deseja liberar acesso de 30 dias para ${userEmail}?`)) {
+      return;
+    }
+
+    setLiberatingUser(userId);
+    try {
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 30);
+
+      const { error } = await supabase
+        .from("subscriptions")
+        .upsert({
+          user_id: userId,
+          status: "active",
+          expires_at: expiresAt.toISOString(),
+          plan_type: "monthly",
+          auto_renew: false,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: "user_id"
+        });
+
+      if (error) throw error;
+
+      toast.success(`Acesso liberado para ${userEmail}!`);
+      loadAllUsers();
+    } catch (error: any) {
+      console.error("Error liberating user:", error);
+      toast.error(error.message || "Erro ao liberar usuário");
+    } finally {
+      setLiberatingUser(null);
+    }
+  };
 
   // Real-time subscription for alerts
   useEffect(() => {
@@ -315,6 +401,7 @@ const Admin = () => {
       loadStats();
       loadVouchers();
       loadAuditLogs();
+      loadAllUsers();
     } catch (error: any) {
       console.error("Error verifying password:", error);
       toast.error("Erro ao verificar senha");
@@ -1729,6 +1816,103 @@ const Admin = () => {
                 </Table>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Users Management */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Gerenciamento de Usuários</CardTitle>
+            <CardDescription>
+              Visualize todos os usuários cadastrados e libere acesso
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {usersLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Data Cadastro</TableHead>
+                      <TableHead>Status Assinatura</TableHead>
+                      <TableHead>Expira em</TableHead>
+                      <TableHead>Plano</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {allUsers.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-muted-foreground">
+                          Nenhum usuário encontrado
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      allUsers.map((user) => {
+                        const hasActiveSubscription = 
+                          user.subscription?.status === "active" && 
+                          user.subscription?.expires_at && 
+                          new Date(user.subscription.expires_at) > new Date();
+                        
+                        return (
+                          <TableRow key={user.id}>
+                            <TableCell className="font-medium">
+                              {user.email}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {new Date(user.created_at).toLocaleDateString("pt-BR")}
+                            </TableCell>
+                            <TableCell>
+                              {hasActiveSubscription ? (
+                                <Badge variant="default" className="bg-success">Ativo</Badge>
+                              ) : (
+                                <Badge variant="secondary">Inativo</Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {user.subscription?.expires_at ? (
+                                new Date(user.subscription.expires_at).toLocaleDateString("pt-BR")
+                              ) : (
+                                "-"
+                              )}
+                            </TableCell>
+                            <TableCell className="text-sm capitalize">
+                              {user.subscription?.plan_type || "-"}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {!hasActiveSubscription && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleLiberateUser(user.id, user.email)}
+                                  disabled={liberatingUser === user.id}
+                                >
+                                  {liberatingUser === user.id ? (
+                                    <>
+                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                      Liberando...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Check className="mr-2 h-4 w-4" />
+                                      Liberar Acesso
+                                    </>
+                                  )}
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </CardContent>
         </Card>
 
