@@ -238,6 +238,68 @@ const Admin = () => {
     }
   };
 
+  const handleLiberateAllUsers = async () => {
+    const inactiveUsers = allUsers.filter(user => {
+      const hasActiveSubscription = 
+        user.subscription?.status === "active" && 
+        user.subscription?.expires_at && 
+        new Date(user.subscription.expires_at) > new Date();
+      return !hasActiveSubscription;
+    });
+
+    if (inactiveUsers.length === 0) {
+      toast.info("Todos os usuários já possuem assinaturas ativas");
+      return;
+    }
+
+    if (!confirm(`Deseja liberar acesso de 30 dias para ${inactiveUsers.length} usuário(s) inativo(s)?`)) {
+      return;
+    }
+
+    setLiberatingUser("all");
+    let successCount = 0;
+    let errorCount = 0;
+
+    try {
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 30);
+
+      for (const user of inactiveUsers) {
+        try {
+          const { error } = await supabase
+            .from("subscriptions")
+            .upsert({
+              user_id: user.id,
+              status: "active",
+              expires_at: expiresAt.toISOString(),
+              plan_type: "monthly",
+              auto_renew: false,
+              updated_at: new Date().toISOString()
+            }, {
+              onConflict: "user_id"
+            });
+
+          if (error) throw error;
+          successCount++;
+        } catch (error) {
+          console.error(`Error liberating user ${user.email}:`, error);
+          errorCount++;
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(`${successCount} usuário(s) liberado(s) com sucesso!`);
+      }
+      if (errorCount > 0) {
+        toast.error(`Erro ao liberar ${errorCount} usuário(s)`);
+      }
+
+      loadAllUsers();
+    } finally {
+      setLiberatingUser(null);
+    }
+  };
+
   // Real-time subscription for alerts
   useEffect(() => {
     if (!isAdmin) return;
@@ -1822,12 +1884,86 @@ const Admin = () => {
         {/* Users Management */}
         <Card>
           <CardHeader>
-            <CardTitle>Gerenciamento de Usuários</CardTitle>
-            <CardDescription>
-              Visualize todos os usuários cadastrados e libere acesso
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Gerenciamento de Usuários</CardTitle>
+                <CardDescription>
+                  Visualize todos os usuários cadastrados e libere acesso
+                </CardDescription>
+              </div>
+              {allUsers.length > 0 && (
+                <Button
+                  onClick={handleLiberateAllUsers}
+                  disabled={liberatingUser === "all" || allUsers.every(user => {
+                    const hasActiveSubscription = 
+                      user.subscription?.status === "active" && 
+                      user.subscription?.expires_at && 
+                      new Date(user.subscription.expires_at) > new Date();
+                    return hasActiveSubscription;
+                  })}
+                  variant="default"
+                >
+                  {liberatingUser === "all" ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Liberando Todos...
+                    </>
+                  ) : (
+                    <>
+                      <Users className="mr-2 h-4 w-4" />
+                      Liberar Todos Usuários Inativos
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            {/* Stats */}
+            <div className="grid gap-4 md:grid-cols-3">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-xs">Total de Usuários</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{allUsers.length}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-xs">Assinaturas Ativas</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">
+                    {allUsers.filter(user => {
+                      const hasActiveSubscription = 
+                        user.subscription?.status === "active" && 
+                        user.subscription?.expires_at && 
+                        new Date(user.subscription.expires_at) > new Date();
+                      return hasActiveSubscription;
+                    }).length}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-xs">Usuários Inativos</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-destructive">
+                    {allUsers.filter(user => {
+                      const hasActiveSubscription = 
+                        user.subscription?.status === "active" && 
+                        user.subscription?.expires_at && 
+                        new Date(user.subscription.expires_at) > new Date();
+                      return !hasActiveSubscription;
+                    }).length}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Table */}
             {usersLoading ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -1869,7 +2005,7 @@ const Admin = () => {
                             </TableCell>
                             <TableCell>
                               {hasActiveSubscription ? (
-                                <Badge variant="default" className="bg-success">Ativo</Badge>
+                                <Badge variant="default" className="bg-green-600">Ativo</Badge>
                               ) : (
                                 <Badge variant="secondary">Inativo</Badge>
                               )}
@@ -1889,7 +2025,7 @@ const Admin = () => {
                                 <Button
                                   size="sm"
                                   onClick={() => handleLiberateUser(user.id, user.email)}
-                                  disabled={liberatingUser === user.id}
+                                  disabled={liberatingUser === user.id || liberatingUser === "all"}
                                 >
                                   {liberatingUser === user.id ? (
                                     <>
