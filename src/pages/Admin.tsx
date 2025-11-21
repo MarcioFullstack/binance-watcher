@@ -263,6 +263,21 @@ const Admin = () => {
 
       if (error) throw error;
 
+      // Send notification email
+      try {
+        await supabase.functions.invoke("notify-user-liberated", {
+          body: {
+            userEmail,
+            expiresAt: expiresAt.toISOString(),
+            planType: "monthly"
+          }
+        });
+        console.log("Notification email sent to", userEmail);
+      } catch (emailError) {
+        console.error("Error sending notification email:", emailError);
+        // Don't fail the liberation if email fails
+      }
+
       toast.success(`Acesso liberado para ${userEmail}!`);
       loadAllUsers();
     } catch (error: any) {
@@ -294,6 +309,7 @@ const Admin = () => {
     setLiberatingUser("all");
     let successCount = 0;
     let errorCount = 0;
+    let emailCount = 0;
 
     try {
       const expiresAt = new Date();
@@ -316,6 +332,20 @@ const Admin = () => {
 
           if (error) throw error;
           successCount++;
+
+          // Send notification email
+          try {
+            await supabase.functions.invoke("notify-user-liberated", {
+              body: {
+                userEmail: user.email,
+                expiresAt: expiresAt.toISOString(),
+                planType: "monthly"
+              }
+            });
+            emailCount++;
+          } catch (emailError) {
+            console.error(`Error sending notification email to ${user.email}:`, emailError);
+          }
         } catch (error) {
           console.error(`Error liberating user ${user.email}:`, error);
           errorCount++;
@@ -323,7 +353,7 @@ const Admin = () => {
       }
 
       if (successCount > 0) {
-        toast.success(`${successCount} usuário(s) liberado(s) com sucesso!`);
+        toast.success(`${successCount} usuário(s) liberado(s) com sucesso! ${emailCount} email(s) enviado(s).`);
       }
       if (errorCount > 0) {
         toast.error(`Erro ao liberar ${errorCount} usuário(s)`);
