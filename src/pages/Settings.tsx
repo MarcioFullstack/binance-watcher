@@ -149,18 +149,18 @@ const Settings = () => {
     const trimmedCode = voucherCode.trim().toUpperCase();
     
     if (!trimmedCode) {
-      toast.error("Digite o código do voucher");
+      toast.error("Enter the voucher code");
       return;
     }
 
     // Validação: aceita códigos alfanuméricos com hífens entre 5 e 30 caracteres
     if (trimmedCode.length < 5 || trimmedCode.length > 30) {
-      toast.error("Código inválido. Deve ter entre 5 e 30 caracteres");
+      toast.error("Invalid code. Must be between 5 and 30 characters");
       return;
     }
 
     if (!/^[A-Z0-9-]+$/.test(trimmedCode)) {
-      toast.error("Código inválido. Use apenas letras, números e hífens");
+      toast.error("Invalid code. Use only letters, numbers and hyphens");
       return;
     }
 
@@ -190,9 +190,9 @@ const Settings = () => {
       const daysGranted = result.days_granted ?? result.days;
       const expiresAt = result.expires_at ?? result.expiresAt;
 
-      toast.success(`✅ Voucher ativado! ${daysGranted} dias adicionados à sua assinatura.`, {
+      toast.success(`✅ Voucher activated! ${daysGranted} days added to your subscription.`, {
         description: expiresAt
-          ? `Nova data de expiração: ${new Date(expiresAt).toLocaleDateString('pt-BR')}`
+          ? `New expiration date: ${new Date(expiresAt).toLocaleDateString('en-US')}`
           : undefined,
         duration: 5000,
       });

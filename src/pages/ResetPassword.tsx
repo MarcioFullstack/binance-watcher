@@ -97,7 +97,7 @@ const ResetPassword = () => {
       // Invalidate all sessions for security
       await supabase.auth.signOut({ scope: 'global' });
 
-      toast.success("Senha alterada com sucesso! Faça login novamente.");
+      toast.success("Password changed successfully! Please login again.");
       setTimeout(() => {
         navigate("/login");
       }, 2000);

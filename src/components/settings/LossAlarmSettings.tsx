@@ -54,7 +54,7 @@ export const LossAlarmSettings = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        toast.error("Usuário não autenticado");
+        toast.error("User not authenticated");
         return;
       }
 
@@ -73,10 +73,10 @@ export const LossAlarmSettings = () => {
 
       if (error) throw error;
 
-      toast.success("Configurações de alarme salvas com sucesso!");
+      toast.success("Alarm settings saved successfully!");
     } catch (error: any) {
       console.error("Error saving settings:", error);
-      toast.error("Erro ao salvar configurações");
+      toast.error("Error saving settings");
     } finally {
       setSaving(false);
     }

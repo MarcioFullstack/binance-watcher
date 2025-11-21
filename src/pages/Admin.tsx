@@ -235,14 +235,14 @@ const Admin = () => {
       setAllUsers(usersWithSubs);
     } catch (error) {
       console.error("Error loading users:", error);
-      toast.error("Erro ao carregar usuários");
+      toast.error("Error loading users");
     } finally {
       setUsersLoading(false);
     }
   };
 
   const handleLiberateUser = async (userId: string, userEmail: string) => {
-    if (!confirm(`Deseja liberar acesso de 30 dias para ${userEmail}?`)) {
+    if (!confirm(`Grant 30 days of access to ${userEmail}?`)) {
       return;
     }
 
@@ -281,11 +281,11 @@ const Admin = () => {
         // Don't fail the liberation if email fails
       }
 
-      toast.success(`Acesso liberado para ${userEmail}!`);
+      toast.success(`Access granted to ${userEmail}!`);
       loadAllUsers();
     } catch (error: any) {
       console.error("Error liberating user:", error);
-      toast.error(error.message || "Erro ao liberar usuário");
+      toast.error(error.message || "Error granting user access");
     } finally {
       setLiberatingUser(null);
     }
@@ -301,11 +301,11 @@ const Admin = () => {
     });
 
     if (inactiveUsers.length === 0) {
-      toast.info("Todos os usuários já possuem assinaturas ativas");
+      toast.info("All users already have active subscriptions");
       return;
     }
 
-    if (!confirm(`Deseja liberar acesso de 30 dias para ${inactiveUsers.length} usuário(s) inativo(s)?`)) {
+    if (!confirm(`Grant 30 days of access to ${inactiveUsers.length} inactive user(s)?`)) {
       return;
     }
 
@@ -356,10 +356,10 @@ const Admin = () => {
       }
 
       if (successCount > 0) {
-        toast.success(`${successCount} usuário(s) liberado(s) com sucesso! ${emailCount} email(s) enviado(s).`);
+        toast.success(`${successCount} user(s) granted access successfully! ${emailCount} email(s) sent.`);
       }
       if (errorCount > 0) {
-        toast.error(`Erro ao liberar ${errorCount} usuário(s)`);
+        toast.error(`Error granting access to ${errorCount} user(s)`);
       }
 
       loadAllUsers();
@@ -664,13 +664,13 @@ const Admin = () => {
     }
 
     if (!/^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(voucherCode)) {
-      toast.error("O código deve estar no formato XXXX-XXXX-XXXX-XXXX");
+      toast.error("Code must be in format XXXX-XXXX-XXXX-XXXX");
       return;
     }
 
     const days = parseInt(voucherDays);
     if (isNaN(days) || days < 1 || days > 365) {
-      toast.error("Dias deve ser um número entre 1 e 365");
+      toast.error("Days must be a number between 1 and 365");
       return;
     }
 
@@ -696,7 +696,7 @@ const Admin = () => {
   const handleCopyVoucher = async (code: string) => {
     try {
       await navigator.clipboard.writeText(code);
-      toast.success("Código copiado!");
+      toast.success("Code copied!");
     } catch (error) {
       toast.error("Error copying code");
     }
@@ -732,7 +732,7 @@ const Admin = () => {
 
     const days = parseInt(voucherDays);
     if (isNaN(days) || days < 1 || days > 365) {
-      toast.error("Dias deve ser um número entre 1 e 365");
+      toast.error("Days must be a number between 1 and 365");
       return;
     }
 
@@ -988,7 +988,7 @@ const Admin = () => {
 
       if (error) throw error;
       
-      toast.success('Configuração atualizada com sucesso');
+      toast.success('Configuration updated successfully');
       loadAlertConfigs();
     } catch (error: any) {
       console.error('Error updating alert config:', error);
@@ -1029,7 +1029,7 @@ const Admin = () => {
 
       if (error) throw error;
       
-      toast.success(data.message || 'Verificação de alertas concluída');
+      toast.success(data.message || 'Alert verification completed');
       loadAlerts();
     } catch (error: any) {
       console.error('Error triggering alert check:', error);
@@ -1400,70 +1400,70 @@ const Admin = () => {
           </div>
         ) : stats ? (
           <>
-            {/* Cards de Métricas */}
+            {/* Metrics Cards */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Recebido</CardTitle>
+                  <CardTitle className="text-sm font-medium">Total Received</CardTitle>
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">${stats.payments.totalReceived}</div>
                   <p className="text-xs text-muted-foreground">
-                    {stats.payments.confirmed} pagamentos confirmados
+                    {stats.payments.confirmed} confirmed payments
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Taxa de Conversão</CardTitle>
+                  <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{stats.payments.conversionRate}%</div>
                   <p className="text-xs text-muted-foreground">
-                    {stats.payments.confirmed} de {stats.payments.total} pagamentos
+                    {stats.payments.confirmed} of {stats.payments.total} payments
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Usuários Ativos</CardTitle>
+                  <CardTitle className="text-sm font-medium">Active Users</CardTitle>
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{stats.users.active}</div>
                   <p className="text-xs text-muted-foreground">
-                    de {stats.users.total} usuários totais
+                    of {stats.users.total} total users
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Pagamentos Pendentes</CardTitle>
+                  <CardTitle className="text-sm font-medium">Pending Payments</CardTitle>
                   <Activity className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{stats.payments.pending}</div>
                   <p className="text-xs text-muted-foreground">
-                    aguardando aprovação
+                    awaiting approval
                   </p>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Gráficos */}
+            {/* Charts */}
             <div className="grid gap-4 md:grid-cols-2">
               {/* Realtime Metrics Dashboard */}
               <RealtimeMetrics />
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Pagamentos por Dia</CardTitle>
-                  <CardDescription>Últimos 30 dias</CardDescription>
+                  <CardTitle>Payments per Day</CardTitle>
+                  <CardDescription>Last 30 days</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
@@ -1471,15 +1471,15 @@ const Admin = () => {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis 
                         dataKey="date" 
-                        tickFormatter={(value) => new Date(value).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                        tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' })}
                       />
                       <YAxis />
                       <Tooltip 
-                        labelFormatter={(value) => new Date(value).toLocaleDateString('pt-BR')}
+                        labelFormatter={(value) => new Date(value).toLocaleDateString('en-US')}
                       />
                       <Legend />
-                      <Line type="monotone" dataKey="count" stroke="#8884d8" name="Quantidade" />
-                      <Line type="monotone" dataKey="amount" stroke="#82ca9d" name="Valor ($)" />
+                      <Line type="monotone" dataKey="count" stroke="#8884d8" name="Quantity" />
+                      <Line type="monotone" dataKey="amount" stroke="#82ca9d" name="Amount ($)" />
                     </LineChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -1487,16 +1487,16 @@ const Admin = () => {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Usuários por Status</CardTitle>
-                  <CardDescription>Ativos vs Inativos</CardDescription>
+                  <CardTitle>Users by Status</CardTitle>
+                  <CardDescription>Active vs Inactive</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
                         data={[
-                          { name: 'Ativos', value: stats.users.active },
-                          { name: 'Inativos', value: stats.users.inactive },
+                          { name: 'Active', value: stats.users.active },
+                          { name: 'Inactive', value: stats.users.inactive },
                         ]}
                         cx="50%"
                         cy="50%"
@@ -1518,7 +1518,7 @@ const Admin = () => {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Status de Pagamentos</CardTitle>
+                  <CardTitle>Payment Status</CardTitle>
                   <CardDescription>Distribution by status</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -1766,12 +1766,12 @@ const Admin = () => {
                     {creatingVoucher ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Criando...
+                        Creating...
                       </>
                     ) : (
                       <>
                         <Ticket className="mr-2 h-4 w-4" />
-                        Criar Voucher
+                        Create Voucher
                       </>
                     )}
                   </Button>
@@ -1954,10 +1954,10 @@ const Admin = () => {
           <CardHeader>
             <div className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-primary" />
-              <CardTitle>Distribuição Geográfica dos Usuários</CardTitle>
+              <CardTitle>Geographic Distribution of Users</CardTitle>
             </div>
             <CardDescription>
-              Análise da localização dos usuários cadastrados
+              Analysis of registered users location
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -1965,7 +1965,7 @@ const Admin = () => {
             <div className="grid gap-4 md:grid-cols-3">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription className="text-xs">Países Únicos</CardDescription>
+                  <CardDescription className="text-xs">Unique Countries</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
@@ -1975,7 +1975,7 @@ const Admin = () => {
               </Card>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription className="text-xs">Estados Únicos</CardDescription>
+                  <CardDescription className="text-xs">Unique States</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
@@ -1985,7 +1985,7 @@ const Admin = () => {
               </Card>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription className="text-xs">Cidades Únicas</CardDescription>
+                  <CardDescription className="text-xs">Unique Cities</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
@@ -1998,8 +1998,8 @@ const Admin = () => {
             {/* Distribution by Country */}
             <Card className="bg-card/50">
               <CardHeader>
-                <CardTitle className="text-base">Usuários por País</CardTitle>
-                <CardDescription>Top 10 países com mais usuários</CardDescription>
+                <CardTitle className="text-base">Users by Country</CardTitle>
+                <CardDescription>Top 10 countries with most users</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -2034,7 +2034,7 @@ const Admin = () => {
                     })}
                   {allUsers.filter(u => u.country).length === 0 && (
                     <p className="text-center text-muted-foreground py-4">
-                      Nenhum dado de localização disponível
+                      No location data available
                     </p>
                   )}
                 </div>
@@ -2044,8 +2044,8 @@ const Admin = () => {
             {/* Distribution by State */}
             <Card className="bg-card/50">
               <CardHeader>
-                <CardTitle className="text-base">Usuários por Estado</CardTitle>
-                <CardDescription>Top 10 estados com mais usuários</CardDescription>
+                <CardTitle className="text-base">Users by State</CardTitle>
+                <CardDescription>Top 10 states with most users</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -2079,9 +2079,9 @@ const Admin = () => {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Gerenciamento de Usuários</CardTitle>
+                <CardTitle>User Management</CardTitle>
                 <CardDescription>
-                  Visualize todos os usuários cadastrados e libere acesso
+                  View all registered users and grant access
                 </CardDescription>
               </div>
               {allUsers.length > 0 && (
@@ -2099,12 +2099,12 @@ const Admin = () => {
                   {liberatingUser === "all" ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Liberando Todos...
+                      Granting All...
                     </>
                   ) : (
                     <>
                       <Users className="mr-2 h-4 w-4" />
-                      Liberar Todos Usuários Inativos
+                      Grant Access to All Inactive Users
                     </>
                   )}
                 </Button>
@@ -2116,7 +2116,7 @@ const Admin = () => {
             <div className="grid gap-4 md:grid-cols-3">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription className="text-xs">Total de Usuários</CardDescription>
+                  <CardDescription className="text-xs">Total Users</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{allUsers.length}</div>
@@ -2124,7 +2124,7 @@ const Admin = () => {
               </Card>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription className="text-xs">Assinaturas Ativas</CardDescription>
+                  <CardDescription className="text-xs">Active Subscriptions</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-green-600">
@@ -2140,7 +2140,7 @@ const Admin = () => {
               </Card>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription className="text-xs">Usuários Inativos</CardDescription>
+                  <CardDescription className="text-xs">Inactive Users</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-destructive">
@@ -2160,7 +2160,7 @@ const Admin = () => {
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
                 <Input
-                  placeholder="Buscar por email..."
+                  placeholder="Search by email..."
                   value={userSearchEmail}
                   onChange={(e) => setUserSearchEmail(e.target.value)}
                 />
@@ -2168,15 +2168,15 @@ const Admin = () => {
               <div className="flex gap-2">
                 <Tabs value={userStatusFilter} onValueChange={(v) => setUserStatusFilter(v as any)} className="w-auto">
                   <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="all">Todos</TabsTrigger>
-                    <TabsTrigger value="active">Ativos</TabsTrigger>
-                    <TabsTrigger value="inactive">Inativos</TabsTrigger>
+                    <TabsTrigger value="all">All</TabsTrigger>
+                    <TabsTrigger value="active">Active</TabsTrigger>
+                    <TabsTrigger value="inactive">Inactive</TabsTrigger>
                   </TabsList>
                 </Tabs>
                 <Tabs value={userSortBy} onValueChange={(v) => setUserSortBy(v as any)} className="w-auto">
                   <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="newest">Mais Recentes</TabsTrigger>
-                    <TabsTrigger value="oldest">Mais Antigos</TabsTrigger>
+                    <TabsTrigger value="newest">Newest</TabsTrigger>
+                    <TabsTrigger value="oldest">Oldest</TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
@@ -2205,7 +2205,7 @@ const Admin = () => {
                     {getFilteredUsers().length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center text-muted-foreground">
-                          Nenhum usuário encontrado
+                          No users found
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -2235,10 +2235,10 @@ const Admin = () => {
                             </TableCell>
                             <TableCell>
                               {hasActiveSubscription ? (
-                                <Badge variant="default" className="bg-green-600">Ativo</Badge>
-                              ) : (
-                                <Badge variant="secondary">Inativo</Badge>
-                              )}
+                              <Badge variant="default" className="bg-green-600">Active</Badge>
+                            ) : (
+                              <Badge variant="secondary">Inactive</Badge>
+                            )}
                             </TableCell>
                             <TableCell className="text-sm">
                               {user.subscription?.expires_at ? (
@@ -2258,16 +2258,16 @@ const Admin = () => {
                                   disabled={liberatingUser === user.id || liberatingUser === "all"}
                                 >
                                   {liberatingUser === user.id ? (
-                                    <>
-                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                      Liberando...
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Check className="mr-2 h-4 w-4" />
-                                      Liberar Acesso
-                                    </>
-                                  )}
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Granting...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Check className="mr-2 h-4 w-4" />
+                                    Grant Access
+                                  </>
+                                )}
                                 </Button>
                               )}
                             </TableCell>
@@ -2351,55 +2351,55 @@ const Admin = () => {
               </div>
             </div>
             <CardDescription>
-              Dashboard com estatísticas e análises de ações administrativas - {getPeriodLabel()}
+              Dashboard with statistics and analysis of administrative actions - {getPeriodLabel()}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Estatísticas Resumidas */}
+            {/* Summary Statistics */}
             <div className="grid gap-4 md:grid-cols-3">
               <Card className="bg-card/50">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Total de Ações</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Actions</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{auditMetrics.totalActions}</div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {auditMetrics.actionsToday} hoje
+                    {auditMetrics.actionsToday} today
                   </p>
                 </CardContent>
               </Card>
               <Card className="bg-card/50">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Usuários Ativos</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Active Users</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{auditMetrics.uniqueUsers}</div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Administradores únicos
+                    Unique administrators
                   </p>
                 </CardContent>
               </Card>
               <Card className="bg-card/50">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Média Diária</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Daily Average</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
                     {auditMetrics.avgPerDay}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    No período selecionado
+                    In selected period
                   </p>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Gráficos */}
+            {/* Charts */}
             <div className="grid gap-6 md:grid-cols-2">
-              {/* Gráfico de Ações ao Longo do Tempo */}
+              {/* Actions Over Time Chart */}
               <Card className="bg-card/50">
                 <CardHeader>
-                  <CardTitle className="text-base">Ações ao Longo do Tempo</CardTitle>
+                  <CardTitle className="text-base">Actions Over Time</CardTitle>
                   <CardDescription>{getPeriodLabel()}</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -2415,18 +2415,18 @@ const Admin = () => {
                         dataKey="count" 
                         stroke="hsl(var(--primary))" 
                         strokeWidth={2}
-                        name="Ações"
+                        name="Actions"
                       />
                     </LineChart>
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
 
-              {/* Gráfico de Distribuição por Tipo */}
+              {/* Distribution by Type Chart */}
               <Card className="bg-card/50">
                 <CardHeader>
-                  <CardTitle className="text-base">Distribuição por Tipo</CardTitle>
-                  <CardDescription>Total de ações por categoria</CardDescription>
+                  <CardTitle className="text-base">Distribution by Type</CardTitle>
+                  <CardDescription>Total actions by category</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={250}>
@@ -2479,7 +2479,7 @@ const Admin = () => {
                   ))}
                   {auditMetrics.topUsers.length === 0 && (
                     <p className="text-center text-muted-foreground py-4">
-                      Nenhum dado disponível
+                      No data available
                     </p>
                   )}
                 </div>

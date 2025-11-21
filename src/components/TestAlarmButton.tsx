@@ -32,7 +32,7 @@ export const TestAlarmButton = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        toast.error('Você precisa estar logado');
+        toast.error('You need to be logged in');
         return;
       }
 
@@ -43,15 +43,15 @@ export const TestAlarmButton = () => {
       if (error) throw error;
 
       toast.success(
-        type === 'gain' ? 'Teste de alarme de ganho iniciado!' : 'Teste de alarme de perda iniciado!',
+        type === 'gain' ? 'Gain alarm test started!' : 'Loss alarm test started!',
         {
-          description: 'O alarme deve começar a tocar agora. Use o botão para desligar.',
+          description: 'The alarm should start sounding now. Use the button to turn it off.',
           duration: 5000,
         }
       );
     } catch (error: any) {
       console.error('Error testing alarm:', error);
-      toast.error('Erro ao testar alarme: ' + error.message);
+      toast.error('Error testing alarm: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -63,7 +63,7 @@ export const TestAlarmButton = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        toast.error('Você precisa estar logado');
+        toast.error('You need to be logged in');
         return;
       }
 
@@ -71,14 +71,14 @@ export const TestAlarmButton = () => {
 
       if (error) throw error;
 
-      toast.success('Notificações de teste limpas!', {
-        description: `${data.count} notificação(ões) removida(s) do histórico.`,
+      toast.success('Test notifications cleared!', {
+        description: `${data.count} notification(s) removed from history.`,
         duration: 3000,
       });
       setShowClearDialog(false);
     } catch (error: any) {
       console.error('Error clearing test notifications:', error);
-      toast.error('Erro ao limpar notificações: ' + error.message);
+      toast.error('Error clearing notifications: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -95,24 +95,24 @@ export const TestAlarmButton = () => {
           className="gap-2"
         >
           <Siren className="h-4 w-4" />
-          {loading ? 'Testando...' : 'Testar Alarmes'}
+          {loading ? 'Testing...' : 'Test Alarms'}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Testar Alarmes</DropdownMenuLabel>
+        <DropdownMenuLabel>Test Alarms</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => testAlarm('critical_loss')}>
           <Siren className="mr-2 h-4 w-4 text-destructive" />
-          Alarme de Perda
+          Loss Alarm
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => testAlarm('gain')}>
           <Coins className="mr-2 h-4 w-4 text-green-500" />
-          Alarme de Ganho
+          Gain Alarm
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => setShowClearDialog(true)} className="text-destructive focus:text-destructive">
           <Trash2 className="mr-2 h-4 w-4" />
-          Limpar Notificações de Teste
+          Clear Test Notifications
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -120,20 +120,20 @@ export const TestAlarmButton = () => {
     <AlertDialog open={showClearDialog} onOpenChange={setShowClearDialog}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Confirmar Limpeza</AlertDialogTitle>
+          <AlertDialogTitle>Confirm Cleanup</AlertDialogTitle>
           <AlertDialogDescription>
-            Tem certeza que deseja limpar todas as notificações de teste do histórico? 
-            Esta ação não pode ser desfeita.
+            Are you sure you want to clear all test notifications from history? 
+            This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={loading}>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
           <AlertDialogAction 
             onClick={clearTestNotifications}
             disabled={loading}
             className="bg-destructive hover:bg-destructive/90"
           >
-            {loading ? 'Limpando...' : 'Sim, Limpar'}
+            {loading ? 'Clearing...' : 'Yes, Clear'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
