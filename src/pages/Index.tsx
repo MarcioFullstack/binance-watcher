@@ -702,11 +702,11 @@ const Index = () => {
             >
               <HelpCircle className="h-10 w-10 text-primary" />
               <h2 className="text-4xl md:text-5xl font-bold">
-                Perguntas Frequentes
+                Frequently Asked Questions
               </h2>
             </motion.div>
             <p className="text-xl text-muted-foreground">
-              Tire suas dúvidas sobre o NOTTIFY
+              Get answers about NOTTIFY
             </p>
           </motion.div>
 
@@ -725,12 +725,12 @@ const Index = () => {
               >
                 <AccordionItem value="item-1" className="bg-card/50 backdrop-blur-sm border-2 border-border rounded-lg px-6">
                   <AccordionTrigger className="text-lg font-semibold hover:text-primary">
-                    Como funciona o monitoramento em tempo real?
+                    How does real-time monitoring work?
                   </AccordionTrigger>
                   <AccordionContent className="text-muted-foreground">
-                    O NOTTIFY se conecta diretamente à API da Binance Futures usando suas credenciais seguras. 
-                    A cada 5 segundos, coletamos informações atualizadas sobre seu saldo, posições abertas e PnL. 
-                    Todos os dados são processados em tempo real e exibidos no dashboard de forma clara e organizada.
+                    NOTTIFY connects directly to the Binance Futures API using your secure credentials. 
+                    Every 5 seconds, we collect updated information about your balance, open positions, and PnL. 
+                    All data is processed in real-time and displayed on the dashboard in a clear and organized manner.
                   </AccordionContent>
                 </AccordionItem>
               </motion.div>
@@ -743,13 +743,13 @@ const Index = () => {
               >
                 <AccordionItem value="item-2" className="bg-card/50 backdrop-blur-sm border-2 border-border rounded-lg px-6">
                   <AccordionTrigger className="text-lg font-semibold hover:text-primary">
-                    Minhas API keys da Binance estão seguras?
+                    Are my Binance API keys secure?
                   </AccordionTrigger>
                   <AccordionContent className="text-muted-foreground">
-                    Sim! Utilizamos criptografia de ponta a ponta para armazenar suas credenciais. Suas API keys 
-                    são criptografadas antes de serem salvas no banco de dados. Além disso, implementamos autenticação 
-                    2FA (TOTP) para proteger o acesso à sua conta. Recomendamos criar API keys apenas com permissões 
-                    de leitura e execução de ordens, sem permissão de saque.
+                    Yes! We use end-to-end encryption to store your credentials. Your API keys 
+                    are encrypted before being saved in the database. Additionally, we implement 2FA 
+                    (TOTP) authentication to protect access to your account. We recommend creating API keys with only 
+                    read and trade execution permissions, without withdrawal permissions.
                   </AccordionContent>
                 </AccordionItem>
               </motion.div>
@@ -763,12 +763,12 @@ const Index = () => {
               >
                 <AccordionItem value="item-4" className="bg-card/50 backdrop-blur-sm border-2 border-border rounded-lg px-6">
                   <AccordionTrigger className="text-lg font-semibold hover:text-primary">
-                    Posso conectar múltiplas contas da Binance?
+                    Can I connect multiple Binance accounts?
                   </AccordionTrigger>
                   <AccordionContent className="text-muted-foreground">
-                    Sim! O NOTTIFY permite adicionar e gerenciar múltiplas contas Binance. Você pode alternar entre 
-                    elas facilmente no dashboard e configurar alertas e proteções específicas para cada conta. 
-                    Todas as contas são protegidas com a mesma segurança e podem ser monitoradas simultaneamente.
+                    Yes! NOTTIFY allows you to add and manage multiple Binance accounts. You can easily switch between 
+                    them in the dashboard and configure specific alerts and protections for each account. 
+                    All accounts are protected with the same security and can be monitored simultaneously.
                   </AccordionContent>
                 </AccordionItem>
               </motion.div>
@@ -781,12 +781,12 @@ const Index = () => {
               >
                 <AccordionItem value="item-5" className="bg-card/50 backdrop-blur-sm border-2 border-border rounded-lg px-6">
                   <AccordionTrigger className="text-lg font-semibold hover:text-primary">
-                    Como funcionam os alertas personalizados?
+                    How do custom alerts work?
                   </AccordionTrigger>
                   <AccordionContent className="text-muted-foreground">
-                    Você pode configurar alertas para diversos eventos: lucro atingido, perda máxima, mudança de saldo, 
-                    e muito mais. Os alertas aparecem em tempo real no dashboard e podem ser customizados com diferentes 
-                    níveis de severidade. Configure os limites que fazem sentido para sua estratégia de trading.
+                    You can configure alerts for various events: profit target reached, maximum loss, balance changes, 
+                    and much more. Alerts appear in real-time on the dashboard and can be customized with different 
+                    severity levels. Configure the limits that make sense for your trading strategy.
                   </AccordionContent>
                 </AccordionItem>
               </motion.div>
@@ -799,13 +799,13 @@ const Index = () => {
               >
                 <AccordionItem value="item-6" className="bg-card/50 backdrop-blur-sm border-2 border-border rounded-lg px-6">
                   <AccordionTrigger className="text-lg font-semibold hover:text-primary">
-                    Qual é a política de cancelamento?
+                    What is the cancellation policy?
                   </AccordionTrigger>
                   <AccordionContent className="text-muted-foreground">
-                    A assinatura mensal de $10 dá acesso completo por 30 dias. Você pode cancelar a qualquer momento
-                    através das configurações da sua conta. Não há período de fidelidade ou taxas de cancelamento. 
-                    Seu acesso permanece ativo até o fim do período pago. Também oferecemos vouchers para períodos 
-                    específicos de acesso.
+                    The $10 monthly subscription gives you full access for 30 days. You can cancel at any time 
+                    through your account settings. There is no commitment period or cancellation fees. 
+                    Your access remains active until the end of the paid period. We also offer vouchers for specific 
+                    access periods.
                   </AccordionContent>
                 </AccordionItem>
               </motion.div>
@@ -818,12 +818,12 @@ const Index = () => {
               >
                 <AccordionItem value="item-7" className="bg-card/50 backdrop-blur-sm border-2 border-border rounded-lg px-6">
                   <AccordionTrigger className="text-lg font-semibold hover:text-primary">
-                    Quais métodos de pagamento são aceitos?
+                    What payment methods are accepted?
                   </AccordionTrigger>
                   <AccordionContent className="text-muted-foreground">
-                    Aceitamos pagamentos em criptomoedas (valor equivalente a $10 USD) através de várias redes blockchain.
-                    O pagamento é confirmado automaticamente após 3 confirmações na rede. Também oferecemos vouchers 
-                    que podem ser ativados instantaneamente para acesso imediato. O processo é rápido, seguro e totalmente automatizado.
+                    We accept cryptocurrency payments (equivalent to $10 USD) through various blockchain networks.
+                    Payment is automatically confirmed after 3 network confirmations. We also offer vouchers 
+                    that can be activated instantly for immediate access. The process is fast, secure, and fully automated.
                   </AccordionContent>
                 </AccordionItem>
               </motion.div>
@@ -843,10 +843,10 @@ const Index = () => {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Preço Simples e Transparente
+              Simple and Transparent Pricing
             </h2>
             <p className="text-xl text-muted-foreground">
-              Acesso completo a todas as funcionalidades
+              Full access to all features
             </p>
           </motion.div>
 
@@ -861,18 +861,18 @@ const Index = () => {
               <CardContent className="p-8 text-center space-y-6">
                 <div>
                   <div className="text-5xl font-bold text-primary mb-2">$10</div>
-                  <div className="text-muted-foreground">por mês</div>
+                  <div className="text-muted-foreground">per month</div>
                 </div>
 
                 <ul className="space-y-3 text-left">
                   {[
-                    "Monitoramento em tempo real (5s)",
-                    "Alertas ilimitados personalizáveis",
-                    "Gestão de risco avançada",
-                    "Autenticação 2FA",
-                    "Dashboard profissional",
-                    "Múltiplas contas Binance",
-                    "Suporte prioritário"
+                    "Real-time monitoring (5s)",
+                    "Unlimited customizable alerts",
+                    "Advanced risk management",
+                    "2FA Authentication",
+                    "Professional dashboard",
+                    "Multiple Binance accounts",
+                    "Priority support"
                   ].map((feature, index) => (
                     <motion.li 
                       key={index}
@@ -894,7 +894,7 @@ const Index = () => {
                     className="w-full text-lg"
                     onClick={() => navigate("/signup")}
                   >
-                    Começar Agora
+                    Get Started
                   </Button>
                 </motion.div>
               </CardContent>
@@ -913,10 +913,10 @@ const Index = () => {
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-4xl md:text-5xl font-bold">
-            Pronto para Proteger Seus Investimentos?
+            Ready to Protect Your Investments?
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Junte-se aos traders que já estão monitorando suas operações com segurança e eficiência
+            Join traders who are already monitoring their operations with security and efficiency
           </p>
           <motion.div
             className="flex flex-col sm:flex-row gap-4 justify-center"
@@ -942,10 +942,10 @@ const Index = () => {
             <span className="text-xl font-bold">NOTTIFY</span>
           </div>
           <p className="text-muted-foreground">
-            Monitor PnL Profissional para Binance Futures
+            Professional PnL Monitor for Binance Futures
           </p>
           <div className="text-sm text-muted-foreground">
-            © 2025 NOTTIFY. Todos os direitos reservados.
+            © 2025 NOTTIFY. All rights reserved.
           </div>
         </div>
       </footer>
