@@ -132,7 +132,7 @@ const AlertHistory = () => {
       setStats({ total, acknowledged, pending, byLevel });
     } catch (error) {
       console.error("Error loading alert history:", error);
-      toast.error("Erro ao carregar histórico de alertas");
+      toast.error("Error loading alert history");
     } finally {
       setLoading(false);
     }

@@ -115,7 +115,7 @@ export const AdvancedLossAlertSettings = () => {
       }
     } catch (error) {
       console.error("Error loading settings:", error);
-      toast.error("Erro ao carregar configurações");
+      toast.error("Error loading settings");
     } finally {
       setLoading(false);
     }
@@ -125,7 +125,7 @@ export const AdvancedLossAlertSettings = () => {
     const balanceValue = parseFloat(initialBalance);
     
     if (isNaN(balanceValue) || balanceValue <= 0) {
-      toast.error("Digite um saldo inicial válido");
+      toast.error("Enter a valid initial balance");
       return;
     }
 
@@ -133,7 +133,7 @@ export const AdvancedLossAlertSettings = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        toast.error("Usuário não autenticado");
+        toast.error("User not authenticated");
         return;
       }
 
@@ -141,7 +141,7 @@ export const AdvancedLossAlertSettings = () => {
       const sortedLevels = [...alertLevels].sort((a, b) => a.loss_percentage - b.loss_percentage);
       for (let i = 0; i < sortedLevels.length - 1; i++) {
         if (sortedLevels[i].loss_percentage >= sortedLevels[i + 1].loss_percentage) {
-          toast.error("Os percentuais de perda devem ser únicos");
+          toast.error("Loss percentages must be unique");
           return;
         }
       }
@@ -173,10 +173,10 @@ export const AdvancedLossAlertSettings = () => {
 
       if (riskError) throw riskError;
 
-      toast.success("Configurações salvas com sucesso!");
+      toast.success("Settings saved successfully!");
     } catch (error: any) {
       console.error("Error saving settings:", error);
-      toast.error("Erro ao salvar configurações");
+      toast.error("Error saving settings");
     } finally {
       setSaving(false);
     }
@@ -184,7 +184,7 @@ export const AdvancedLossAlertSettings = () => {
 
   const handleAddNewAlert = async () => {
     if (!newAlert.level_name.trim()) {
-      toast.error("Digite um nome para o nível de alerta");
+      toast.error("Enter a name for the alert level");
       return;
     }
 
@@ -195,7 +195,7 @@ export const AdvancedLossAlertSettings = () => {
 
     // Verificar se já existe um alerta com esse nome
     if (alertLevels.some(level => level.level_name.toLowerCase() === newAlert.level_name.toLowerCase())) {
-      toast.error("Já existe um alerta com este nome");
+      toast.error("An alert with this name already exists");
       return;
     }
 
@@ -227,10 +227,10 @@ export const AdvancedLossAlertSettings = () => {
         visual_alert: true,
         push_notification: false,
       });
-      toast.success("Novo nível de alerta adicionado!");
+      toast.success("New alert level added!");
     } catch (error: any) {
       console.error("Error adding alert:", error);
-      toast.error("Erro ao adicionar nível de alerta");
+      toast.error("Error adding alert level");
     }
   };
 
@@ -238,7 +238,7 @@ export const AdvancedLossAlertSettings = () => {
     // Não permitir deletar níveis padrão
     const defaultLevels = ['warning', 'danger', 'critical', 'emergency'];
     if (defaultLevels.includes(levelName)) {
-      toast.error("Não é possível deletar níveis padrão. Desative-os se não quiser usá-los.");
+      toast.error("Cannot delete default levels. Disable them if you don't want to use them.");
       return;
     }
 
@@ -251,10 +251,10 @@ export const AdvancedLossAlertSettings = () => {
       if (error) throw error;
 
       setAlertLevels(alertLevels.filter(level => level.id !== id));
-      toast.success("Nível de alerta removido!");
+      toast.success("Alert level removed!");
     } catch (error: any) {
       console.error("Error deleting alert:", error);
-      toast.error("Erro ao remover nível de alerta");
+      toast.error("Error removing alert level");
     }
   };
 

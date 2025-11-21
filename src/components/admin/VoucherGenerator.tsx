@@ -146,7 +146,7 @@ export const VoucherGenerator = () => {
     try {
       const exists = await checkVoucherExists(customCode);
       if (exists) {
-        toast.error("Este código de voucher já existe. Escolha outro.");
+        toast.error("This voucher code already exists. Choose another.");
         return;
       }
 

@@ -176,7 +176,7 @@ const Signup = () => {
           });
 
           if (signInError) {
-            toast.error("Email já cadastrado. Por favor, faça login.");
+            toast.error("Email already registered. Please login.");
             setLoading(false);
             return;
           }
@@ -231,12 +231,12 @@ const Signup = () => {
             } else {
               // User already has 2FA configured
               await supabase.auth.signOut();
-              toast.error("Email já cadastrado com 2FA configurado. Por favor, faça login.");
+              toast.error("Email already registered with 2FA configured. Please login.");
             }
           }
         } catch (verifyError: any) {
           console.error("Error verifying user:", verifyError);
-          toast.error("Email já cadastrado. Por favor, faça login.");
+          toast.error("Email already registered. Please login.");
         }
       } else {
         toast.error(error.message || "Error creating account");
@@ -308,7 +308,7 @@ const Signup = () => {
 
   const handleRegenerate2FA = async () => {
     if (!userId) {
-      toast.error("Erro ao regenerar código");
+      toast.error("Error regenerating code");
       return;
     }
 
@@ -346,10 +346,10 @@ const Signup = () => {
       setQrCodeUrl(totpUri);
       setTotpCode(""); // Clear any entered code
 
-      toast.success("Novo código 2FA gerado! Escaneie o novo QR code.");
+      toast.success("New 2FA code generated! Scan the new QR code.");
     } catch (error: any) {
       console.error("Error regenerating 2FA:", error);
-      toast.error(error.message || "Erro ao regenerar código 2FA");
+      toast.error(error.message || "Error regenerating 2FA code");
     } finally {
       setLoading(false);
     }
@@ -422,7 +422,7 @@ const Signup = () => {
             <CardHeader className="space-y-2">
               <div className="flex items-center gap-3 mb-4">
                 <Shield className="w-12 h-12 text-primary" />
-                <CardTitle className="text-2xl">Autenticação de Dois Fatores</CardTitle>
+                <CardTitle className="text-2xl">Two-Factor Authentication</CardTitle>
               </div>
               <CardDescription>
                 Configure o Google Authenticator para proteger sua conta
@@ -727,7 +727,7 @@ const Signup = () => {
                             checked={includeLowercase}
                             onCheckedChange={(checked) => setIncludeLowercase(checked as boolean)}
                           />
-                          <Label htmlFor="lowercase">Letras minúsculas (a-z)</Label>
+                          <Label htmlFor="lowercase">Lowercase letters (a-z)</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <Checkbox
@@ -735,7 +735,7 @@ const Signup = () => {
                             checked={includeUppercase}
                             onCheckedChange={(checked) => setIncludeUppercase(checked as boolean)}
                           />
-                          <Label htmlFor="uppercase">Letras maiúsculas (A-Z)</Label>
+                          <Label htmlFor="uppercase">Uppercase letters (A-Z)</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <Checkbox
@@ -743,7 +743,7 @@ const Signup = () => {
                             checked={includeNumbers}
                             onCheckedChange={(checked) => setIncludeNumbers(checked as boolean)}
                           />
-                          <Label htmlFor="numbers">Números (0-9)</Label>
+                          <Label htmlFor="numbers">Numbers (0-9)</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <Checkbox

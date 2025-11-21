@@ -254,7 +254,7 @@ const Login = () => {
 
       if (error) throw error;
 
-      toast.success("Email de recuperação enviado! Verifique sua caixa de entrada.");
+      toast.success("Recovery email sent! Check your inbox.");
       setResetDialogOpen(false);
       setResetEmail("");
     } catch (error: any) {
@@ -284,7 +284,7 @@ const Login = () => {
             <CardHeader className="space-y-2">
               <div className="flex items-center gap-3 mb-4">
                 <Shield className="w-12 h-12 text-primary" />
-                <CardTitle className="text-2xl">Verificação 2FA</CardTitle>
+                <CardTitle className="text-2xl">2FA Verification</CardTitle>
               </div>
               <CardDescription>Enter the authentication code</CardDescription>
             </CardHeader>
@@ -336,7 +336,7 @@ const Login = () => {
                 <TabsContent value="backup" className="space-y-4">
                   <form onSubmit={handleVerify2FA} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="backup-code">Código de Backup</Label>
+                      <Label htmlFor="backup-code">Backup Code</Label>
                       <Input
                         id="backup-code"
                         type="text"
