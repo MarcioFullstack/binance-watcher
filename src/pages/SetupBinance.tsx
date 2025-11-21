@@ -181,10 +181,10 @@ const SetupBinance = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Nome da Conta</Label>
+                <Label htmlFor="name">Account Name</Label>
                 <Input
                   id="name"
-                  placeholder="Minha Conta Principal"
+                  placeholder="My Main Account"
                   value={accountData.name}
                   onChange={(e) =>
                     setAccountData({ ...accountData, name: e.target.value })
@@ -197,7 +197,7 @@ const SetupBinance = () => {
                 <Label htmlFor="apiKey">API Key</Label>
                 <Input
                   id="apiKey"
-                  placeholder="Sua API Key da Binance"
+                  placeholder="Your Binance API Key"
                   value={accountData.apiKey}
                   onChange={(e) =>
                     setAccountData({ ...accountData, apiKey: e.target.value })
@@ -211,7 +211,7 @@ const SetupBinance = () => {
                 <Input
                   id="apiSecret"
                   type="password"
-                  placeholder="Seu API Secret da Binance"
+                  placeholder="Your Binance API Secret"
                   value={accountData.apiSecret}
                   onChange={(e) =>
                     setAccountData({ ...accountData, apiSecret: e.target.value })
@@ -246,7 +246,7 @@ const SetupBinance = () => {
 
               <Button type="submit" className="w-full" disabled={loading || testing}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Conectar Binance
+                Connect Binance
               </Button>
             </form>
           </CardContent>
