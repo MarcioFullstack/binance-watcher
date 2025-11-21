@@ -86,3 +86,6 @@ verify_jwt = true
 
 [functions.verify-totp]
 verify_jwt = true
+
+[functions.capture-user-location]
+verify_jwt = true
