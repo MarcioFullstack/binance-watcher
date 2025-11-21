@@ -63,10 +63,20 @@ export const useAdvancedLossAlarm = (
 
   // Calcular status de perda em tempo real
   useEffect(() => {
-    if (!enabled || !initialBalance || initialBalance === 0 || !alertLevels) return;
+    if (!enabled || !initialBalance || initialBalance === 0 || !alertLevels) {
+      console.log('Advanced alarm disabled:', { enabled, initialBalance, hasAlertLevels: !!alertLevels });
+      return;
+    }
 
     const lossAmount = initialBalance - currentBalance;
     const lossPercent = (lossAmount / initialBalance) * 100;
+
+    console.log('Loss calculation:', {
+      currentBalance,
+      initialBalance,
+      lossAmount: lossAmount.toFixed(2),
+      lossPercent: lossPercent.toFixed(2)
+    });
 
     // Encontrar o nível mais alto atingido
     let triggeredLevel: LossAlertLevel | null = null;
@@ -74,23 +84,26 @@ export const useAdvancedLossAlarm = (
     for (const level of [...(alertLevels || [])].reverse()) {
       if (lossPercent >= level.loss_percentage) {
         triggeredLevel = level;
+        console.log('Level triggered:', level.level_name, level.loss_percentage + '%');
         break;
       }
     }
 
-    setLossStatus({
+    setLossStatus(prev => ({
       currentLossPercent: lossPercent,
       currentLossAmount: lossAmount,
       triggeredLevel,
-      isInLoss: lossPercent > 0,
-      alarmActive: lossStatus.alarmActive, // Mantém estado do alarme
-    });
+      isInLoss: lossPercent > 0 && !!triggeredLevel,
+      alarmActive: prev.alarmActive, // Mantém estado do alarme
+    }));
 
     // Disparar alarme se mudou de nível
     if (triggeredLevel && triggeredLevel.id !== lastTriggeredLevelRef.current) {
+      console.log('NEW LEVEL TRIGGERED:', triggeredLevel.level_name);
       lastTriggeredLevelRef.current = triggeredLevel.id;
       handleLossAlert(triggeredLevel, lossPercent, lossAmount);
-    } else if (!triggeredLevel) {
+    } else if (!triggeredLevel && lastTriggeredLevelRef.current) {
+      console.log('Loss recovered, clearing trigger');
       lastTriggeredLevelRef.current = null;
     }
 
@@ -101,8 +114,19 @@ export const useAdvancedLossAlarm = (
     lossPercent: number,
     lossAmount: number
   ) => {
+    console.log('🚨 handleLossAlert CALLED:', {
+      level: level.level_name,
+      lossPercent: lossPercent.toFixed(2),
+      lossAmount: lossAmount.toFixed(2),
+      soundEnabled: level.sound_enabled,
+      visualAlert: level.visual_alert
+    });
+
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      console.log('❌ No user found, aborting alert');
+      return;
+    }
 
     // Buscar configurações de sirene
     const { data: riskSettings } = await supabase
@@ -112,6 +136,7 @@ export const useAdvancedLossAlarm = (
       .maybeSingle();
 
     const sirenType = riskSettings?.siren_type || 'police';
+    console.log('Siren type from settings:', sirenType);
 
     // Alertas visuais
     if (level.visual_alert) {
@@ -122,6 +147,7 @@ export const useAdvancedLossAlarm = (
         emergency: `🆘 EMERGÊNCIA: ${lossPercent.toFixed(2)}% de perda - FECHE POSIÇÕES AGORA!`,
       };
 
+      console.log('📢 Showing visual alert:', messages[level.level_name]);
       toast.error(messages[level.level_name], {
         duration: level.level_name === 'emergency' ? Infinity : 10000,
       });
@@ -129,13 +155,17 @@ export const useAdvancedLossAlarm = (
 
     // Som de alarme contínuo com tipo de sirene configurado
     if (level.sound_enabled) {
+      console.log('🔊 Starting sound alarm with type:', sirenType);
       startContinuousAlarm(level.level_name, sirenType);
       setLossStatus(prev => ({ ...prev, alarmActive: true }));
+    } else {
+      console.log('🔇 Sound alarm disabled for this level');
     }
 
     // Registrar no histórico
     try {
-      await supabase.from('loss_alert_history').insert({
+      console.log('💾 Saving to loss_alert_history...');
+      const { error } = await supabase.from('loss_alert_history').insert({
         user_id: user.id,
         level_name: level.level_name,
         loss_percentage: lossPercent,
@@ -144,8 +174,14 @@ export const useAdvancedLossAlarm = (
         initial_balance: initialBalance,
         alert_message: `Perda de ${lossPercent.toFixed(2)}% (${lossAmount.toFixed(2)} USDT) detectada`,
       });
+      
+      if (error) {
+        console.error('❌ Error saving alert history:', error);
+      } else {
+        console.log('✅ Alert saved to history');
+      }
     } catch (error) {
-      console.error('Error saving loss alert history:', error);
+      console.error('❌ Exception saving loss alert history:', error);
     }
   };
 
@@ -153,14 +189,24 @@ export const useAdvancedLossAlarm = (
     level: 'warning' | 'danger' | 'critical' | 'emergency',
     sirenType: string = 'police'
   ) => {
+    console.log('🎵 startContinuousAlarm called:', { level, sirenType });
+    
     // Para qualquer alarme existente
     stopAlarm();
 
-    if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-    }
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        console.log('AudioContext created, state:', audioContextRef.current.state);
+      }
 
-    const audioContext = audioContextRef.current;
+      const audioContext = audioContextRef.current;
+      
+      // Resume if suspended
+      if (audioContext.state === 'suspended') {
+        console.log('AudioContext suspended, resuming...');
+        audioContext.resume();
+      }
     
     // Volume ALTO baseado na severidade
     const volume = level === 'emergency' ? 0.8 : level === 'critical' ? 0.7 : level === 'danger' ? 0.6 : 0.5;
@@ -248,28 +294,39 @@ export const useAdvancedLossAlarm = (
       oscillator.stop(startTime + cycleDuration);
     };
 
-    // Toca o primeiro ciclo imediatamente
-    playCycle();
-
-    // Configura loop contínuo a cada 5.5 segundos (um pouco mais que o ciclo)
-    alarmIntervalRef.current = window.setInterval(() => {
+      // Toca o primeiro ciclo imediatamente
+      console.log('▶️ Playing first alarm cycle');
       playCycle();
-    }, 5500);
+
+      // Configura loop contínuo a cada 5.5 segundos (um pouco mais que o ciclo)
+      alarmIntervalRef.current = window.setInterval(() => {
+        console.log('🔁 Alarm cycle repeating...');
+        playCycle();
+      }, 5500);
+      
+      console.log('✅ Alarm started successfully');
+    } catch (error) {
+      console.error('❌ Error starting alarm:', error);
+    }
   };
 
   const stopAlarm = () => {
+    console.log('⏹️ Stopping alarm...');
+    
     // Para o intervalo
     if (alarmIntervalRef.current) {
       clearInterval(alarmIntervalRef.current);
       alarmIntervalRef.current = null;
+      console.log('Interval cleared');
     }
 
     // Para o oscillador atual
     if (oscillatorRef.current) {
       try {
         oscillatorRef.current.stop();
+        console.log('Oscillator stopped');
       } catch (e) {
-        // Ignora erro se já foi parado
+        console.log('Oscillator already stopped');
       }
       oscillatorRef.current = null;
     }
@@ -278,9 +335,11 @@ export const useAdvancedLossAlarm = (
     if (gainNodeRef.current) {
       gainNodeRef.current.disconnect();
       gainNodeRef.current = null;
+      console.log('Gain node disconnected');
     }
 
     setLossStatus(prev => ({ ...prev, alarmActive: false }));
+    console.log('✅ Alarm stopped');
   };
 
   // Limpar recursos ao desmontar

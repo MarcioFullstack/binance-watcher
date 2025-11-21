@@ -263,7 +263,11 @@ serve(async (req) => {
 
     // Verificar alertas de PnL configurados pelo usuário
     try {
+      const authHeader = req.headers.get('Authorization');
       await supabaseClient.functions.invoke('check-pnl-alerts', {
+        headers: {
+          Authorization: authHeader || '',
+        },
         body: {
           pnlData: {
             today: todayTotalPnL,
@@ -274,6 +278,7 @@ serve(async (req) => {
           },
         },
       });
+      console.log('PnL alerts checked successfully');
     } catch (alertError) {
       console.error('Error checking PnL alerts:', alertError);
       // Não lançar erro para não interromper o fluxo principal
