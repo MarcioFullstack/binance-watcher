@@ -189,7 +189,7 @@ const Index = () => {
       avatar: "",
       initials: "CS",
       rating: 5,
-      text: "O NOTTIFY mudou completamente minha forma de operar. Agora tenho controle total sobre minhas posições e os alertas personalizados me protegem. Melhor investimento que fiz!"
+      text: "NOTTIFY completely changed my way of operating. Now I have total control over my positions and the customized alerts protect me. Best investment I made!"
     },
     {
       name: "Marina Costa",
@@ -197,7 +197,7 @@ const Index = () => {
       avatar: "",
       initials: "MC",
       rating: 5,
-      text: "Excelente ferramenta! Os alertas personalizados são perfeitos e me mantêm informada mesmo quando não estou monitorando. Interface muito profissional e fácil de usar."
+      text: "Excellent tool! The personalized alerts are perfect and keep me informed even when I'm not monitoring. Very professional and easy to use interface."
     },
     {
       name: "Roberto Mendes",
@@ -205,7 +205,7 @@ const Index = () => {
       avatar: "",
       initials: "RM",
       rating: 5,
-      text: "A atualização a cada 5 segundos é essencial para meu estilo de trading. Dashboard limpo, informações precisas e a segurança 2FA me dá muita confiança."
+      text: "The 5-second update is essential for my trading style. Clean dashboard, accurate information and 2FA security gives me a lot of confidence."
     },
     {
       name: "Juliana Alves",
@@ -213,23 +213,23 @@ const Index = () => {
       avatar: "",
       initials: "JA",
       rating: 5,
-      text: "Gerencio múltiplas contas e o NOTTIFY facilita demais. Consigo alternar entre elas rapidamente e configurar proteções diferentes para cada estratégia. Recomendo muito!"
+      text: "I manage multiple accounts and NOTTIFY makes it so much easier. I can switch between them quickly and configure different protections for each strategy. Highly recommend!"
     },
     {
       name: "Pedro Santos",
-      role: "Trader Profissional",
+      role: "Professional Trader",
       avatar: "",
       initials: "PS",
       rating: 5,
-      text: "Finalmente uma ferramenta que entende o trader brasileiro. Setup rápido, preço justo e funciona perfeitamente. O suporte também é excelente!"
+      text: "Finally a tool that understands the trader. Quick setup, fair price and works perfectly. The support is also excellent!"
     },
     {
       name: "Ana Oliveira",
-      role: "Trader Iniciante",
+      role: "Beginner Trader",
       avatar: "",
       initials: "AO",
       rating: 5,
-      text: "Como iniciante, o NOTTIFY me ajudou muito a aprender gerenciamento de risco. Os alertas me ensinam quando estou ultrapassando limites e me protegem de perdas."
+      text: "As a beginner, NOTTIFY helped me a lot to learn risk management. The alerts teach me when I'm exceeding limits and protect me from losses."
     }
   ];
 
@@ -348,7 +348,7 @@ const Index = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
           >
-            Monitor PnL Profissional para Binance Futures
+            Professional PnL Monitor for Binance Futures
           </motion.h2>
           
           <motion.p 
@@ -357,8 +357,8 @@ const Index = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
           >
-            Monitore seus lucros e perdas em tempo real, configure alertas inteligentes 
-            e proteja sua banca com notificações personalizadas. Tudo em um dashboard profissional.
+            Monitor your profits and losses in real-time, configure intelligent alerts 
+            and protect your account with personalized notifications. All in a professional dashboard.
           </motion.p>
 
           <motion.div 
@@ -373,7 +373,7 @@ const Index = () => {
                 className="group text-lg px-8"
                 onClick={() => navigate("/signup")}
               >
-                Começar Agora
+                Get Started Now
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </motion.div>
@@ -385,7 +385,7 @@ const Index = () => {
                 className="text-lg px-8"
                 onClick={() => navigate("/login")}
               >
-                Já Tenho Conta
+                Already Have Account
               </Button>
             </motion.div>
           </motion.div>
@@ -501,11 +501,11 @@ const Index = () => {
             >
               <Quote className="h-10 w-10 text-primary" />
               <h2 className="text-4xl md:text-5xl font-bold">
-                O Que Nossos Traders Dizem
+                What Our Traders Say
               </h2>
             </motion.div>
             <p className="text-xl text-muted-foreground">
-              Depoimentos reais de quem já usa o NOTTIFY
+              Real testimonials from those who already use NOTTIFY
             </p>
           </motion.div>
 
@@ -601,21 +601,21 @@ const Index = () => {
               whileHover={{ scale: 1.05 }}
             >
               <div className="text-4xl font-bold text-primary mb-2">500+</div>
-              <div className="text-sm text-muted-foreground">Traders Ativos</div>
+              <div className="text-sm text-muted-foreground">Active Traders</div>
             </motion.div>
             <motion.div 
               className="text-center"
               whileHover={{ scale: 1.05 }}
             >
               <div className="text-4xl font-bold text-primary mb-2">4.9/5</div>
-              <div className="text-sm text-muted-foreground">Avaliação Média</div>
+              <div className="text-sm text-muted-foreground">Average Rating</div>
             </motion.div>
             <motion.div 
               className="text-center"
               whileHover={{ scale: 1.05 }}
             >
               <div className="text-4xl font-bold text-primary mb-2">1M+</div>
-              <div className="text-sm text-muted-foreground">Alertas Enviados</div>
+              <div className="text-sm text-muted-foreground">Alerts Sent</div>
             </motion.div>
           </motion.div>
         </div>
