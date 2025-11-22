@@ -33,7 +33,16 @@ serve(async (req) => {
     // Get authenticated user
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
     if (authError || !user) {
-      throw new Error('Unauthorized');
+      console.error('Unauthorized in check-pnl-alerts: missing or invalid user.', {
+        hasAuthError: !!authError,
+      });
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      );
     }
 
     const userId = user.id;

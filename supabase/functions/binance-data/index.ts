@@ -272,25 +272,31 @@ serve(async (req) => {
       );
 
       const authHeader = req.headers.get('Authorization');
-      const { data: alertData, error: alertError } = await serviceRoleClient.functions.invoke('check-pnl-alerts', {
-        headers: {
-          Authorization: authHeader || '',
-        },
-        body: {
-          pnlData: {
-            today: todayTotalPnL,
-            todayPercent: todayTotalPercent,
-            unrealized: unrealizedPnL,
-            totalFromInitial: totalPnLFromInitial,
-            totalPercent: totalPnLPercent,
-          },
-        },
-      });
-      
-      if (alertError) {
-        console.error('Error invoking PnL alerts:', alertError);
+
+      if (!authHeader) {
+        console.warn('No Authorization header when invoking check-pnl-alerts; skipping PnL alert check.');
       } else {
-        console.log('PnL alerts checked successfully:', alertData);
+        const { data: alertData, error: alertError } =
+          await serviceRoleClient.functions.invoke('check-pnl-alerts', {
+            headers: {
+              Authorization: authHeader,
+            },
+            body: {
+              pnlData: {
+                today: todayTotalPnL,
+                todayPercent: todayTotalPercent,
+                unrealized: unrealizedPnL,
+                totalFromInitial: totalPnLFromInitial,
+                totalPercent: totalPnLPercent,
+              },
+            },
+          });
+        
+        if (alertError) {
+          console.error('Error invoking PnL alerts:', alertError);
+        } else {
+          console.log('PnL alerts checked successfully:', alertData);
+        }
       }
     } catch (alertError) {
       console.error('Exception checking PnL alerts:', alertError);
