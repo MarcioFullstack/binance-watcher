@@ -263,8 +263,16 @@ serve(async (req) => {
 
     // Verificar alertas de PnL configurados pelo usuário
     try {
+      console.log('Checking PnL alerts for user:', user.id);
+      
+      // Use service role client to properly invoke the function
+      const serviceRoleClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+
       const authHeader = req.headers.get('Authorization');
-      await supabaseClient.functions.invoke('check-pnl-alerts', {
+      const { data: alertData, error: alertError } = await serviceRoleClient.functions.invoke('check-pnl-alerts', {
         headers: {
           Authorization: authHeader || '',
         },
@@ -278,9 +286,14 @@ serve(async (req) => {
           },
         },
       });
-      console.log('PnL alerts checked successfully');
+      
+      if (alertError) {
+        console.error('Error invoking PnL alerts:', alertError);
+      } else {
+        console.log('PnL alerts checked successfully:', alertData);
+      }
     } catch (alertError) {
-      console.error('Error checking PnL alerts:', alertError);
+      console.error('Exception checking PnL alerts:', alertError);
       // Não lançar erro para não interromper o fluxo principal
     }
 

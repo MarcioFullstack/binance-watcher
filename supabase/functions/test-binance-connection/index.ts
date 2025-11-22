@@ -27,25 +27,36 @@ serve(async (req) => {
   }
 
   try {
-    const { api_key, api_secret } = await req.json();
+    console.log("Test Binance connection request received");
+    
+    const body = await req.json();
+    console.log("Request body received:", { hasApiKey: !!body.api_key, hasSecret: !!body.api_secret });
+    
+    const { api_key, api_secret } = body;
 
     if (!api_key || !api_secret) {
+      console.error("Missing API credentials");
       return new Response(
-        JSON.stringify({ error: "Missing API key or secret" }),
+        JSON.stringify({ 
+          success: false,
+          error: "Por favor, preencha a API Key e o API Secret" 
+        }),
         {
-          status: 400,
+          status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     }
 
-    console.log("Testing Binance connection...");
+    console.log("Testing Binance Futures API connection...");
 
-    // Test with a simple account info request
+    // Test with a simple account info request - increased recvWindow for better reliability
     const timestamp = Date.now();
-    const queryString = `timestamp=${timestamp}`;
+    const recvWindow = 10000; // 10 seconds window
+    const queryString = `timestamp=${timestamp}&recvWindow=${recvWindow}`;
     const signature = await createSignature(api_secret, queryString);
 
+    console.log("Making request to Binance API...");
     const response = await fetch(
       `https://fapi.binance.com/fapi/v2/account?${queryString}&signature=${signature}`,
       {
@@ -55,14 +66,32 @@ serve(async (req) => {
       }
     );
 
+    console.log("Binance API response status:", response.status);
+
     if (!response.ok) {
-      const errorData = await response.text();
-      console.error("Binance API error:", errorData);
+      const errorText = await response.text();
+      console.error("Binance API error response:", errorText);
+      
+      let errorMessage = "Credenciais inválidas ou permissões insuficientes";
+      
+      try {
+        const errorData = JSON.parse(errorText);
+        if (errorData.code === -2015) {
+          errorMessage = "API Key inválida ou formato incorreto";
+        } else if (errorData.code === -1022) {
+          errorMessage = "Assinatura inválida. Verifique seu API Secret";
+        } else if (errorData.code === -2014) {
+          errorMessage = "API Key não tem permissões para Futures. Ative Futures Trading nas permissões da chave";
+        }
+        console.error("Parsed error:", errorData);
+      } catch (e) {
+        console.error("Could not parse error response:", e);
+      }
       
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: "Invalid API credentials or insufficient permissions" 
+          error: errorMessage
         }),
         {
           status: 200,
@@ -72,12 +101,12 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log("Connection test successful");
+    console.log("Connection test successful! Balance:", data.totalWalletBalance);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: "Connection successful",
+        message: "Conexão estabelecida com sucesso! ✓",
         balance: data.totalWalletBalance 
       }),
       {
@@ -85,12 +114,12 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
-  } catch (err) {
-    console.error("Error testing Binance connection:", err);
+  } catch (err: any) {
+    console.error("Exception testing Binance connection:", err);
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: "Failed to test connection" 
+        error: `Erro ao testar conexão: ${err.message || 'Erro desconhecido'}` 
       }),
       {
         status: 200,
