@@ -73,17 +73,32 @@ serve(async (req) => {
       console.error("Binance API error response:", errorText);
       
       let errorMessage = "Credenciais inválidas ou permissões insuficientes";
+      let binanceCode: number | undefined;
+      let binanceMessage: string | undefined;
       
       try {
         const errorData = JSON.parse(errorText);
+        binanceCode = errorData.code;
+        binanceMessage = errorData.msg;
+
         if (errorData.code === -2015) {
-          errorMessage = "API Key inválida ou formato incorreto";
-        } else if (errorData.code === -1022) {
-          errorMessage = "Assinatura inválida. Verifique seu API Secret";
+          // Invalid API-key, IP, or permissions for action
+          errorMessage =
+            "API Key inválida, IP não autorizado ou permissões incorretas. " +
+            "Confirme que a chave é FUTURES, somente leitura e sem restrição de IP.";
         } else if (errorData.code === -2014) {
-          errorMessage = "API Key não tem permissões para Futures. Ative Futures Trading nas permissões da chave";
+          // API-key format invalid
+          errorMessage =
+            "Formato da API Key inválido. Copie e cole novamente sem espaços ou caracteres extras.";
+        } else if (errorData.code === -1022) {
+          // Signature for this request is not valid
+          errorMessage =
+            "Assinatura inválida. Verifique se o API Secret está correto.";
+        } else if (typeof errorData.msg === "string") {
+          errorMessage = `Erro da Binance (${errorData.code}): ${errorData.msg}`;
         }
-        console.error("Parsed error:", errorData);
+
+        console.error("Parsed Binance error:", errorData);
       } catch (e) {
         console.error("Could not parse error response:", e);
       }
@@ -91,7 +106,9 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: errorMessage
+          error: errorMessage,
+          binanceCode,
+          binanceMessage,
         }),
         {
           status: 200,
