@@ -98,6 +98,7 @@ serve(async (req) => {
     }
 
     // Usar service role para inserir o voucher (bypass RLS)
+    console.log('🔐 Usando service role para criar voucher no banco...');
     const supabaseServiceRole = createClient(
       supabaseUrl,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -116,21 +117,43 @@ serve(async (req) => {
       .single();
 
     if (insertError) {
-      console.error('Insert error details:', {
+      console.error('❌❌❌ ERRO CRÍTICO ao inserir voucher no banco:', {
         error: insertError,
         code: codeUpper,
         days: daysNumber,
-        maxUses: maxUsesNumber
+        maxUses: maxUsesNumber,
+        message: insertError.message,
+        details: insertError.details,
+        hint: insertError.hint
       });
-      throw new Error('Erro ao criar voucher: ' + insertError.message);
+      throw new Error('Erro ao criar voucher no banco: ' + insertError.message);
     }
 
-    console.log('✅ Voucher created successfully:', {
+    console.log('✅✅✅ Voucher criado e salvo com sucesso no banco:', {
       code: newVoucher.code,
       days: daysNumber,
       maxUses: maxUsesNumber,
-      id: newVoucher.id
+      id: newVoucher.id,
+      created_at: newVoucher.created_at
     });
+
+    // VALIDAÇÃO CRÍTICA: Verificar se o voucher foi REALMENTE salvo
+    console.log('🔍 Verificando se voucher foi persistido no banco...');
+    const { data: verifyVoucher, error: verifyError } = await supabaseServiceRole
+      .from('vouchers')
+      .select('*')
+      .eq('code', codeUpper)
+      .maybeSingle();
+
+    if (verifyError || !verifyVoucher) {
+      console.error('❌❌❌ ERRO CRÍTICO: Voucher não foi encontrado após inserção!', {
+        code: codeUpper,
+        verifyError
+      });
+      throw new Error('Voucher não foi persistido corretamente no banco de dados');
+    }
+
+    console.log('✅ Voucher validado e confirmado no banco:', verifyVoucher);
 
     // Registrar log de auditoria
     await createAuditLog({

@@ -78,6 +78,8 @@ export const VoucherGenerator = () => {
     const generatedCodes = new Set<string>();
 
     try {
+      console.log(`🚀 Iniciando geração de ${formData.quantity} vouchers em lote`);
+      
       for (let i = 0; i < formData.quantity; i++) {
         // Garante códigos únicos dentro do lote
         let code = generateRandomCode(formData.prefix);
@@ -86,10 +88,12 @@ export const VoucherGenerator = () => {
         }
         generatedCodes.add(code);
 
+        console.log(`📝 [${i+1}/${formData.quantity}] Gerando voucher: ${code}`);
+
         // Verifica duplicidade no banco antes de tentar criar
         const exists = await checkVoucherExists(code);
         if (exists) {
-          console.warn(`Skipping duplicate voucher code ${code}`);
+          console.warn(`⚠️ Código duplicado no banco: ${code}`);
           newVouchers.push({ code, days: formData.days, created: false });
           continue;
         }
@@ -104,9 +108,13 @@ export const VoucherGenerator = () => {
         });
 
         if (error) {
-          console.error(`Failed to create voucher ${code}:`, error);
+          console.error(`❌ Falha ao criar voucher ${code}:`, error);
+          newVouchers.push({ code, days: formData.days, created: false });
+        } else if (data?.error) {
+          console.error(`❌ Erro do servidor para ${code}:`, data.error);
           newVouchers.push({ code, days: formData.days, created: false });
         } else {
+          console.log(`✅ Voucher criado com sucesso: ${code}`);
           newVouchers.push({ code, days: formData.days, created: true });
         }
       }
@@ -114,13 +122,23 @@ export const VoucherGenerator = () => {
       const successCount = newVouchers.filter(v => v.created).length;
       setGeneratedVouchers(newVouchers);
       
+      console.log(`📊 Resultado: ${successCount}/${formData.quantity} vouchers criados`);
+      
       if (successCount === formData.quantity) {
-        toast.success(`${successCount} vouchers created successfully!`);
+        toast.success(`✅ ${successCount} vouchers criados e validados com sucesso!`);
+      } else if (successCount > 0) {
+        toast.warning(`⚠️ ${successCount}/${formData.quantity} vouchers criados. ${formData.quantity - successCount} falharam.`);
       } else {
-        toast.warning(`${successCount}/${formData.quantity} vouchers created. Some failed.`);
+        toast.error(`❌ Nenhum voucher foi criado. Verifique os logs.`);
+      }
+      
+      // Disparar evento para atualizar a lista
+      if (successCount > 0) {
+        window.dispatchEvent(new CustomEvent('voucher-created'));
       }
     } catch (error: any) {
-      toast.error(error.message || "Error generating vouchers");
+      console.error('❌ Erro inesperado na geração em lote:', error);
+      toast.error(error.message || "Erro ao gerar vouchers");
     } finally {
       setLoading(false);
     }
@@ -144,55 +162,69 @@ export const VoucherGenerator = () => {
 
     setLoading(true);
     try {
+      // VALIDAÇÃO CRÍTICA: Verificar se já existe no banco ANTES de criar
+      console.log('🔍 Verificando se voucher já existe:', customCode);
       const exists = await checkVoucherExists(customCode);
       if (exists) {
+        console.error('❌ Voucher já existe no banco:', customCode);
         toast.error("Este código de voucher já existe. Escolha outro.");
         setLoading(false);
         return;
       }
+      console.log('✅ Voucher não existe, prosseguindo com criação');
 
       const body: any = { code: customCode, days: customDays };
       if (customMaxUses && customMaxUses > 0) {
         body.maxUses = customMaxUses;
       }
       
-      console.log('Creating voucher with data:', body);
+      console.log('📤 Enviando requisição para criar voucher:', body);
       
       const { data, error } = await supabase.functions.invoke('create-voucher', {
         body
       });
 
-      console.log('Voucher creation response:', { data, error });
+      console.log('📥 Resposta da criação do voucher:', { data, error });
 
       if (error) {
-        console.error('Error from create-voucher:', error);
-        throw error;
+        console.error('❌ Erro na edge function:', error);
+        toast.error(`Erro ao criar voucher: ${error.message}`);
+        return;
       }
 
       if (data?.error) {
-        console.error('Error in response data:', data.error);
+        console.error('❌ Erro retornado pelo servidor:', data.error);
         toast.error(data.error);
         return;
       }
 
       if (data?.success) {
-        toast.success(`✅ Voucher "${customCode}" criado com sucesso!`);
+        console.log('✅ Voucher criado com sucesso na edge function');
+        
+        // VALIDAÇÃO CRÍTICA: Aguardar e verificar se foi REALMENTE salvo no banco
+        console.log('⏳ Aguardando 2 segundos para verificar no banco...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        console.log('🔍 Verificando se voucher foi salvo no banco:', customCode);
+        const verify = await checkVoucherExists(customCode);
+        
+        if (!verify) {
+          console.error('❌ ERRO CRÍTICO: Voucher não encontrado no banco após criação!');
+          toast.error('❌ ERRO: Voucher NÃO foi salvo no banco de dados! Entre em contato com o suporte.');
+          setGeneratedVouchers([{ code: customCode, days: customDays, created: false }]);
+          return;
+        }
+        
+        console.log('✅✅✅ Voucher confirmado e validado no banco de dados');
+        toast.success(`✅ Voucher "${customCode}" criado e validado com sucesso!`);
         setGeneratedVouchers([{ code: customCode, days: customDays, created: true }]);
         setCustomCode("");
         
-        // Verificar se foi criado no banco
-        setTimeout(async () => {
-          const verify = await checkVoucherExists(customCode);
-          if (!verify) {
-            console.error('ERRO: Voucher não foi encontrado no banco após criação!');
-            toast.error('AVISO: Voucher pode não ter sido salvo corretamente. Verifique no banco de dados.');
-          } else {
-            console.log('✅ Voucher confirmado no banco de dados');
-          }
-        }, 1000);
+        // Disparar evento para atualizar a lista
+        window.dispatchEvent(new CustomEvent('voucher-created'));
       }
     } catch (error: any) {
-      console.error('Unexpected error creating voucher:', error);
+      console.error('❌ Erro inesperado ao criar voucher:', error);
       toast.error(error.message || "Erro ao criar voucher");
     } finally {
       setLoading(false);
