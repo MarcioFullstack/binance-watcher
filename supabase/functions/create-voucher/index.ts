@@ -116,11 +116,21 @@ serve(async (req) => {
       .single();
 
     if (insertError) {
-      console.error('Insert error:', insertError);
-      throw new Error('Erro ao criar voucher');
+      console.error('Insert error details:', {
+        error: insertError,
+        code: codeUpper,
+        days: daysNumber,
+        maxUses: maxUsesNumber
+      });
+      throw new Error('Erro ao criar voucher: ' + insertError.message);
     }
 
-    console.log('Voucher created successfully:', newVoucher.code);
+    console.log('✅ Voucher created successfully:', {
+      code: newVoucher.code,
+      days: daysNumber,
+      maxUses: maxUsesNumber,
+      id: newVoucher.id
+    });
 
     // Registrar log de auditoria
     await createAuditLog({
