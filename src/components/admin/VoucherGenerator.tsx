@@ -127,18 +127,18 @@ export const VoucherGenerator = () => {
   };
 
   const handleCustomGenerate = async () => {
-    if (!customCode || customCode.length < 10 || customCode.length > 30) {
-      toast.error("Code must be between 10-30 characters");
+    if (!customCode || customCode.length < 5 || customCode.length > 30) {
+      toast.error("Código deve ter entre 5-30 caracteres");
       return;
     }
 
     if (!/^[A-Z0-9-]+$/.test(customCode)) {
-      toast.error("Only uppercase letters, numbers and hyphens allowed");
+      toast.error("Apenas letras maiúsculas, números e hífens são permitidos");
       return;
     }
 
     if (customDays < 1 || customDays > 365) {
-      toast.error("Days must be between 1-365");
+      toast.error("Dias deve ser entre 1-365");
       return;
     }
 
@@ -146,7 +146,8 @@ export const VoucherGenerator = () => {
     try {
       const exists = await checkVoucherExists(customCode);
       if (exists) {
-        toast.error("This voucher code already exists. Choose another.");
+        toast.error("Este código de voucher já existe. Escolha outro.");
+        setLoading(false);
         return;
       }
 
@@ -155,17 +156,44 @@ export const VoucherGenerator = () => {
         body.maxUses = customMaxUses;
       }
       
+      console.log('Creating voucher with data:', body);
+      
       const { data, error } = await supabase.functions.invoke('create-voucher', {
         body
       });
 
-      if (error) throw error;
+      console.log('Voucher creation response:', { data, error });
 
-      toast.success("Custom voucher created successfully!");
-      setGeneratedVouchers([{ code: customCode, days: customDays, created: true }]);
-      setCustomCode("");
+      if (error) {
+        console.error('Error from create-voucher:', error);
+        throw error;
+      }
+
+      if (data?.error) {
+        console.error('Error in response data:', data.error);
+        toast.error(data.error);
+        return;
+      }
+
+      if (data?.success) {
+        toast.success(`✅ Voucher "${customCode}" criado com sucesso!`);
+        setGeneratedVouchers([{ code: customCode, days: customDays, created: true }]);
+        setCustomCode("");
+        
+        // Verificar se foi criado no banco
+        setTimeout(async () => {
+          const verify = await checkVoucherExists(customCode);
+          if (!verify) {
+            console.error('ERRO: Voucher não foi encontrado no banco após criação!');
+            toast.error('AVISO: Voucher pode não ter sido salvo corretamente. Verifique no banco de dados.');
+          } else {
+            console.log('✅ Voucher confirmado no banco de dados');
+          }
+        }, 1000);
+      }
     } catch (error: any) {
-      toast.error(error.message || "Error creating voucher");
+      console.error('Unexpected error creating voucher:', error);
+      toast.error(error.message || "Erro ao criar voucher");
     } finally {
       setLoading(false);
     }
@@ -279,16 +307,16 @@ export const VoucherGenerator = () => {
           <TabsContent value="custom" className="space-y-4">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="customCode">Custom Code</Label>
+                <Label htmlFor="customCode">Código Personalizado</Label>
                 <Input
                   id="customCode"
-                  placeholder="MY-SPECIAL-VOUCHER-2025"
+                  placeholder="MEU-VOUCHER-ESPECIAL"
                   value={customCode}
                   onChange={(e) => setCustomCode(e.target.value.toUpperCase())}
                   maxLength={30}
                 />
                 <p className="text-xs text-muted-foreground">
-                  10-30 characters: letters, numbers, hyphens only
+                  5-30 caracteres: letras, números e hífens
                 </p>
               </div>
 

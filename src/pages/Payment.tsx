@@ -140,28 +140,80 @@ const Payment = () => {
     const trimmedCode = voucherCode.trim().toUpperCase();
     
     if (!trimmedCode) {
-      toast.error(t("payment.errors.enterCode"));
+      toast.error("Por favor, insira um código de voucher");
       return;
     }
 
-    // Validação do formato: XXXX-XXXX-XXXX-XXXX
-    const voucherRegex = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
-    if (!voucherRegex.test(trimmedCode)) {
-      toast.error(t("payment.errors.invalidFormat"));
+    // Validação básica: 5-30 caracteres, alfanuméricos e hífens
+    if (trimmedCode.length < 5 || trimmedCode.length > 30) {
+      toast.error("Código deve ter entre 5 e 30 caracteres");
+      return;
+    }
+
+    if (!/^[A-Z0-9-]+$/.test(trimmedCode)) {
+      toast.error("Código deve conter apenas letras, números e hífens");
       return;
     }
 
     setLoading(true);
     try {
-      const result = await activateVoucher(trimmedCode);
-      if (result.success) {
-        toast.success(t("payment.success.voucherActivated", { days: result.days }));
-        navigate("/setup-binance");
+      const { data, error } = await supabase.functions.invoke('activate-voucher', {
+        body: { code: trimmedCode }
+      });
+
+      if (error) {
+        console.error('Voucher activation error:', error);
+        toast.error("Erro ao comunicar com servidor. Tente novamente.");
+        return;
+      }
+
+      // Verificar error_code retornado
+      if (data?.error_code) {
+        console.error('Voucher error code:', data.error_code, data);
+        
+        switch (data.error_code) {
+          case 'VOUCHER_NOT_FOUND':
+            toast.error(`❌ Voucher "${trimmedCode}" não foi encontrado no sistema. Verifique se o código está correto ou contacte o administrador.`);
+            break;
+          case 'VOUCHER_ALREADY_USED':
+            toast.error("Este voucher já foi utilizado e não pode ser reutilizado.");
+            break;
+          case 'VOUCHER_ALREADY_ACTIVATED_BY_USER':
+            toast.error("Você já ativou este voucher anteriormente.");
+            break;
+          case 'VOUCHER_MAX_USES_REACHED':
+            toast.error("Este voucher atingiu o limite máximo de utilizações.");
+            break;
+          case 'INVALID_CODE_LENGTH':
+            toast.error("Código de voucher tem tamanho inválido.");
+            break;
+          case 'INVALID_CHARACTERS':
+            toast.error("Código de voucher contém caracteres inválidos.");
+            break;
+          case 'NOT_AUTHENTICATED':
+          case 'INVALID_SESSION':
+            toast.error("Sessão expirada. Por favor, faça login novamente.");
+            setTimeout(() => navigate("/login"), 2000);
+            break;
+          default:
+            toast.error(data.error || "Falha ao ativar voucher. Tente novamente.");
+        }
+        return;
+      }
+
+      // Sucesso
+      if (data?.success) {
+        toast.success(`✅ Voucher ativado com sucesso! ${data.days} dias adicionados à sua assinatura.`);
+        setVoucherCode("");
+        
+        // Redirecionar para setup da Binance
+        setTimeout(() => {
+          navigate("/setup-binance");
+        }, 1500);
       }
     } catch (error: any) {
-      const errorCode = error.error_code || "defaultError";
-      const errorKey = `payment.errors.${errorCode}`;
-      toast.error(t(errorKey));
+      console.error('Unexpected voucher activation error:', error);
+      toast.error("Erro inesperado ao ativar voucher. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -296,34 +348,37 @@ const Payment = () => {
               </TabsContent>
 
               <TabsContent value="voucher" className="space-y-4">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="voucher">{t("payment.voucherCode")}</Label>
-                    <Input
-                      id="voucher"
-                      placeholder="PROMO-2025-TEST-GIFT"
-                      value={voucherCode}
-                      onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
-                      maxLength={30}
-                      disabled={loading}
-                    />
-                  </div>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="voucher">Código do Voucher</Label>
+                      <Input
+                        id="voucher"
+                        placeholder="PZZF-MRTH-EIPV-SGRA"
+                        value={voucherCode}
+                        onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+                        maxLength={30}
+                        disabled={loading}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Digite o código do voucher que você recebeu
+                      </p>
+                    </div>
 
-                  <Button
-                    onClick={handleActivateVoucher}
-                    disabled={loading}
-                    className="w-full"
-                  >
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {t("payment.activate")}
-                  </Button>
+                    <Button
+                      onClick={handleActivateVoucher}
+                      disabled={loading || !voucherCode.trim()}
+                      className="w-full"
+                    >
+                      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Ativar Voucher
+                    </Button>
 
-                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-                    <p className="text-sm text-blue-600 dark:text-blue-400">
-                      💡 {t("payment.haveVoucher")}
-                    </p>
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                      <p className="text-sm text-blue-600 dark:text-blue-400">
+                        💡 Já tem um voucher? Ative aqui e tenha acesso instantâneo.
+                      </p>
+                    </div>
                   </div>
-                </div>
               </TabsContent>
             </Tabs>
           </CardContent>

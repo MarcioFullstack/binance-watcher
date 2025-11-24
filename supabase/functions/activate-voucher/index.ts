@@ -110,9 +110,13 @@ serve(async (req) => {
       .single();
 
     if (voucherError || !voucher) {
-      console.error('Error fetching voucher:', voucherError, 'Code:', trimmedCode);
+      console.error('Voucher not found in database:', voucherError, 'Code:', trimmedCode);
       return new Response(
-        JSON.stringify({ error_code: 'VOUCHER_NOT_FOUND' }),
+        JSON.stringify({ 
+          error_code: 'VOUCHER_NOT_FOUND',
+          error: 'Voucher não encontrado. Verifique se o código está correto ou se foi criado pelo administrador.',
+          code_attempted: trimmedCode
+        }),
         {
           status: 404,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { VoucherGenerator } from "@/components/admin/VoucherGenerator";
+import { VoucherList } from "@/components/admin/VoucherList";
 import { RealtimeMetrics } from "@/components/admin/RealtimeMetrics";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -1677,6 +1678,9 @@ const Admin = () => {
 
         {/* Vouchers Card */}
         <VoucherGenerator />
+        
+        {/* Lista de Vouchers Criados */}
+        <VoucherList />
         
         <Card>
           <CardHeader>
