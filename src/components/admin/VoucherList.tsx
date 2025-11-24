@@ -29,26 +29,47 @@ export const VoucherList = () => {
 
   useEffect(() => {
     fetchVouchers();
+    
+    // Listener para atualizar quando um novo voucher é criado
+    const handleVoucherCreated = () => {
+      console.log('🔄 Evento recebido: novo voucher criado, atualizando lista');
+      fetchVouchers();
+    };
+    
+    window.addEventListener('voucher-created', handleVoucherCreated);
+    
+    return () => {
+      window.removeEventListener('voucher-created', handleVoucherCreated);
+    };
   }, []);
 
   const fetchVouchers = async () => {
     setLoading(true);
     try {
+      console.log('🔍 Buscando todos os vouchers do banco de dados...');
+      
       const { data, error } = await supabase
         .from("vouchers")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Error fetching vouchers:", error);
-        toast.error("Erro ao carregar vouchers");
+        console.error("❌ Erro ao buscar vouchers:", error);
+        toast.error("Erro ao carregar vouchers do banco de dados");
         return;
       }
 
       setVouchers(data || []);
-      console.log(`✅ Carregados ${data?.length || 0} vouchers do banco`);
+      console.log(`✅ Carregados ${data?.length || 0} vouchers do banco de dados`);
+      
+      // Validação: Verificar se há vouchers sem validação adequada
+      const invalidVouchers = (data || []).filter(v => !v.code || !v.days);
+      if (invalidVouchers.length > 0) {
+        console.error('⚠️ Vouchers inválidos encontrados:', invalidVouchers);
+        toast.warning(`${invalidVouchers.length} voucher(s) com dados incompletos`);
+      }
     } catch (error) {
-      console.error("Unexpected error fetching vouchers:", error);
+      console.error("❌ Erro inesperado ao carregar vouchers:", error);
       toast.error("Erro ao carregar vouchers");
     } finally {
       setLoading(false);
