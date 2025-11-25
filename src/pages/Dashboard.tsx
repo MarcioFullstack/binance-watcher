@@ -27,6 +27,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isClosingPositions, setIsClosingPositions] = useState(false);
   const navigate = useNavigate();
 
   // Check Binance data
@@ -115,6 +116,44 @@ const Dashboard = () => {
     }
   };
 
+  const handleStopAlarm = () => {
+    stopAlarm();
+    stopAlarmSound();
+  };
+
+  const handleCloseAllPositions = async () => {
+    setIsClosingPositions(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('close-all-positions');
+      
+      if (error) {
+        console.error('Error closing positions:', error);
+        toast.error('Erro ao fechar posições. Tente novamente.');
+        return;
+      }
+
+      console.log('Positions closed:', data);
+      
+      if (data.success) {
+        toast.success(
+          `✅ ${data.closedPositions.length} posições fechadas com sucesso!`,
+          {
+            description: data.errors?.length 
+              ? `${data.errors.length} posições não puderam ser fechadas.`
+              : 'Todas as posições foram fechadas.',
+          }
+        );
+      } else {
+        toast.error('Erro ao fechar posições');
+      }
+    } catch (error: any) {
+      console.error('Failed to close positions:', error);
+      toast.error('Falha ao fechar posições. Verifique sua conexão.');
+    } finally {
+      setIsClosingPositions(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -193,7 +232,9 @@ const Dashboard = () => {
                   triggeredLevel={lossStatus.triggeredLevel}
                   isInLoss={lossStatus.isInLoss}
                   alarmActive={!!activeAlarm && activeAlarm.type === 'loss'}
-                  onStopAlarm={stopAlarmSound}
+                  onStopAlarm={handleStopAlarm}
+                  onClosePositions={handleCloseAllPositions}
+                  isClosingPositions={isClosingPositions}
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <Link to="/alert-history">
