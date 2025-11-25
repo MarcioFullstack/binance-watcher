@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { X, Download, Clock } from "lucide-react";
+import { X, Download, Clock, Smartphone, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -12,18 +13,27 @@ interface BeforeInstallPromptEvent extends Event {
 
 const STORAGE_KEY = "nottify-install-prompt-dismissed";
 const REMIND_LATER_KEY = "nottify-install-remind-later";
-const REMIND_LATER_DAYS = 7;
+const REMIND_LATER_DAYS = 3; // Reduzido para 3 dias
 
 export const InstallPrompt = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
+  const isMobile = useIsMobile();
   const navigate = useNavigate();
 
   useEffect(() => {
     // Check if already installed
-    if (window.matchMedia("(display-mode: standalone)").matches) {
+    const standalone = window.matchMedia("(display-mode: standalone)").matches;
+    setIsStandalone(standalone);
+    if (standalone) {
       return;
     }
+
+    // Check if iOS
+    const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    setIsIOS(iOS);
 
     // Check if permanently dismissed
     const permanentlyDismissed = localStorage.getItem(STORAGE_KEY);
@@ -40,21 +50,23 @@ export const InstallPrompt = () => {
       }
     }
 
-    // Listen for install prompt
+    // Listen for install prompt (Android/Chrome)
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      
-      // Show prompt after 3 seconds delay
-      setTimeout(() => {
-        setShowPrompt(true);
-      }, 3000);
     };
 
     window.addEventListener("beforeinstallprompt", handler);
 
+    // Show prompt for mobile users after short delay
+    if (isMobile) {
+      setTimeout(() => {
+        setShowPrompt(true);
+      }, 2000);
+    }
+
     return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
+  }, [isMobile]);
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
@@ -77,17 +89,17 @@ export const InstallPrompt = () => {
   };
 
   const handleDismiss = () => {
-    localStorage.setItem(STORAGE_KEY, "true");
-    setShowPrompt(false);
+    // Não mais dismiss permanente, apenas remind later
+    handleRemindLater();
   };
 
   const handleViewInstructions = () => {
-    localStorage.setItem(STORAGE_KEY, "true");
     setShowPrompt(false);
     navigate("/install");
   };
 
-  if (!showPrompt || !deferredPrompt) {
+  // Não mostrar se já instalado ou não for mobile
+  if (!showPrompt || isStandalone || !isMobile) {
     return null;
   }
 
@@ -100,16 +112,16 @@ export const InstallPrompt = () => {
         transition={{ type: "spring", damping: 25, stiffness: 200 }}
         className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:max-w-md"
       >
-        <Card className="border-primary/20 bg-card/95 backdrop-blur-sm shadow-2xl">
+        <Card className="border-primary/50 bg-gradient-to-br from-primary/10 to-background/95 backdrop-blur-md shadow-2xl">
           <CardContent className="p-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Download className="h-5 w-5 text-primary" />
+                <div className="p-3 rounded-xl bg-primary/20 border border-primary/30">
+                  <Smartphone className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground">Instalar NOTTIFY</h3>
-                  <p className="text-sm text-muted-foreground">Acesso rápido e notificações</p>
+                  <h3 className="font-bold text-foreground text-lg">📱 Instale o App NOTTIFY</h3>
+                  <p className="text-sm text-muted-foreground">Funciona em segundo plano!</p>
                 </div>
               </div>
               <Button
@@ -122,38 +134,82 @@ export const InstallPrompt = () => {
               </Button>
             </div>
 
-            <p className="text-sm text-muted-foreground mb-4">
-              Instale o app para receber alertas em tempo real sobre seus limites de PnL e acessar instantaneamente seu dashboard.
-            </p>
+            <div className="bg-primary/5 rounded-lg p-3 mb-4 border border-primary/20">
+              <p className="text-sm font-medium text-foreground mb-2">
+                ⚡ Benefícios do App Instalado:
+              </p>
+              <ul className="text-xs text-muted-foreground space-y-1">
+                <li>✓ Funciona em segundo plano mesmo com celular bloqueado</li>
+                <li>✓ Alertas instantâneos de PnL diretamente na tela</li>
+                <li>✓ Acesso rápido sem abrir navegador</li>
+                <li>✓ Funciona offline e carrega mais rápido</li>
+              </ul>
+            </div>
 
-            <div className="space-y-2">
-              <Button
-                onClick={handleInstall}
-                className="w-full"
-                size="sm"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Instalar Agora
-              </Button>
-              
-              <div className="grid grid-cols-2 gap-2">
+            {isIOS ? (
+              <div className="space-y-2">
+                <Button
+                  onClick={handleViewInstructions}
+                  className="w-full"
+                  size="sm"
+                >
+                  <Share className="mr-2 h-4 w-4" />
+                  Como Instalar no iPhone
+                </Button>
+                <p className="text-xs text-center text-muted-foreground">
+                  Toque em <Share className="inline h-3 w-3" /> e depois "Adicionar à Tela Inicial"
+                </p>
                 <Button
                   onClick={handleRemindLater}
                   variant="outline"
                   size="sm"
+                  className="w-full"
                 >
                   <Clock className="mr-2 h-4 w-4" />
-                  Lembrar Depois
-                </Button>
-                <Button
-                  onClick={handleViewInstructions}
-                  variant="outline"
-                  size="sm"
-                >
-                  Ver Instruções
+                  Lembrar em {REMIND_LATER_DAYS} dias
                 </Button>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-2">
+                {deferredPrompt ? (
+                  <Button
+                    onClick={handleInstall}
+                    className="w-full"
+                    size="sm"
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Instalar Agora (1 Toque)
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleViewInstructions}
+                    className="w-full"
+                    size="sm"
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Ver Como Instalar
+                  </Button>
+                )}
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    onClick={handleRemindLater}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Clock className="mr-2 h-4 w-4" />
+                    Depois
+                  </Button>
+                  <Button
+                    onClick={handleViewInstructions}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Instruções
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </motion.div>
