@@ -24,7 +24,8 @@ interface LossStatus {
 export const useAdvancedLossAlarm = (
   currentBalance: number,
   initialBalance: number,
-  enabled: boolean = true
+  enabled: boolean = true,
+  hasOpenPositions: boolean = false
 ) => {
   const [lossStatus, setLossStatus] = useState<LossStatus>({
     currentLossPercent: 0,
@@ -63,8 +64,14 @@ export const useAdvancedLossAlarm = (
 
   // Calcular status de perda em tempo real
   useEffect(() => {
-    if (!enabled || !initialBalance || initialBalance === 0 || !alertLevels) {
-      console.log('Advanced alarm disabled:', { enabled, initialBalance, hasAlertLevels: !!alertLevels });
+    // CRITICAL: Only trigger alarm if there are open positions
+    if (!enabled || !initialBalance || initialBalance === 0 || !alertLevels || !hasOpenPositions) {
+      console.log('Advanced alarm disabled:', { 
+        enabled, 
+        initialBalance, 
+        hasAlertLevels: !!alertLevels,
+        hasOpenPositions 
+      });
       return;
     }
 
@@ -107,7 +114,7 @@ export const useAdvancedLossAlarm = (
       lastTriggeredLevelRef.current = null;
     }
 
-  }, [currentBalance, initialBalance, enabled, alertLevels]);
+  }, [currentBalance, initialBalance, enabled, alertLevels, hasOpenPositions]);
 
   const handleLossAlert = async (
     level: LossAlertLevel,
