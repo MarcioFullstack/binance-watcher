@@ -38,7 +38,13 @@ const Dashboard = () => {
   // Monitor loss alarm with advanced system
   const currentBalance = binanceData ? parseFloat(binanceData.balance.total) : 0;
   const initialBalance = binanceData ? parseFloat(binanceData.balance.initial) : 0;
-  const { lossStatus, stopAlarm } = useAdvancedLossAlarm(currentBalance, initialBalance, !!binanceData);
+  const hasOpenPositions = binanceData ? binanceData.positions.length > 0 : false;
+  const { lossStatus, stopAlarm } = useAdvancedLossAlarm(
+    currentBalance, 
+    initialBalance, 
+    !!binanceData,
+    hasOpenPositions
+  );
 
   // Enable realtime subscription notifications
   useSubscriptionRealtime(user?.id);
