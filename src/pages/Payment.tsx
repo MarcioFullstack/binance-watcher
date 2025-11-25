@@ -206,10 +206,10 @@ const Payment = () => {
         toast.success(`✅ Voucher ativado com sucesso! ${data.days} dias adicionados à sua assinatura.`);
         setVoucherCode("");
         
-        // Redirecionar para setup da Binance
+        // Aguardar um pouco mais para garantir que o banco de dados propagou a atualização
         setTimeout(() => {
-          navigate("/setup-binance");
-        }, 1500);
+          navigate("/setup-binance", { state: { fromVoucherActivation: true } });
+        }, 2500);
       }
     } catch (error: any) {
       console.error('Unexpected voucher activation error:', error);
