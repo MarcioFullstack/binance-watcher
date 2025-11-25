@@ -16,6 +16,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { PnLDashboard } from "@/components/dashboard/PnLDashboard";
 import { BalanceCards } from "@/components/dashboard/BalanceCards";
+import { PositionsStatusIndicator } from "@/components/dashboard/PositionsStatusIndicator";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AlarmStopButton } from "@/components/AlarmStopButton";
@@ -39,6 +40,11 @@ const Dashboard = () => {
   const currentBalance = binanceData ? parseFloat(binanceData.balance.total) : 0;
   const initialBalance = binanceData ? parseFloat(binanceData.balance.initial) : 0;
   const hasOpenPositions = binanceData ? binanceData.positions.length > 0 : false;
+  const positionsCount = binanceData ? binanceData.positions.length : 0;
+  const totalUnrealizedPnL = binanceData 
+    ? parseFloat(binanceData.pnl.unrealized) 
+    : 0;
+  
   const { lossStatus, stopAlarm } = useAdvancedLossAlarm(
     currentBalance, 
     initialBalance, 
@@ -227,6 +233,15 @@ const Dashboard = () => {
                   </Button>
                 </AlertDescription>
               </Alert>
+            )}
+
+            {/* Positions Status Indicator */}
+            {binanceData && (
+              <PositionsStatusIndicator
+                hasOpenPositions={hasOpenPositions}
+                positionsCount={positionsCount}
+                totalUnrealizedPnL={totalUnrealizedPnL}
+              />
             )}
 
             {/* Loss Risk Indicator */}
