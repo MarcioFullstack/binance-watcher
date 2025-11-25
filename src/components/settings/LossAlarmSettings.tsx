@@ -15,6 +15,7 @@ export const LossAlarmSettings = () => {
   const [riskPercent, setRiskPercent] = useState(5);
   const [initialBalance, setInitialBalance] = useState(0);
   const [sirenType, setSirenType] = useState("police");
+  const [autoClosePositions, setAutoClosePositions] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -41,6 +42,7 @@ export const LossAlarmSettings = () => {
         setRiskPercent(data.risk_percent ?? 5);
         setInitialBalance(data.initial_balance ?? 0);
         setSirenType(data.siren_type ?? "police");
+        setAutoClosePositions(data.auto_close_positions ?? false);
       }
     } catch (error) {
       console.error("Error:", error);
@@ -64,6 +66,7 @@ export const LossAlarmSettings = () => {
         risk_percent: riskPercent,
         initial_balance: initialBalance,
         siren_type: sirenType,
+        auto_close_positions: autoClosePositions,
         updated_at: new Date().toISOString(),
       };
 
@@ -292,9 +295,28 @@ export const LossAlarmSettings = () => {
           </p>
         </div>
 
+        {/* Auto Close Positions */}
+        <div className="flex items-center justify-between p-4 rounded-lg bg-destructive/10 border border-destructive/20">
+          <div className="space-y-0.5">
+            <Label htmlFor="auto-close" className="text-base font-medium flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              Fechar Posições Automaticamente
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Quando o alarme for acionado, todas as posições abertas serão fechadas automaticamente
+            </p>
+          </div>
+          <Switch
+            id="auto-close"
+            checked={autoClosePositions}
+            onCheckedChange={setAutoClosePositions}
+            disabled={!riskActive}
+          />
+        </div>
+
         {/* Alarm Sound Type */}
         <div className="space-y-2">
-          <Label>Sound Alarm Type</Label>
+          <Label>Tipo de Som do Alarme</Label>
           <div className="grid grid-cols-2 gap-2">
             {[
               { value: "police", label: "🚨 Police" },

@@ -534,6 +534,7 @@ export type Database = {
       }
       risk_settings: {
         Row: {
+          auto_close_positions: boolean | null
           created_at: string | null
           daily_reset: boolean | null
           gain_push_notifications: boolean | null
@@ -548,6 +549,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          auto_close_positions?: boolean | null
           created_at?: string | null
           daily_reset?: boolean | null
           gain_push_notifications?: boolean | null
@@ -562,6 +564,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          auto_close_positions?: boolean | null
           created_at?: string | null
           daily_reset?: boolean | null
           gain_push_notifications?: boolean | null
