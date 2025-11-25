@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle, AlertTriangle, AlertOctagon, Siren, TrendingDown, Shield, Volume2, VolumeX } from "lucide-react";
+import { AlertCircle, AlertTriangle, AlertOctagon, Siren, TrendingDown, Shield, Volume2, VolumeX, X, Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 
@@ -13,6 +13,8 @@ interface LossRiskIndicatorProps {
   isInLoss: boolean;
   alarmActive?: boolean;
   onStopAlarm?: () => void;
+  onClosePositions?: () => Promise<void>;
+  isClosingPositions?: boolean;
 }
 
 const levelStyles = {
@@ -53,6 +55,8 @@ export const LossRiskIndicator = ({
   isInLoss,
   alarmActive = false,
   onStopAlarm,
+  onClosePositions,
+  isClosingPositions = false,
 }: LossRiskIndicatorProps) => {
   if (!isInLoss) {
     return (
@@ -109,20 +113,42 @@ export const LossRiskIndicator = ({
           </div>
         </div>
 
-        {/* Stop Alarm Button */}
-        {alarmActive && onStopAlarm && (
-          <div className="flex justify-center">
+        {/* Action Buttons */}
+        <div className="space-y-2">
+          {alarmActive && onStopAlarm && (
             <Button
               onClick={onStopAlarm}
               size="lg"
-              variant="destructive"
-              className="w-full max-w-md animate-pulse"
+              variant="outline"
+              className="w-full animate-pulse"
             >
               <VolumeX className="mr-2 h-5 w-5" />
-              TURN OFF SOUND ALARM
+              DESLIGAR SOM DO ALARME
             </Button>
-          </div>
-        )}
+          )}
+          
+          {onClosePositions && (
+            <Button
+              onClick={onClosePositions}
+              size="lg"
+              variant="destructive"
+              disabled={isClosingPositions}
+              className="w-full"
+            >
+              {isClosingPositions ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Fechando Posições...
+                </>
+              ) : (
+                <>
+                  <X className="mr-2 h-5 w-5" />
+                  FECHAR TODAS AS POSIÇÕES
+                </>
+              )}
+            </Button>
+          )}
+        </div>
 
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
