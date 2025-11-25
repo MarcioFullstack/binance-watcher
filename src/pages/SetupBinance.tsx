@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,12 +24,13 @@ const SetupBinance = () => {
     apiSecret: "",
   });
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     checkUserAccess();
   }, []);
 
-  const checkUserAccess = async () => {
+  const checkUserAccess = async (retryCount = 0) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -47,12 +48,23 @@ const SetupBinance = () => {
         .eq("status", "active")
         .maybeSingle();
 
-      console.log("Subscription check:", { subscription, subError });
+      console.log("Subscription check:", { subscription, subError, retryCount });
+
+      // Se veio de ativação de voucher e não encontrou subscription, tentar novamente
+      const fromVoucherActivation = location.state?.fromVoucherActivation;
+      
+      if (!subscription && fromVoucherActivation && retryCount < 3) {
+        console.log("Retrying subscription check after voucher activation...");
+        setTimeout(() => {
+          checkUserAccess(retryCount + 1);
+        }, 1000);
+        return;
+      }
 
       // Verify subscription exists and is not expired
       if (!subscription) {
         console.log("No active subscription found");
-        toast.error("You need an active subscription to access this page");
+        toast.error("Você precisa de uma assinatura ativa para acessar esta página");
         navigate("/payment");
         return;
       }
@@ -63,9 +75,14 @@ const SetupBinance = () => {
       
       if (expiresAt < now) {
         console.log("Subscription expired at:", expiresAt);
-        toast.error("Your subscription has expired");
+        toast.error("Sua assinatura expirou! Por favor, renove para continuar.");
         navigate("/payment");
         return;
+      }
+
+      // Limpar o state para não ficar tentando retry
+      if (fromVoucherActivation) {
+        navigate(location.pathname, { replace: true, state: {} });
       }
     } catch (error) {
       console.error("Error checking access:", error);
