@@ -664,8 +664,15 @@ const Admin = () => {
       return;
     }
 
-    if (!/^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(voucherCode)) {
-      toast.error("Code must be in format XXXX-XXXX-XXXX-XXXX");
+    // Validação flexível: 5-30 caracteres, alfanuméricos e hífens
+    const trimmedCode = voucherCode.trim();
+    if (trimmedCode.length < 5 || trimmedCode.length > 30) {
+      toast.error("Code must be between 5-30 characters");
+      return;
+    }
+
+    if (!/^[A-Z0-9-]+$/.test(trimmedCode)) {
+      toast.error("Code must contain only letters, numbers, and hyphens");
       return;
     }
 
@@ -1736,14 +1743,14 @@ const Admin = () => {
                       <Label htmlFor="voucherCode">Voucher Code</Label>
                       <Input
                         id="voucherCode"
-                        placeholder="XXXX-XXXX-XXXX-XXXX"
+                        placeholder="PROMO-ABC12345 ou MEU-VOUCHER"
                         value={voucherCode}
                         onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
-                        maxLength={19}
+                        maxLength={30}
                         disabled={creatingVoucher}
                       />
                       <p className="text-xs text-muted-foreground">
-                        Use only letters and numbers (format: XXXX-XXXX-XXXX-XXXX)
+                        Use 5-30 characters: letters, numbers, and hyphens
                       </p>
                     </div>
                     <div className="space-y-2">
