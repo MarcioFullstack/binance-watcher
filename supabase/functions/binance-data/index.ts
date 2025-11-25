@@ -259,6 +259,29 @@ serve(async (req) => {
     
     if (hasReachedRiskLimit) {
       await checkAndSendRiskAlert(100, '🚨 LIMITE DE RISCO ATINGIDO', '🚨');
+      
+      // Se o auto_close_positions estiver ativo, fechar todas as posições
+      if (riskSettings?.auto_close_positions && openPositions.length > 0) {
+        console.log(`Auto-closing all positions for user ${user.id} due to risk limit`);
+        
+        try {
+          const authHeader = req.headers.get('Authorization');
+          const { data: closeResult, error: closeError } = await supabaseClient.functions.invoke(
+            'close-all-positions',
+            {
+              headers: authHeader ? { Authorization: authHeader } : undefined,
+            }
+          );
+          
+          if (closeError) {
+            console.error('Error auto-closing positions:', closeError);
+          } else {
+            console.log('Positions auto-closed successfully:', closeResult);
+          }
+        } catch (closeError) {
+          console.error('Failed to auto-close positions:', closeError);
+        }
+      }
     }
 
     // Verificar alertas de PnL configurados pelo usuário
