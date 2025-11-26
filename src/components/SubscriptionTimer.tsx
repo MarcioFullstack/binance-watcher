@@ -43,10 +43,13 @@ export const SubscriptionTimer = ({ userId, onExpired }: SubscriptionTimerProps)
 
   useEffect(() => {
     if (timeRemaining.isExpired && !loading) {
-      toast.error("Your subscription has expired! Please renew to continue.");
+      // Only show toast if not already on payment page
+      if (window.location.pathname !== '/payment') {
+        toast.error("Your subscription has expired! Please renew to continue.");
+      }
       if (onExpired) {
         onExpired();
-      } else {
+      } else if (window.location.pathname !== '/payment') {
         navigate("/payment");
       }
     }
