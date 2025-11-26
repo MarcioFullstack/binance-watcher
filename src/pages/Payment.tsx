@@ -214,13 +214,16 @@ const Payment = () => {
 
       // Sucesso
       if (data?.success) {
+        console.log('[Voucher] Activation success, response:', data);
         toast.success(`✅ Voucher ativado! Redirecionando...`, {
           duration: 2000,
         });
         setVoucherCode("");
         
+        console.log('[Voucher] Scheduling redirect to /setup-binance in 500ms');
         // Redirecionar imediatamente
         setTimeout(() => {
+          console.log('[Voucher] Executing redirect to /setup-binance');
           navigate("/setup-binance", { replace: true });
         }, 500);
       }
