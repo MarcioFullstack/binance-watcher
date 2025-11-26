@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,7 +37,13 @@ const Payment = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Separate ref to track if we're processing voucher
+  const processingVoucher = useRef(false);
+
   const checkPaymentStatus = async () => {
+    // Don't check if we're processing a voucher
+    if (processingVoucher.current) return;
+    
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -52,7 +58,7 @@ const Payment = () => {
         .eq("user_id", user.id)
         .maybeSingle();
 
-      if (subscription?.status === "active") {
+      if (subscription?.status === "active" && !processingVoucher.current) {
         navigate("/setup-binance");
         return;
       }
@@ -156,6 +162,8 @@ const Payment = () => {
     }
 
     setLoading(true);
+    processingVoucher.current = true; // Block checkPaymentStatus
+    
     try {
       const { data, error } = await supabase.functions.invoke('activate-voucher', {
         body: { code: trimmedCode }
@@ -164,6 +172,7 @@ const Payment = () => {
       if (error) {
         console.error('Voucher activation error:', error);
         toast.error("Erro ao comunicar com servidor. Tente novamente.");
+        processingVoucher.current = false;
         return;
       }
 
@@ -193,29 +202,32 @@ const Payment = () => {
           case 'NOT_AUTHENTICATED':
           case 'INVALID_SESSION':
             toast.error("Sessão expirada. Por favor, faça login novamente.");
+            processingVoucher.current = false;
             setTimeout(() => navigate("/login"), 2000);
             break;
           default:
             toast.error(data.error || "Falha ao ativar voucher. Tente novamente.");
         }
+        processingVoucher.current = false;
         return;
       }
 
       // Sucesso
       if (data?.success) {
-        toast.success(`✅ Voucher ativado! ${data.days} dias adicionados à sua assinatura.`, {
-          duration: 3000,
+        toast.success(`✅ Voucher ativado! Redirecionando...`, {
+          duration: 2000,
         });
         setVoucherCode("");
         
-        // Aguardar para garantir propagação no banco
+        // Redirecionar imediatamente
         setTimeout(() => {
-          navigate("/setup-binance", { state: { fromVoucherActivation: true }, replace: true });
-        }, 2000);
+          navigate("/setup-binance", { replace: true });
+        }, 500);
       }
     } catch (error: any) {
       console.error('Unexpected voucher activation error:', error);
       toast.error("Erro inesperado ao ativar voucher. Tente novamente.");
+      processingVoucher.current = false;
     } finally {
       setLoading(false);
     }
