@@ -203,13 +203,15 @@ const Payment = () => {
 
       // Sucesso
       if (data?.success) {
-        toast.success(`✅ Voucher ativado com sucesso! ${data.days} dias adicionados à sua assinatura.`);
+        toast.success(`✅ Voucher ativado! ${data.days} dias adicionados à sua assinatura.`, {
+          duration: 3000,
+        });
         setVoucherCode("");
         
-        // Aguardar um pouco mais para garantir que o banco de dados propagou a atualização
+        // Aguardar para garantir propagação no banco
         setTimeout(() => {
-          navigate("/setup-binance", { state: { fromVoucherActivation: true } });
-        }, 2500);
+          navigate("/setup-binance", { state: { fromVoucherActivation: true }, replace: true });
+        }, 2000);
       }
     } catch (error: any) {
       console.error('Unexpected voucher activation error:', error);
